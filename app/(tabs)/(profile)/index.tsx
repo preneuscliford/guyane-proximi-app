@@ -24,7 +24,9 @@ const editProfil = () => {
     // Add other properties as needed
   }
   const [userData, setUserData] = useState<UserData | null>(null);
-  const { session } = useAuth();
+  const { session, user } = useAuth();
+
+  console.log(user);
 
   useEffect(() => {
     if (session) getProfile();

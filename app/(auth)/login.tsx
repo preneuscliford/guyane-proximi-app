@@ -5,15 +5,14 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Button, TextInput, Text } from "react-native-paper";
 
-import { Link } from "expo-router";
+import { Link, useNavigation } from "expo-router";
 import { supabase } from "@/lib/supabase";
 
 AppState.addEventListener("change", (state) => {
@@ -26,6 +25,11 @@ AppState.addEventListener("change", (state) => {
 
 const SignIn = () => {
   const [isSubmitting, setSubmitting] = useState(false);
+  const [secureTextEntry, setSecureTextEntry] = useState(true);
+  const [errorEmail, SetErrorEmail] = useState(false);
+  const [error, setError] = useState("");
+  const [errorPassword, setErrorPassword] = useState(false);
+  const [icon, setIcon] = useState("eye");
 
   const [form, setForm] = useState({
     email: "",
@@ -33,12 +37,9 @@ const SignIn = () => {
   });
 
   const submitForm = async () => {
-    if (form.email === "" || form.password === "") {
-      Alert.alert(
-        "Erreur",
-        "Veillez remplisez tous les champs s'il vous Plaît!! "
-      );
-    }
+    if (form.email === "" || form.password === "") return;
+
+    validateLogin(form.email, form.password);
 
     setSubmitting(true);
 
@@ -47,7 +48,14 @@ const SignIn = () => {
       password: form.password,
     });
 
-    if (error) Alert.alert(error.message);
+    if (error) {
+      if (error.status === 400) {
+        setError("Adresse e-mail ou mot de passe incorrect.");
+        setErrorPassword(true);
+        SetErrorEmail(true);
+      }
+      console.log(error.status);
+    }
     setSubmitting(false);
 
     try {
@@ -58,57 +66,94 @@ const SignIn = () => {
     }
   };
 
+  const handleIconPress = () => {
+    setSecureTextEntry(!secureTextEntry);
+    setIcon(secureTextEntry ? "eye-off-outline" : "eye");
+  };
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password: string) => {
+    return password.length >= 8;
+  };
+
+  const validateLogin = (email: string, password: string) => {
+    setError("");
+    if (!validateEmail(email)) {
+      SetErrorEmail(true);
+    } else {
+      SetErrorEmail(false);
+    }
+    if (!validatePassword(password)) {
+      setErrorPassword(true);
+    } else {
+      setErrorPassword(false);
+    }
+  };
+
   return (
-    <SafeAreaView className=" h-full bg-[#161622]">
-      <ScrollView>
+    <SafeAreaView>
+      <ScrollView className=" h-full bg-light-gray">
         <View className="w-full h-full justify-center min-h-[85vh] px-4 py-6 ">
-          <Text className="text-2xl   text-semibold font-psemibold mb-6">
-            Connectez-Vous avec Aora
+          <Text variant="displayLarge" style={{ fontWeight: "bold" }}>
+            Hé, bon retour!
           </Text>
 
           <View className="mt-4">
-            <TextInput
-              onChangeText={(text) => setForm({ ...form, email: text })}
-              placeholder="Email"
-              placeholderTextColor="#333"
-              value={form.email}
-              className="bg-zinc-200 text-textgray mt-3 rounded-xl py-3 px-5"
-            />
-            <TextInput
-              secureTextEntry={true}
-              onChangeText={(text) => setForm({ ...form, password: text })}
-              placeholder="Password"
-              placeholderTextColor="#333"
-              value={form.password}
-              className="bg-zinc-200 text-textgray mt-3 rounded-xl py-3 px-5"
-            />
-            <TouchableOpacity
-              className="mt-2 flex items-end"
-              onPress={() => {}}
-            >
-              <Text className=" text-white font-bold">
-                Mot de Passe oublié?
-              </Text>
-            </TouchableOpacity>
-            <View className="mt-7">
-              <Pressable
-                onPress={submitForm}
-                disabled={isSubmitting}
-                className=" bg-slate-500 rounded-lg justify-center items-center py-4 px-3"
-              >
-                <Text
-                  className={`${
-                    isSubmitting ? "text-slate-400 " : "text-white"
-                  } `}
-                  font-pextrabold
-                >
-                  Se Connecter
+            <View className=" pb-4">
+              <TextInput
+                error={errorEmail}
+                onTextInput={() => validateLogin(form.email, form.password)}
+                label="Email"
+                onChangeText={(text) => setForm({ ...form, email: text })}
+                value={form.email}
+              />
+            </View>
+
+            <View className=" pb-4">
+              <TextInput
+                error={errorPassword}
+                onTextInput={() => validateLogin(form.email, form.password)}
+                label="Mot de passe"
+                secureTextEntry={secureTextEntry}
+                onChangeText={(text) => setForm({ ...form, password: text })}
+                value={form.password}
+                right={<TextInput.Icon icon={icon} onPress={handleIconPress} />}
+              />
+              {error && (
+                <Text variant="titleSmall" style={{ color: "red" }}>
+                  {" "}
+                  {error}{" "}
                 </Text>
-              </Pressable>
+              )}
+            </View>
+
+            <TouchableOpacity className=" flex items-end" onPress={() => {}}>
+              <Text className=" font-bold">Mot de Passe oublié?</Text>
+            </TouchableOpacity>
+            <View className="mt-7 ">
+              <Button
+                icon="camera"
+                mode="contained"
+                className=" p-5 bg-secondary-200 rounded-3xl"
+                onPress={submitForm}
+                disabled={isSubmitting || errorEmail || errorPassword}
+                style={{
+                  width: "100%",
+                  padding: 5,
+                  borderRadius: 10,
+                  backgroundColor: "#2D6A4F",
+                }}
+              >
+                Se Connecter
+              </Button>
             </View>
           </View>
 
-          <View className="mt-10">
+          {/* <View className="mt-10">
             <Text className="text-white text-center">Ou Continue avec</Text>
             <View className="mt-2">
               <TouchableOpacity className=" bg-zinc-200 rounded-lg justify-center items-center py-2 px-4">
@@ -118,25 +163,25 @@ const SignIn = () => {
                 />
               </TouchableOpacity>
             </View>
-          </View>
+          </View> */}
 
           <View className="justify-center flex-row gap-2 pt-5">
-            <Text className="text-lg text-gray-200 font-psemibold">
+            <Text className="text-lg font-psemibold">
               Vous n'avez pas de compte ?
             </Text>
-            <Link className=" text-lg text-white" href="/signUp">
+            <Link className=" text-lg " href="/signUp">
               S'inscrire
             </Link>
           </View>
-          <View className=" mt-10 text-white justify-center items-center">
-            <Text className="text-sm text-white">
+          <View className=" mt-10  justify-center items-center">
+            <Text className="text-sm ">
               En vous inscrivant, vous acceptez{" "}
-              <Link className=" text-cyan-300" href={"/"}>
+              <Link className=" text-cyan-600" href={"/"}>
                 {" "}
                 l'avis d'utilisation{" "}
               </Link>
               et{" "}
-              <Link className=" text-cyan-300" href={"/"}>
+              <Link className=" text-cyan-600" href={"/"}>
                 {" "}
                 la politique de confidentialité
               </Link>

@@ -3,7 +3,7 @@ import Feather from "@expo/vector-icons/Feather";
 
 import { useEffect } from "react";
 import { Link, useNavigation } from "expo-router";
-import { useAuth } from "../provider/AuthProvider";
+import AuthProvider, { useAuth } from "../provider/AuthProvider";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import Slider from "@/components/Slider";

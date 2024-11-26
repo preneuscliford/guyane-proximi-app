@@ -1,7 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy } from "react";
 import { supabase } from "../lib/supabase";
-import { StyleSheet, View, Alert, Image, Button } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Alert,
+  Image,
+  Button,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 
 interface Props {
   size: number;
@@ -93,30 +102,43 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
   }
 
   return (
-    <View>
+    <View className="flex flex-col items-center mt-4">
       {avatarUrl ? (
-        <Image
-          source={{ uri: avatarUrl }}
-          accessibilityLabel="Avatar"
-          style={[avatarSize, styles.avatar, styles.image]}
-        />
+        <TouchableOpacity
+          onPress={uploadAvatar}
+          className=" relative justify-center items-center"
+        >
+          <Image
+            source={{ uri: avatarUrl }}
+            accessibilityLabel="Avatar"
+            style={[avatarSize, styles.avatar, styles.image]}
+          />
+
+          {!uploading && (
+            <View style={{ position: "absolute", bottom: 6, right: 4 }}>
+              <FontAwesome6 name="edit" size={24} color="white" />
+            </View>
+          )}
+
+          {uploading && <ActivityIndicator size="large" className="absolute" />}
+        </TouchableOpacity>
       ) : (
         <View style={[avatarSize, styles.avatar, styles.noImage]} />
       )}
-      <View>
-        <Button
-          title={uploading ? "Uploading ..." : "Upload"}
-          onPress={uploadAvatar}
-          disabled={uploading}
-        />
-      </View>
     </View>
   );
 }
+//  <View>
+//    <Button
+//      title={uploading ? "Uploading ..." : "Upload"}
+//      onPress={uploadAvatar}
+//      disabled={uploading}
+//    />
+//  </View>;
 
 const styles = StyleSheet.create({
   avatar: {
-    borderRadius: 5,
+    borderRadius: 15,
     overflow: "hidden",
     maxWidth: "100%",
   },
@@ -129,6 +151,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderStyle: "solid",
     borderColor: "rgb(200, 200, 200)",
-    borderRadius: 5,
+    borderRadius: 10,
   },
 });
