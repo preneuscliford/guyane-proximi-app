@@ -25,8 +25,6 @@ const LastItems = () => {
     getProducts();
   }, []);
 
-  console.log(product);
-
   async function getProducts() {
     try {
       const { data, error, status } = await supabase

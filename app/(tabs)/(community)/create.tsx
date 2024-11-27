@@ -14,14 +14,17 @@ import { useNavigation, useRouter } from "expo-router";
 import RemoteImage from "@/components/RemoteImage";
 import RichTextEditor from "@/components/RichTextEditor";
 import { supabase } from "@/lib/supabase";
-
+interface RichTextEditor {
+  setContentHTML(html: string): void;
+  // ...
+}
 const create = () => {
   const [loading, setLoading] = useState(false);
   const { session, user, userData } = useAuth();
 
   const router = useRouter();
   const bodyRef = useRef("");
-  const editorRef = useRef(null);
+  const editorRef = useRef<RichTextEditor>(null);
 
   console.log(session?.user.id);
 
@@ -43,6 +46,9 @@ const create = () => {
       }
 
       setLoading(false);
+      bodyRef.current = "";
+      editorRef.current?.setContentHTML("");
+      router.back();
     } catch (error) {
       console.log(error);
     }
