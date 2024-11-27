@@ -23,35 +23,10 @@ interface UserData {
   // Add other properties as needed
 }
 const index = () => {
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const { session, user, userData } = useAuth();
 
   const router = useRouter();
 
-  const { session } = useAuth();
-  useEffect(() => {
-    if (session) getProfile();
-  }, [session]);
-
-  async function getProfile() {
-    try {
-      if (!session?.user) throw new Error("No user on the session!");
-
-      const { data, error, status } = await supabase
-        .from("profiles")
-        .select(`username, website, avatar_url`)
-        .eq("id", session?.user.id)
-        .single();
-      if (error && status !== 406) {
-        throw error;
-      }
-      setUserData(data as any);
-    } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert(error.message);
-      }
-    } finally {
-    }
-  }
   return (
     <SafeAreaView>
       <StatusBar style="light" backgroundColor="#0a7ea4" />
