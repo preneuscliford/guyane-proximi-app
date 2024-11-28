@@ -43,7 +43,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
       const { data, error, status } = await supabase
         .from("profiles")
-        .select(`username, website, avatar_url`)
+        .select(`username, website, avatar_url, id`)
         .eq("id", session?.user.id)
         .single();
       if (error && status !== 406) {

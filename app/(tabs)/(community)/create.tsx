@@ -26,8 +26,6 @@ const create = () => {
   const bodyRef = useRef("");
   const editorRef = useRef<RichTextEditor>(null);
 
-  console.log(session?.user.id);
-
   const createPost = async () => {
     try {
       setLoading(true);

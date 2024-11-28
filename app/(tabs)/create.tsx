@@ -27,7 +27,6 @@ const create = () => {
 
   const uploadImage = async () => {
     if (image) {
-      console.log("uploding");
       const arraybuffer = await fetch(image?.uri).then((res) =>
         res.arrayBuffer()
       );
@@ -57,7 +56,6 @@ const create = () => {
         throw new Error("Image upload failed");
       }
 
-      console.log(uploadedPath);
       const { data, error } = await supabase.from("products").insert({
         title: form.title,
         desc: form.desc,
@@ -77,8 +75,6 @@ const create = () => {
         categorie: "",
       });
       setImage(null);
-
-      console.log(data);
     } catch (error) {
       if (error instanceof Error) {
         Alert.alert(error.message);
