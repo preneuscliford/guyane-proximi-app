@@ -88,15 +88,15 @@ const index = () => {
     };
   }, []);
 
-  console.log(post);
-
   async function getPosts() {
     if (!hasMore) return null;
     limit = limit + 4;
     try {
       const { data, error, status } = await supabase
         .from("posts")
-        .select("*, profiles(id, username, avatar_url), postLikes(*)")
+        .select(
+          "*, profiles(id, username, avatar_url), postLikes(*), comments(*)"
+        )
         .order("created_at", { ascending: false })
         .limit(limit);
 

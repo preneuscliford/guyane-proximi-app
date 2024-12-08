@@ -30,7 +30,8 @@ const LastItems = () => {
       const { data, error, status } = await supabase
         .from("products")
         .select(`*`)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(4);
 
       if (error && status !== 406) {
         throw error;

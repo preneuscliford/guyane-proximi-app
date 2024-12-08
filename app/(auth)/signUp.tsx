@@ -37,55 +37,60 @@ const SignUp = () => {
   });
 
   const submitForm = async () => {
-    if (form.email === "" || form.password === "") {
+    if (!form.username || !form.email || !form.password) {
+      setError("Veuillez remplir tous les champs");
       return;
     }
 
-    setSubmitting(true);
+    validateLogin(form.email, form.password);
+    if (errorEmail || errorPassword) return;
 
+    setSubmitting(true);
     try {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: form.email.trim(),
         password: form.password.trim(),
+        options: {
+          data: {
+            username: form.username.trim(),
+          },
+        },
       });
 
-      if (error) {
-        // Alert.alert("Erreur", "Erreur Lors de l'inscription");
-        if (error.status === 422) {
+      if (authError) {
+        if (authError.status === 422) {
           setError("Ce compte existe déjà.");
           SetErrorEmail(true);
-        }
-        console.log(error.message);
-      } else if (!session) {
-        // Alert.alert("Please check your inbox for email verification!");
-      } else {
-        const { data, error } = await supabase.from("users").insert(
-          [
-            {
-              username: form.username.trim(),
-              email: form.email.trim(),
-              user_id: session?.user.id,
-            },
-          ],
-          {}
-        );
-
-        if (error) {
-          console.log(error.code);
-          console.log(error.message);
         } else {
-          // Récupérer l'ID  automatiquement
-          console.log("Utilisateur créé avec succès ! ");
+          setError("Une erreur est survenue lors de l'inscription");
         }
-        router.push("/(profile)/editProfile");
+        return;
       }
 
-      setSubmitting(false);
+      if (authData.session) {
+        const { error: profileError } = await supabase.from("profiles").insert({
+          id: authData.session.user.id,
+          username: form.username.trim(),
+          email: form.email.trim(),
+          updated_at: new Date(),
+        });
+
+        if (profileError) {
+          console.error("Erreur lors de la création du profil:", profileError);
+          setError("Erreur lors de la création du profil");
+          return;
+        }
+
+        router.push("/(profile)/editProfile");
+      } else {
+        Alert.alert(
+          "Vérification par email",
+          "Veuillez vérifier votre boîte mail pour confirmer votre inscription."
+        );
+      }
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      setError("Une erreur inattendue est survenue");
     } finally {
       setSubmitting(false);
     }

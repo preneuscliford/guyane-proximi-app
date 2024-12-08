@@ -37,30 +37,38 @@ const SignIn = () => {
   });
 
   const submitForm = async () => {
-    if (form.email === "" || form.password === "") return;
+    if (form.email === "" || form.password === "") {
+      setError("Veuillez remplir tous les champs");
+      return;
+    }
 
     validateLogin(form.email, form.password);
+    if (errorEmail || errorPassword) return;
 
     setSubmitting(true);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email: form.email,
-      password: form.password,
-    });
-
-    if (error) {
-      if (error.status === 400) {
-        setError("Adresse e-mail ou mot de passe incorrect.");
-        setErrorPassword(true);
-        SetErrorEmail(true);
-      }
-      console.log(error.status);
-    }
-    setSubmitting(false);
-
     try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: form.email.trim(),
+        password: form.password.trim(),
+      });
+
+      if (error) {
+        switch (error.status) {
+          case 400:
+            setError("Adresse e-mail ou mot de passe incorrect.");
+            setErrorPassword(true);
+            SetErrorEmail(true);
+            break;
+          case 429:
+            setError("Trop de tentatives. Veuillez réessayer plus tard.");
+            break;
+          default:
+            setError("Une erreur est survenue. Veuillez réessayer.");
+        }
+      }
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      setError("Une erreur inattendue est survenue");
     } finally {
       setSubmitting(false);
     }

@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabase";
 import * as ImagePicker from "expo-image-picker";
 
 const create = () => {
+  const [uploading, setUploading] = useState(false);
   const [image, setImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [imagePath, setImagePath] = useState("");
   const [form, setForm] = useState({
@@ -49,6 +50,15 @@ const create = () => {
 
   const submitForm = async () => {
     try {
+      if (form.title === "" || form.desc === "" || form.price === "") {
+        Alert.alert("Veuillez remplir tous les champs");
+
+        setUploading(false);
+        return null;
+      }
+
+      setUploading(true);
+
       await uploadImage();
 
       const uploadedPath = await uploadImage();
@@ -75,10 +85,13 @@ const create = () => {
         categorie: "",
       });
       setImage(null);
+      setUploading(false);
     } catch (error) {
       if (error instanceof Error) {
         Alert.alert(error.message);
+        setUploading(false);
       } else {
+        setUploading(false);
         throw error;
       }
     } finally {
@@ -89,8 +102,11 @@ const create = () => {
         categorie: "",
       });
       setImage(null);
+      setUploading(false);
     }
   };
+
+  console.log(uploading);
 
   async function selectImage() {
     try {
@@ -206,12 +222,13 @@ const create = () => {
           </View>
 
           <View className="mt-7">
-            <Pressable
+            <TouchableOpacity
+              disabled={uploading === true}
               onPress={submitForm}
               className=" bg-slate-500 rounded-lg justify-center items-center py-4 px-3"
             >
-              <Text className=" text-white">Se Connecter</Text>
-            </Pressable>
+              <Text className=" text-white">Ajouter</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>

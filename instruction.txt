@@ -1,0 +1,9 @@
+As you can see, the app is not working as expected. I need you to fix the issues and make the app work as expected.
+
+1. The products category is not displaying the products correctly.
+2. The login screen and the signup screen is not working properly i need to fix it as a perferct login and signup screen.
+3. The search page is not displaying the search results correctly.
+4. The app do not have a deleting the products from the database.
+5. The app do not have a updating the products in the database.
+6. The the community page is not working properly, i need to fix the like and add the comment system.
+7- the app do not have a disconnect system.

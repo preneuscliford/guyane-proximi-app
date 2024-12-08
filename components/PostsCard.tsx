@@ -4,6 +4,7 @@ import {
   View,
   TouchableOpacity,
   useWindowDimensions,
+  Share,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { shadow } from "react-native-paper";
@@ -14,6 +15,7 @@ import moment from "moment";
 import RenderHTML from "react-native-render-html";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { supabase } from "@/lib/supabase";
+import { Link } from "expo-router";
 
 const textStyles = {
   fontSize: 16,
@@ -24,9 +26,16 @@ const tagsStyles = {
   p: textStyles,
   ol: textStyles,
 };
-const PostsCard = ({ item, router, currentUser, hasShadow = true }) => {
+const PostsCard = ({
+  item,
+  router,
+  currentUser,
+  hasShadow = true,
+  showMoreIcons = true,
+}: any) => {
   const { width } = useWindowDimensions();
-  const [likes, setLikes] = useState<any>([]);
+  const [likes, setLikes] = useState<any[]>([]);
+  const [isLiking, setIsLiking] = useState(false);
   const dataTime = moment(item?.created_at).fromNow();
 
   const hasShadowStyle = {
@@ -40,57 +49,126 @@ const PostsCard = ({ item, router, currentUser, hasShadow = true }) => {
   };
 
   const handleLike = async () => {
+    if (isLiking || !currentUser?.id) return;
+
+    setIsLiking(true);
     try {
       if (liked) {
-        let updateLikes = likes?.filter(
-          (like: any) => like?.userId !== currentUser?.id
+        const updatedLikes = likes.filter(
+          (like) => like.userId !== currentUser.id
         );
-        setLikes([...updateLikes]);
+        setLikes(updatedLikes);
 
-        await removeLike({ postId: item?.id, userId: currentUser?.id });
-      } else {
-        const { data, error }: any = await supabase
+        const { error } = await supabase
           .from("postLikes")
-          .insert({ postId: item?.id, userId: currentUser?.id })
+          .delete()
+          .eq("userId", currentUser.id)
+          .eq("postId", item.id);
+
+        if (error) {
+          setLikes(likes);
+          console.error("Erreur lors de la suppression du like:", error);
+          return;
+        }
+      } else {
+        const newLike = {
+          postId: item.id,
+          userId: currentUser.id,
+          created_at: new Date().toISOString(),
+        };
+        setLikes([...likes, newLike]);
+
+        const { data, error } = await supabase
+          .from("postLikes")
+          .insert({
+            postId: item.id,
+            userId: currentUser.id,
+          })
           .select()
           .single();
-        setLikes([...likes, data]);
+
         if (error) {
-          console.log(error);
+          setLikes(likes);
+          console.error("Erreur lors de l'ajout du like:", error);
+          return;
         }
-
-        console.log("success", data);
       }
     } catch (error) {
-      console.log("error", error);
-    }
-  };
-  const removeLike = async ({ postId, userId }: any) => {
-    try {
-      const { error }: any = supabase
-        .from("postLikes")
-        .delete()
-        .eq("userId", userId)
-        .eq("postId", postId)
-        .single();
-
-      if (error) {
-        console.log(error);
-      }
-    } catch (error) {
-      console.log(error);
+      console.error("Erreur lors de la gestion du like:", error);
+    } finally {
+      setIsLiking(false);
     }
   };
 
   useEffect(() => {
-    setLikes(item?.postLikes);
-  }, []);
+    const fetchLikes = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("postLikes")
+          .select("*")
+          .eq("postId", item.id);
 
-  const liked = likes?.filter(
-    (like: any) => like?.userId === currentUser?.id
-  )[0]
-    ? true
-    : false;
+        if (error) {
+          console.error("Erreur lors du chargement des likes:", error);
+          return;
+        }
+
+        setLikes(data || []);
+      } catch (error) {
+        console.error("Erreur lors du chargement des likes:", error);
+      }
+    };
+
+    if (item?.id) {
+      fetchLikes();
+    }
+  }, [item?.id]);
+
+  useEffect(() => {
+    const likesSubscription = supabase
+      .channel(`post-likes-${item.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "postLikes",
+          filter: `postId=eq.${item.id}`,
+        },
+        async (payload) => {
+          const { data, error } = await supabase
+            .from("postLikes")
+            .select("*")
+            .eq("postId", item.id);
+
+          if (!error && data) {
+            setLikes(data);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      likesSubscription.unsubscribe();
+    };
+  }, [item?.id]);
+
+  const liked = likes?.some((like) => like.userId === currentUser?.id);
+
+  const handleShare = async () => {
+    const stripHtmlContent = (html: string) => {
+      html = html.replace(/<\/?[^>]+(>|$)/gm, "");
+      html = html.replace(/&nbsp;/gm, " ");
+      html = html.replace(/&[^;]+;/gm, ""); // Supprime les entités HTML
+      return html;
+    };
+    let content = { message: stripHtmlContent(item?.body) };
+    Share.share(content);
+  };
+
+  const removeExcessSpaces = (html: string) => {
+    return html.replace(/<br\s*\/?>/g, "");
+  };
 
   return (
     <View style={[styles.container, hasShadow && hasShadowStyle]}>
@@ -115,7 +193,9 @@ const PostsCard = ({ item, router, currentUser, hasShadow = true }) => {
             <Text className=" text-sm font-light">{dataTime}</Text>
           </View>
         </View>
-        <Entypo name="dots-three-vertical" size={18} color="black" />
+        {showMoreIcons && (
+          <Entypo name="dots-three-vertical" size={18} color="black" />
+        )}
       </View>
 
       <View>
@@ -123,7 +203,7 @@ const PostsCard = ({ item, router, currentUser, hasShadow = true }) => {
           {item?.body && (
             <RenderHTML
               contentWidth={width}
-              source={{ html: item?.body }}
+              source={{ html: removeExcessSpaces(item?.body) }}
               tagsStyles={tagsStyles}
             />
           )}
@@ -132,28 +212,40 @@ const PostsCard = ({ item, router, currentUser, hasShadow = true }) => {
 
       <View className=" flex-row items-center gap-14">
         <View className=" flex-row items-center px-4 gap-4">
-          <TouchableOpacity onPress={handleLike} className="mr-3">
+          <TouchableOpacity
+            onPress={handleLike}
+            className="mr-3"
+            disabled={isLiking}
+          >
             <Entypo
               name={liked ? "heart" : "heart-outlined"}
               size={24}
               color={liked ? "red" : "black"}
             />
           </TouchableOpacity>
-          <Text className=" text-sm font-medium"> {likes?.length || 0}</Text>
+          <Text className=" text-sm font-medium">{likes?.length || 0}</Text>
         </View>
 
         <View className=" flex-row items-center mr-5 gap-4">
-          <TouchableOpacity className="mr-3">
+          <Link
+            href={{
+              pathname: "/(community)/postDetails",
+              params: { postId: item?.id },
+            }}
+            className="mr-3"
+          >
             <FontAwesome5 name="comment" size={24} color="black" />
-          </TouchableOpacity>
-          <Text className=" text-sm font-medium"> 0</Text>
+          </Link>
+          <Text className=" text-sm font-medium">
+            {" "}
+            {item?.comments?.length}{" "}
+          </Text>
         </View>
 
         <View className=" flex-row items-center px-4 gap-4">
-          <TouchableOpacity className=" mr-3">
+          <TouchableOpacity onPress={handleShare} className=" mr-3">
             <Entypo name="share-alternative" size={24} color="black" />
           </TouchableOpacity>
-          <Text className=" text-sm font-medium"> 0</Text>
         </View>
 
         <View className=" flex-row items-center mr-5 gap-4"></View>
