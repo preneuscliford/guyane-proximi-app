@@ -15,10 +15,6 @@ import { Card, Text, Chip, Badge } from "react-native-paper";
 import { router } from "expo-router";
 
 const LastItems = () => {
-  // const interfaceProduct = [
-
-  // ]
-  // const [loading, setLoading] = useState(false);
   const [product, setProduct] = useState(null);
 
   useEffect(() => {
@@ -42,13 +38,18 @@ const LastItems = () => {
       if (error instanceof Error) {
         Alert.alert(error.message);
       }
-    } finally {
-      //  setLoading(false);
     }
   }
 
+  const handleProductPress = (productId: number) => {
+    router.push({
+      pathname: "/product/details",
+      params: { id: productId },
+    });
+  };
+
   return (
-    <View className=" mt-5  p-5  " style={{ paddingBottom: 10 }}>
+    <View className="mt-5 p-5" style={{ paddingBottom: 10 }}>
       <Text className="text-2xl font-bold">Derniers produits</Text>
       <FlatList
         data={product}
@@ -56,9 +57,7 @@ const LastItems = () => {
         scrollEnabled={false}
         renderItem={({ item, index }) => (
           <ScrollView key={index} style={{ paddingBottom: 10 }}>
-            <TouchableOpacity
-              onPress={() => router.navigate("/product/details")}
-            >
+            <TouchableOpacity onPress={() => handleProductPress(item.id)}>
               <View style={{ margin: 5, width: 180 }}>
                 <Card style={{ width: "100%" }}>
                   <ProductsImage
@@ -70,24 +69,18 @@ const LastItems = () => {
                       objectFit: "cover",
                     }}
                   />
-
                   <Chip
-                    onPress={() => console.log("Pressed")}
                     style={{ marginVertical: 5, marginHorizontal: 5 }}
-                    className=" text-sm"
+                    className="text-sm"
                   >
                     {item?.category}
                   </Chip>
                   <Card.Content>
-                    <Badge
-                      size={25}
-                      style={{ alignSelf: "flex-start" }}
-                      className="font-bold"
-                    >
-                      {""} {item?.price} €
+                    <Badge size={25} style={{ alignSelf: "flex-start" }}>
+                      {`${item?.price} €`}
                     </Badge>
                     <Text variant="titleSmall" numberOfLines={1}>
-                      {item?.title}{" "}
+                      {item?.title}
                     </Text>
                   </Card.Content>
                 </Card>
