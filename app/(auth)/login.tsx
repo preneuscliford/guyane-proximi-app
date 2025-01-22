@@ -177,7 +177,7 @@ const SignIn = () => {
             <Text className="text-lg font-psemibold">
               Vous n'avez pas de compte ?
             </Text>
-            <Link className=" text-lg " href="/signUp">
+            <Link className=" text-lg " href="/(auth)/login">
               S'inscrire
             </Link>
           </View>
@@ -191,7 +191,10 @@ const SignIn = () => {
               et{" "}
               <Link className=" text-cyan-600" href={"/"}>
                 {" "}
-                la politique de confidentialité
+                la politique de confidentialité.
+              </Link>
+              <Link className=" text-lg " href="/(auth)/login">
+                S'inscrire
               </Link>
             </Text>
           </View>

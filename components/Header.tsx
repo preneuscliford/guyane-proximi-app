@@ -50,19 +50,25 @@ const Header = () => {
           className="rounded-sm justify-center items-center bg-slate-500 pl-3"
           style={{ borderRadius: 100, width: 48, height: 48 }}
         >
-          <RemoteImage
-            path={userData?.avatar_url}
-            fallback={"profil image"}
-            className="justify-center items-center"
-            style={{ borderRadius: 100, width: 48, height: 48 }}
-          ></RemoteImage>
+          {session ? (
+            <RemoteImage
+              path={userData?.avatar_url}
+              fallback={"profil image"}
+              className="justify-center items-center"
+              style={{ borderRadius: 100, width: 48, height: 48 }}
+            ></RemoteImage>
+          ) : null}
         </View>
-        <View style={{ marginLeft: 6 }}>
-          <Link href={"/(auth)/login"}>
-            <Text className=" text-xl">Bienvenue</Text>
-          </Link>
-          <Text className=" font-bold text-[20px]">{userData?.username}</Text>
-        </View>
+        {session ? (
+          <View style={{ marginLeft: 6 }}>
+            <Link href={"/(auth)/login"}>
+              <Text className=" text-xl text-rich-black">Bienvenue</Text>
+            </Link>
+            <Text className=" font-bold text-[20px] text-rich-black">
+              {userData?.username}
+            </Text>
+          </View>
+        ) : null}
       </View>
       <SearchInput />
     </View>

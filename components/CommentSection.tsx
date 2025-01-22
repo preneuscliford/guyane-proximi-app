@@ -68,7 +68,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
           value={newComment}
           right={
             <TextInput.Icon
-              disabled={isSubmitting || !newComment.trim()}
+              disabled={isSubmitting}
               icon="send"
               onPress={handleAddComment}
             />

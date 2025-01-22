@@ -14,6 +14,8 @@ import { Picker } from "@react-native-picker/picker";
 import { Alert } from "react-native";
 import { supabase } from "@/lib/supabase";
 import * as ImagePicker from "expo-image-picker";
+import { useAuth } from "../provider/AuthProvider";
+import { ActivityIndicator } from "react-native-paper";
 
 const create = () => {
   const [uploading, setUploading] = useState(false);
@@ -25,6 +27,8 @@ const create = () => {
     price: "",
     categorie: "",
   });
+
+  const { session } = useAuth();
 
   const uploadImage = async () => {
     if (image) {
@@ -145,13 +149,13 @@ const create = () => {
   }
 
   return (
-    <SafeAreaView className="h-full bg-white">
+    <SafeAreaView className="h-full bg-ghost-white">
       <ScrollView>
         <View className="p-10">
-          <Text className="text-[27px] font-bold text-textgray">
+          <Text className="text-[27px] font-bold text-rich-black">
             Ajouter un nouveau Post
           </Text>
-          <Text className=" text-gray-500">
+          <Text className=" text-rich-black">
             Créer un nouveau post a commencer a vendre
           </Text>
         </View>
@@ -173,30 +177,30 @@ const create = () => {
           <TextInput
             onChangeText={(text) => setForm({ ...form, title: text })}
             placeholder="Titre"
-            placeholderTextColor="#333"
+            placeholderTextColor="#181F27"
             value={form.title}
-            className="bg-zinc-200 text-textgray mt-3 rounded-xl py-3 px-5"
+            className=" bg-white-2 text-textgray mt-3 rounded-xl py-3 px-5"
           />
           <TextInput
             onChangeText={(text) => setForm({ ...form, desc: text })}
             placeholder="Description"
             multiline
             numberOfLines={5}
-            placeholderTextColor="#333"
+            placeholderTextColor="#181F27"
             value={form.desc}
             textAlignVertical="top"
-            className="bg-zinc-200 text-textgray mt-3 rounded-xl py-3 px-5"
+            className="bg-white-2 text-textgray mt-3 rounded-xl py-3 px-5"
           />
           <TextInput
             onChangeText={(text) => setForm({ ...form, price: text })}
             placeholder="Prix"
-            placeholderTextColor="#333"
+            placeholderTextColor="#181F27"
             keyboardType="numeric"
             value={form.price}
-            className="bg-zinc-200 text-textgray mt-3 rounded-xl py-3 px-5"
+            className="bg-white-2 text-textgray mt-3 rounded-xl py-3 px-5"
           />
 
-          <View className="mt-5 bg-zinc-200 rounded-xl">
+          <View className="mt-5 bg-white-2 rounded-xl">
             <Picker
               selectedValue={form.categorie}
               onValueChange={(itemValue, itemIndex) =>
@@ -208,7 +212,7 @@ const create = () => {
                 label="Choisissez une Catégorie"
                 value="0"
                 enabled={false}
-                style={{ color: "#333", opacity: 0.5 }}
+                style={{ color: "#181F27", opacity: 0.5 }}
               />
               <Picker.Item label="Électronique" value="Électronique" />
               <Picker.Item label="Maison" value="Maison" />
@@ -223,11 +227,25 @@ const create = () => {
 
           <View className="mt-7">
             <TouchableOpacity
-              disabled={uploading === true}
+              disabled={uploading === true || !session}
               onPress={submitForm}
-              className=" bg-slate-500 rounded-lg justify-center items-center py-4 px-3"
+              className={` ${
+                !session || uploading
+                  ? " bg-rich-black opacity-85"
+                  : " bg-deep-blue opacity-100"
+              }    rounded-lg justify-center items-center py-4 px-3`}
             >
-              <Text className=" text-white">Ajouter</Text>
+              {uploading ? (
+                <ActivityIndicator size={"small"} />
+              ) : (
+                <Text
+                  className={`${
+                    !session || uploading ? " text-gray-400" : "text-white-2"
+                  }  `}
+                >
+                  Ajouter
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>

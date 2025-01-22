@@ -7,16 +7,21 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 // import FontAwesome from "@expo/vector-icons/FontAwesome";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useAuth } from "../provider/AuthProvider";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { session } = useAuth();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
         headerShown: false,
+        tabBarStyle: {
+          backgroundColor: "#181F27",
+        },
+        tabBarActiveTintColor: "#F4F7FC",
       }}
+      initialRouteName="index"
     >
       <Tabs.Screen
         name="index"
@@ -27,7 +32,7 @@ export default function TabLayout() {
             <AntDesign
               name="home"
               size={24}
-              color={focused ? "white" : color}
+              color={focused ? "#F4F7FC" : "#858a8d"}
             />
           ),
         }}
@@ -40,7 +45,7 @@ export default function TabLayout() {
             <AntDesign
               name="search1"
               size={24}
-              color={focused ? "white" : color}
+              color={focused ? "#F4F7FC" : "#858a8d"}
             />
           ),
         }}
@@ -53,7 +58,7 @@ export default function TabLayout() {
             <MaterialIcons
               name="add-a-photo"
               size={24}
-              color={focused ? "white" : color}
+              color={focused ? "#F4F7FC" : "#858a8d"}
             />
           ),
         }}
@@ -66,11 +71,12 @@ export default function TabLayout() {
             <FontAwesome6
               name="users"
               size={24}
-              color={focused ? "white" : color}
+              color={focused ? "#F4F7FC" : "#858a8d"}
             />
           ),
         }}
       />
+
       <Tabs.Screen
         name="(profile)"
         options={{
@@ -79,7 +85,7 @@ export default function TabLayout() {
             <AntDesign
               name="profile"
               size={24}
-              color={focused ? "white" : color}
+              color={focused ? "#F4F7FC" : "#858a8d"}
             />
           ),
         }}

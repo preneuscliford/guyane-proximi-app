@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabase";
 import ProductsImage from "./ProductsImage";
 import { Card, Text, Chip, Badge } from "react-native-paper";
 import { router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
 const LastItems = () => {
   const [product, setProduct] = useState(null);
@@ -50,7 +51,10 @@ const LastItems = () => {
 
   return (
     <View className="mt-5 p-5" style={{ paddingBottom: 10 }}>
-      <Text className="text-2xl font-bold">Derniers produits</Text>
+      <StatusBar style="light" backgroundColor="#181F27" />
+      <Text className="text-2xl font-bold text-rich-black">
+        Derniers produits
+      </Text>
       <FlatList
         data={product}
         numColumns={2}
@@ -59,7 +63,7 @@ const LastItems = () => {
           <ScrollView key={index} style={{ paddingBottom: 10 }}>
             <TouchableOpacity onPress={() => handleProductPress(item.id)}>
               <View style={{ margin: 5, width: 180 }}>
-                <Card style={{ width: "100%" }}>
+                <Card style={{ width: "100%", backgroundColor: "#F5F8FD" }}>
                   <ProductsImage
                     path={item?.imageUrl}
                     fallback={"product image"}
@@ -70,16 +74,31 @@ const LastItems = () => {
                     }}
                   />
                   <Chip
-                    style={{ marginVertical: 5, marginHorizontal: 5 }}
+                    style={{
+                      marginVertical: 5,
+                      marginHorizontal: 5,
+                      backgroundColor: "#cccdd1",
+                    }}
                     className="text-sm"
                   >
                     {item?.category}
                   </Chip>
                   <Card.Content>
-                    <Badge size={25} style={{ alignSelf: "flex-start" }}>
-                      {`${item?.price} €`}
+                    <Badge
+                      size={25}
+                      style={{
+                        alignSelf: "flex-start",
+                        color: "#EAEDF1",
+                        backgroundColor: "#181F27",
+                      }}
+                    >
+                      {` ${item?.price} € `}
                     </Badge>
-                    <Text variant="titleSmall" numberOfLines={1}>
+                    <Text
+                      className=" text-rich-black"
+                      variant="titleSmall"
+                      numberOfLines={1}
+                    >
                       {item?.title}
                     </Text>
                   </Card.Content>

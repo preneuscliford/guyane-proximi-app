@@ -117,19 +117,19 @@ const index = () => {
   }
 
   return (
-    <SafeAreaView className=" h-full bg-white ">
+    <SafeAreaView className=" h-full bg-ghost-white ">
       <StatusBar style="light" backgroundColor="#0a7ea4" />
       <Appbar.Header style={{ backgroundColor: "white" }}>
         <Appbar.Content title="Title" />
         <Appbar.Action
           icon="heart-outline"
           size={28}
-          onPress={() => router.push("/(community)/notifications")}
+          onPress={() => router.push("/(tabs)/(community)/notifications")}
         />
         <Appbar.Action
           icon="plus-box-outline"
           size={28}
-          onPress={() => router.push("/(community)/create")}
+          onPress={() => router.push("/(tabs)/(community)/create")}
         />
         <TouchableOpacity onPress={() => router.push("/(profile)")}>
           <RemoteImage

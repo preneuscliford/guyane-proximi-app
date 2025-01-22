@@ -1,8 +1,15 @@
 import { StyleSheet, Text, View } from "react-native";
-import React from "react";
-import { Stack } from "expo-router";
+import React, { useEffect } from "react";
+import { Stack, useRouter } from "expo-router";
+import { useAuth } from "@/app/provider/AuthProvider";
 
 const profileLayout = () => {
+  const router = useRouter();
+
+  const { session } = useAuth();
+
+  if (!session) router.push("/(auth)/login");
+
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />

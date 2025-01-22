@@ -67,7 +67,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView className="bg-white flex-1">
+    <ScrollView className="bg-ghost-white flex-1">
       <SafeAreaView>
         <Header />
         <Slider />
@@ -83,7 +83,10 @@ export default function HomeScreen() {
           (category) =>
             category && (
               <View key={category} className="mt-6 px-4">
-                <Text variant="titleLarge" className="font-bold mb-4">
+                <Text
+                  variant="titleLarge"
+                  className="font-bold mb-4 text-ice-white"
+                >
                   {category}
                 </Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>

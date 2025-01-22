@@ -1,6 +1,14 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Image,
+  FlatList,
+} from "react-native";
 import React from "react";
 import { router } from "expo-router";
+import index from "@/app/(tabs)/(community)";
 
 const categories = [
   {
@@ -63,24 +71,41 @@ const Cathegory = () => {
 
   return (
     <View className="mt-5 px-5">
-      <Text className="text-2xl font-bold">Catégories</Text>
-      <View className="flex-row flex-wrap justify-between mt-5">
-        {categories.map((item) => (
-          <TouchableOpacity
-            key={item.id}
-            className="w-[23%] items-center mb-4"
-            onPress={() => handleCategoryPress(item.value)}
+      <Text className="text-2xl font-bold text-rich-black">Catégories</Text>
+      <FlatList
+        data={categories}
+        numColumns={4}
+        renderItem={({ item, index }) => (
+          <View
+            className=" flex-1 flex-row flex-wrap justify-center items-center mt-5 border"
+            style={{
+              borderWidth: 1,
+              borderColor: "#EAEDF1",
+              margin: 5,
+              borderRadius: 5,
+            }}
           >
-            <View className="bg-zinc-200 rounded-lg p-2 w-14 h-14 items-center justify-center">
-              <Image
-                source={item.icon}
-                style={{ width: 30, height: 30, objectFit: "contain" }}
-              />
-            </View>
-            <Text className="text-xs text-center mt-1">{item.name}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+            <TouchableOpacity
+              key={index}
+              className="w-[23%] items-center mb-4"
+              onPress={() => handleCategoryPress(item.value)}
+            >
+              <View className=" rounded-lg p-2 w-14 h-14 items-center justify-center">
+                <Image
+                  source={item.icon}
+                  style={{ width: 30, height: 30, objectFit: "contain" }}
+                />
+              </View>
+              <Text
+                numberOfLines={1}
+                className="text-xs text-center mt-1 text-rich-black"
+              >
+                {item.name}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      />
     </View>
   );
 };

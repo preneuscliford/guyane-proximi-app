@@ -16,14 +16,21 @@ import Avatar from "@/components/Avatar";
 import { Button, TextInput, Text } from "react-native-paper";
 
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 
 export default function Account() {
   const [loading, setLoading] = useState(true);
-  const [username, setUsername] = useState("");
-  const [website, setWebsite] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const [form, setForm] = useState({
+    username: "",
+    website: "",
+    avatarUrl: "",
+    phone: "",
+    address: "",
+    bio: "",
+  });
 
   const { session } = useAuth();
+  const router = useRouter();
 
   if (!session) {
     return <Redirect href={"/"} />;
@@ -38,19 +45,23 @@ export default function Account() {
       setLoading(true);
       if (!session?.user) throw new Error("No user on the session!");
 
-      const { data, error, status } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
-        .select(`username, website, avatar_url`)
+        .select(`username, website, avatar_url, phone, address, bio`)
         .eq("id", session?.user.id)
         .single();
-      if (error && status !== 406) {
-        throw error;
-      }
+
+      if (error && error.status !== 406) throw error;
 
       if (data) {
-        setUsername(data.username);
-        setWebsite(data.website);
-        setAvatarUrl(data.avatar_url);
+        setForm({
+          username: data.username || "",
+          website: data.website || "",
+          avatarUrl: data.avatar_url || "",
+          phone: data.phone || "",
+          address: data.address || "",
+          bio: data.bio || "",
+        });
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -61,35 +72,30 @@ export default function Account() {
     }
   }
 
-  async function updateProfile({
-    username,
-    website,
-    avatar_url,
-  }: {
-    username: string;
-    website: string;
-    avatar_url: string;
-  }) {
+  async function updateProfile() {
     try {
       setLoading(true);
       if (!session?.user) throw new Error("No user on the session!");
 
       const updates = {
         id: session?.user.id,
-        username,
-        website,
-        avatar_url,
+        username: form.username,
+        website: form.website,
+        avatar_url: form.avatarUrl,
+        phone: form.phone,
+        address: form.address,
+        bio: form.bio,
         updated_at: new Date(),
       };
 
       const { error } = await supabase.from("profiles").upsert(updates);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
+      Alert.alert("Succès", "Profil mis à jour avec succès");
+      router.back();
     } catch (error) {
       if (error instanceof Error) {
-        Alert.alert(error.message);
+        Alert.alert("Erreur", error.message);
       }
     } finally {
       setLoading(false);
@@ -97,106 +103,77 @@ export default function Account() {
   }
 
   return (
-    <SafeAreaView>
-      <ScrollView className=" h-full bg-white px-4">
-        <View>
+    <SafeAreaView className="flex-1 bg-white">
+      <ScrollView className="px-4 py-6">
+        <View className="items-center mb-6">
           <Avatar
             size={120}
-            url={avatarUrl}
+            url={form.avatarUrl}
             onUpload={(url: string) => {
-              setAvatarUrl(url);
-              updateProfile({ username, website, avatar_url: url });
+              setForm({ ...form, avatarUrl: url });
             }}
           />
+        </View>
 
-          <View style={[styles.verticallySpaced, styles.mt20]}>
-            {/* <View className=" pb-4">
+        <View className="space-y-4">
           <TextInput
-            error={errorEmail}
-            onTextInput={() => validateLogin(form.email, form.password)}
             label="Email"
-            onChangeText={(text) => setForm({ ...form, email: text })}
-            value={form.email}
+            value={session?.user?.email}
+            editable={false}
+            left={<TextInput.Icon icon="email" />}
           />
-        </View> */}
-            <TextInput
-              placeholder="Email"
-              value={session?.user?.email}
-              editable={false}
-              left={<TextInput.Icon icon="email" />}
-            />
-          </View>
-          <View style={styles.verticallySpaced}>
-            <TextInput
-              placeholder="Username"
-              value={username || ""}
-              onChangeText={(text) => setUsername(text)}
-              left={<TextInput.Icon icon="account" />}
-            />
-          </View>
-          <View style={styles.verticallySpaced}>
-            <TextInput
-              placeholder="Télephone"
-              value={""}
-              keyboardType="phone-pad"
-              onChangeText={(text) => {}}
-              left={<TextInput.Icon icon="phone" />}
-            />
-          </View>
-          <View style={styles.verticallySpaced}>
-            <TextInput
-              placeholder="Adresse"
-              value={""}
-              onChangeText={(text) => {}}
-              left={<TextInput.Icon icon="crosshairs-gps" />}
-            />
-          </View>
-          <View style={styles.verticallySpaced}>
-            <TextInput
-              placeholder="Website"
-              value={website || ""}
-              onChangeText={(text) => setWebsite(text)}
-              left={<TextInput.Icon icon="web" />}
-            />
-          </View>
-          <View style={styles.verticallySpaced}>
-            <TextInput
-              className=" h-32"
-              contentStyle={{
-                flexDirection: "row",
 
-                paddingVertical: 15,
-                alignItems: "flex-start",
-              }}
-              multiline
-              placeholder="bio"
-              value={"" || ""}
-              onChangeText={(text) => {}}
-              // left={<TextInput.Icon icon="web" />}
-            />
-          </View>
+          <TextInput
+            label="Nom d'utilisateur"
+            value={form.username}
+            onChangeText={(text) => setForm({ ...form, username: text })}
+            left={<TextInput.Icon icon="account" />}
+          />
 
-          <View style={[styles.verticallySpaced, styles.mt20]}>
-            <Button
-              className=" p-5 bg-secondary-200 rounded-3xl"
-              disabled={loading}
-              onPress={() =>
-                updateProfile({ username, website, avatar_url: avatarUrl })
-              }
-              style={{
-                width: "100%",
-                padding: 5,
-                borderRadius: 10,
-                backgroundColor: "#52B2CF",
-              }}
-            >
-              {loading ? "Loading ..." : "Mise à jour"}
-            </Button>
-          </View>
+          <TextInput
+            label="Téléphone"
+            value={form.phone}
+            keyboardType="phone-pad"
+            onChangeText={(text) => setForm({ ...form, phone: text })}
+            left={<TextInput.Icon icon="phone" />}
+          />
 
-          {/* <View style={styles.verticallySpaced}>
-        <Button title="Sign Out" onPress={() => supabase.auth.signOut()} />
-      </View> */}
+          <TextInput
+            label="Adresse"
+            value={form.address}
+            onChangeText={(text) => setForm({ ...form, address: text })}
+            left={<TextInput.Icon icon="map-marker" />}
+          />
+
+          <TextInput
+            label="Site web"
+            value={form.website}
+            onChangeText={(text) => setForm({ ...form, website: text })}
+            left={<TextInput.Icon icon="web" />}
+          />
+
+          <TextInput
+            label="Bio"
+            value={form.bio}
+            onChangeText={(text) => setForm({ ...form, bio: text })}
+            multiline
+            numberOfLines={4}
+            style={{ height: 100 }}
+          />
+
+          <Button
+            mode="contained"
+            onPress={updateProfile}
+            loading={loading}
+            disabled={loading}
+            style={{
+              marginTop: 20,
+              backgroundColor: "#0a7ea4",
+              paddingVertical: 8,
+            }}
+          >
+            {loading ? "Mise à jour..." : "Mettre à jour le profil"}
+          </Button>
         </View>
       </ScrollView>
     </SafeAreaView>

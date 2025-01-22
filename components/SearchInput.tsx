@@ -17,13 +17,16 @@ const SearchInput = () => {
     router.push(`/search/${searchQuery}`);
   };
   return (
-    <View className=" rounded-2xl flex-row items-center mt-5">
+    <View className=" rounded-2xl flex-row items-center mt-5 ">
       <Searchbar
         placeholder="Search"
         onChangeText={(e) => setSearchQuery(e)}
         value={searchQuery}
         onIconPress={onIconPress}
+        iconColor="#181F27"
         onEndEditing={endEditing}
+        style={{ backgroundColor: "#FCFDFE" }}
+        placeholderTextColor={"#181F27"}
       />
     </View>
   );
