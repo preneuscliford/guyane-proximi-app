@@ -67,7 +67,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView className="bg-ghost-white flex-1">
+    <ScrollView scrollEnabled={true} className="bg-ghost-white flex-1">
       <SafeAreaView>
         <Header />
         <Slider />

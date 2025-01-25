@@ -74,6 +74,8 @@ const Cathegory = () => {
       <Text className="text-2xl font-bold text-rich-black">Catégories</Text>
       <FlatList
         data={categories}
+        scrollEnabled={false}
+        nestedScrollEnabled={true}
         numColumns={4}
         renderItem={({ item, index }) => (
           <View

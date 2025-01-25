@@ -9,7 +9,12 @@ import {
 } from "react-native";
 import React, { useEffect, useState } from "react";
 
-import { ActivityIndicator, Appbar, Avatar } from "react-native-paper";
+import {
+  ActivityIndicator,
+  Appbar,
+  Avatar,
+  SegmentedButtons,
+} from "react-native-paper";
 import { Platform } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import RemoteImage from "@/components/RemoteImage";
@@ -144,7 +149,7 @@ const index = () => {
           />
         </TouchableOpacity>
       </Appbar.Header>
-      <View></View>
+
       <FlatList
         data={post}
         showsVerticalScrollIndicator={false}
@@ -155,6 +160,18 @@ const index = () => {
         )}
         onEndReached={getPosts}
         onEndReachedThreshold={0}
+        ListHeaderComponent={
+          <SegmentedButtons
+            value="new"
+            onValueChange={(value) => {}}
+            buttons={[
+              { value: "new", label: "Nouveaux" },
+              { value: "trending", label: "Tendances" },
+              { value: "myPosts", label: "Mes posts" },
+            ]}
+            style={{ marginBottom: 16 }}
+          />
+        }
         ListFooterComponent={
           hasMore ? (
             <View style={{ marginVertical: post?.length === 0 ? 200 : 30 }}>
