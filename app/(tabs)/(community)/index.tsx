@@ -131,7 +131,7 @@ const index = () => {
           size={28}
           onPress={() => router.push("/(tabs)/(community)/create")}
         />
-        <TouchableOpacity onPress={() => router.push("/(profile)")}>
+        <TouchableOpacity onPress={() => router.push("/(tabs)/(profile)")}>
           <RemoteImage
             path={userData?.avatar_url}
             fallback="profile image"

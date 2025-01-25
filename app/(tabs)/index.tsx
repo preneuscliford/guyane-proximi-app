@@ -79,7 +79,7 @@ export default function HomeScreen() {
         <LastItems />
 
         {/* Section par Catégories */}
-        {categories.map(
+        {/* {categories.map(
           (category) =>
             category && (
               <View key={category} className="mt-6 px-4">
@@ -131,7 +131,7 @@ export default function HomeScreen() {
                 </ScrollView>
               </View>
             )
-        )}
+        )} */}
       </SafeAreaView>
     </ScrollView>
   );

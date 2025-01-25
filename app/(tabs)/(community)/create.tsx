@@ -62,7 +62,7 @@ const create = () => {
         />
       </Appbar.Header>
       <View className=" my-5  flex-row  ">
-        <TouchableOpacity onPress={() => router.push("/(profile)")}>
+        <TouchableOpacity onPress={() => router.push("/(tabs)/(profile)")}>
           <RemoteImage
             path={userData?.avatar_url}
             fallback="profile image"
