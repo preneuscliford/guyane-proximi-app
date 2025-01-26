@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,8 +8,6 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
-import React, { useEffect, useState } from "react";
-
 import {
   ActivityIndicator,
   Appbar,
@@ -36,74 +35,55 @@ interface Post {
 const index = () => {
   const [post, setPost] = useState<Post[]>([]);
   const { session, user, userData } = useAuth();
-
-  console.log(userData);
-
+  const [filter, setFilter] = useState<"new" | "trending" | "myPosts">("new"); // Filtre actif
   const [hasMore, setHasMore] = useState(true);
   const router = useRouter();
 
-  async function getUserData({ userId }: { userId: string }) {
-    try {
-      if (!session?.user) throw new Error("No user on the session!");
-
-      const { data, error, status } = await supabase
-        .from("profiles")
-        .select(`username, website, avatar_url,`)
-        .eq("id", userId)
-        .single();
-      if (error && status !== 406) {
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      if (error instanceof Error) {
-        console.log(error);
-      }
-    } finally {
-    }
-  }
-
-  const handleEvent = async ({ payload }: { payload: any }) => {
-    if (payload.eventType === "INSERT" && payload?.new?.id) {
-      let newPost = { ...payload.new };
-      let res = await getUserData({ userId: newPost.userId });
-      if (res) {
-        newPost = { ...newPost, profiles: { ...res } };
-
-        setPost((prev) => [newPost, ...prev]);
-      }
-    }
-  };
-
-  useEffect(() => {
-    let postChannel = supabase
-      .channel("posts")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "posts" },
-        (payload) => {
-          handleEvent({ payload });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(postChannel);
-    };
-  }, []);
-
+  // Fonction pour récupérer les posts en fonction du filtre
   async function getPosts() {
     if (!hasMore) return null;
     limit = limit + 4;
+
     try {
-      const { data, error, status } = await supabase
+      let query = supabase
         .from("posts")
         .select(
           "*, profiles(id, username, avatar_url), postLikes(*), comments(*)"
         )
-        .order("created_at", { ascending: false })
         .limit(limit);
+
+      // Appliquer les filtres
+      if (filter === "new") {
+        query = query.order("created_at", { ascending: false });
+      } else if (filter === "trending") {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+        const { data, error } = await query
+          .gt("created_at", oneWeekAgo.toISOString()) // Posts des 7 derniers jours
+          .order("created_at", { ascending: false }); // Ordre initial
+
+        if (error) throw error;
+
+        // Calculer la popularité (likes + commentaires) pour chaque post
+        const trendingPosts = (data || []).sort((a, b) => {
+          const aPopularity =
+            (a.postLikes?.length || 0) + (a.comments?.length || 0);
+          const bPopularity =
+            (b.postLikes?.length || 0) + (b.comments?.length || 0);
+          return bPopularity - aPopularity; // Trier par popularité décroissante
+        });
+
+        setPost(trendingPosts);
+        setHasMore(trendingPosts.length === limit);
+        return; // Les posts avec le plus de likes
+      } else if (filter === "myPosts" && user) {
+        query = query
+          .eq("userId", user.id)
+          .order("created_at", { ascending: false });
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         throw error;
@@ -117,9 +97,21 @@ const index = () => {
       if (error instanceof Error) {
         Alert.alert(error.message);
       }
-    } finally {
     }
   }
+
+  // Gérer les changements de filtre
+  const handleFilterChange = (value: "new" | "trending" | "myPosts") => {
+    setFilter(value);
+    setHasMore(true); // Réinitialiser la pagination
+    limit = 0; // Réinitialiser la limite
+    setPost([]); // Réinitialiser les posts
+    getPosts(); // Recharger les posts avec le nouveau filtre
+  };
+
+  useEffect(() => {
+    getPosts();
+  }, [filter]);
 
   return (
     <SafeAreaView className=" h-full bg-ghost-white ">
@@ -162,8 +154,8 @@ const index = () => {
         onEndReachedThreshold={0}
         ListHeaderComponent={
           <SegmentedButtons
-            value="new"
-            onValueChange={(value) => {}}
+            value={filter}
+            onValueChange={handleFilterChange as any}
             buttons={[
               { value: "new", label: "Nouveaux" },
               { value: "trending", label: "Tendances" },
