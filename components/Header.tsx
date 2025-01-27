@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { Searchbar } from "react-native-paper";
 import SearchInput from "./SearchInput";
 import { Link } from "expo-router";
+import AntDesign from "@expo/vector-icons/AntDesign";
 
 interface UserData {
   avatar_url: string;
@@ -57,7 +58,11 @@ const Header = () => {
               className="justify-center items-center"
               style={{ borderRadius: 100, width: 48, height: 48 }}
             ></RemoteImage>
-          ) : null}
+          ) : (
+            <View>
+              <AntDesign name="user" size={24} color="black" />
+            </View>
+          )}
         </View>
         {session ? (
           <View style={{ marginLeft: 6 }}>

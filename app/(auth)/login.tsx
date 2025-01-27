@@ -14,6 +14,7 @@ import { Button, TextInput, Text } from "react-native-paper";
 
 import { Link, useNavigation } from "expo-router";
 import { supabase } from "@/lib/supabase";
+import { StatusBar } from "expo-status-bar";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -104,9 +105,14 @@ const SignIn = () => {
 
   return (
     <SafeAreaView>
-      <ScrollView className=" h-full bg-light-gray">
+      <StatusBar style="dark" backgroundColor="#F5F8FD" />
+      <ScrollView className=" h-full bg-ghost-white">
         <View className="w-full h-full justify-center min-h-[85vh] px-4 py-6 ">
-          <Text variant="displayLarge" style={{ fontWeight: "bold" }}>
+          <Text
+            className=" text-deep-blue"
+            variant="displayLarge"
+            style={{ fontWeight: "bold" }}
+          >
             Hé, bon retour!
           </Text>
 
@@ -114,22 +120,33 @@ const SignIn = () => {
             <View className=" pb-4">
               <TextInput
                 error={errorEmail}
-                onTextInput={() => validateLogin(form.email, form.password)}
+                onChangeText={(text) => {
+                  setForm({ ...form, email: text });
+                  validateLogin(form.email, form.password);
+                }}
                 label="Email"
-                onChangeText={(text) => setForm({ ...form, email: text })}
                 value={form.email}
+                style={{
+                  backgroundColor: "#FCFDFE",
+                }}
               />
             </View>
 
             <View className=" pb-4">
               <TextInput
                 error={errorPassword}
-                onTextInput={() => validateLogin(form.email, form.password)}
+                // onTextInput={(text) => validateLogin(form.email, form.password)}
                 label="Mot de passe"
                 secureTextEntry={secureTextEntry}
-                onChangeText={(text) => setForm({ ...form, password: text })}
+                onChangeText={(text) => {
+                  setForm({ ...form, password: text });
+                  validateLogin(form.email, form.password);
+                }}
                 value={form.password}
                 right={<TextInput.Icon icon={icon} onPress={handleIconPress} />}
+                style={{
+                  backgroundColor: "#FCFDFE",
+                }}
               />
               {error && (
                 <Text variant="titleSmall" style={{ color: "red" }}>
@@ -144,16 +161,18 @@ const SignIn = () => {
             </TouchableOpacity>
             <View className="mt-7 ">
               <Button
-                icon="camera"
+                icon={isSubmitting ? "loading" : ""}
                 mode="contained"
-                className=" p-5 bg-secondary-200 rounded-3xl"
+                className=" p-5 bg-secondary-200 rounded-3xl color-lime-50"
                 onPress={submitForm}
                 disabled={isSubmitting || errorEmail || errorPassword}
                 style={{
                   width: "100%",
                   padding: 5,
                   borderRadius: 10,
-                  backgroundColor: "#2D6A4F",
+                  backgroundColor: "#181F27",
+                  opacity:
+                    isSubmitting || errorEmail || errorPassword ? 0.5 : 1,
                 }}
               >
                 Se Connecter
@@ -177,24 +196,21 @@ const SignIn = () => {
             <Text className="text-lg font-psemibold">
               Vous n'avez pas de compte ?
             </Text>
-            <Link className=" text-lg " href="/(auth)/login">
+            <Link className="text-sky-blue text-lg " href="/(auth)/signUp">
               S'inscrire
             </Link>
           </View>
           <View className=" mt-10  justify-center items-center">
             <Text className="text-sm ">
               En vous inscrivant, vous acceptez{" "}
-              <Link className=" text-cyan-600" href={"/"}>
+              <Link className=" text-sky-blue" href={"/"}>
                 {" "}
                 l'avis d'utilisation{" "}
               </Link>
               et{" "}
-              <Link className=" text-cyan-600" href={"/"}>
+              <Link className=" text-sky-blue" href={"/"}>
                 {" "}
                 la politique de confidentialité.
-              </Link>
-              <Link className=" text-lg " href="/(auth)/login">
-                S'inscrire
               </Link>
             </Text>
           </View>

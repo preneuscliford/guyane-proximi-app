@@ -1,16 +1,7 @@
-import { useState, useEffect, lazy } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import {
-  StyleSheet,
-  View,
-  Alert,
-  Image,
-  Button,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
+import { StyleSheet, View, Alert, Image, Button } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 
 interface Props {
   size: number;
@@ -67,6 +58,7 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
       }
 
       const image = result.assets[0];
+      console.log("Got image", image);
 
       if (!image.uri) {
         throw new Error("No image uri!"); // Realistically, this should never happen, but just in case...
@@ -101,43 +93,30 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
   }
 
   return (
-    <View className="flex flex-col items-center mt-4">
+    <View>
       {avatarUrl ? (
-        <TouchableOpacity
-          onPress={uploadAvatar}
-          className=" relative justify-center items-center"
-        >
-          <Image
-            source={{ uri: avatarUrl }}
-            accessibilityLabel="Avatar"
-            style={[avatarSize, styles.avatar, styles.image]}
-          />
-
-          {!uploading && (
-            <View style={{ position: "absolute", bottom: 6, right: 4 }}>
-              <FontAwesome6 name="edit" size={24} color="white" />
-            </View>
-          )}
-
-          {uploading && <ActivityIndicator size="large" className="absolute" />}
-        </TouchableOpacity>
+        <Image
+          source={{ uri: avatarUrl }}
+          accessibilityLabel="Avatar"
+          style={[avatarSize, styles.avatar, styles.image]}
+        />
       ) : (
         <View style={[avatarSize, styles.avatar, styles.noImage]} />
       )}
+      <View>
+        <Button
+          title={uploading ? "Uploading ..." : "Upload"}
+          onPress={uploadAvatar}
+          disabled={uploading}
+        />
+      </View>
     </View>
   );
 }
-//  <View>
-//    <Button
-//      title={uploading ? "Uploading ..." : "Upload"}
-//      onPress={uploadAvatar}
-//      disabled={uploading}
-//    />
-//  </View>;
 
 const styles = StyleSheet.create({
   avatar: {
-    borderRadius: 15,
+    borderRadius: 5,
     overflow: "hidden",
     maxWidth: "100%",
   },
@@ -150,6 +129,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderStyle: "solid",
     borderColor: "rgb(200, 200, 200)",
-    borderRadius: 10,
+    borderRadius: 5,
   },
 });

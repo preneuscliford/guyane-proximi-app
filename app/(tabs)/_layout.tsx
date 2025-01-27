@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { Tabs, usePathname } from "expo-router";
 import React from "react";
 
 import { Colors } from "@/constants/Colors";
@@ -11,12 +11,17 @@ import { useAuth } from "../provider/AuthProvider";
 
 export default function TabLayout() {
   const { session } = useAuth();
+  const pathname = usePathname();
+
+  const isEditeProfile = pathname.startsWith("/editProfile");
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+
         tabBarStyle: {
+          display: isEditeProfile ? "none" : "flex",
           backgroundColor: "#181F27",
         },
         tabBarActiveTintColor: "#F4F7FC",

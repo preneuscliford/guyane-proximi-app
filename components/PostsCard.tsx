@@ -229,7 +229,7 @@ const PostsCard = ({
         <View className=" flex-row items-center mr-5 gap-4">
           <Link
             href={{
-              pathname: "/(community)/postDetails",
+              pathname: "/(tabs)/(community)/postDetails",
               params: { postId: item?.id },
             }}
             className="mr-3"

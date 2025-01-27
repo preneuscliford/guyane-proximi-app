@@ -14,6 +14,7 @@ import { Button, TextInput, Text } from "react-native-paper";
 import { Link, router } from "expo-router";
 import { Pressable } from "react-native";
 import { supabase } from "@/lib/supabase";
+import { StatusBar } from "expo-status-bar";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -37,7 +38,7 @@ const SignUp = () => {
   });
 
   const submitForm = async () => {
-    if (!form.username || !form.email || !form.password) {
+    if (!form.email || !form.password) {
       setError("Veuillez remplir tous les champs");
       return;
     }
@@ -50,11 +51,6 @@ const SignUp = () => {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: form.email.trim(),
         password: form.password.trim(),
-        options: {
-          data: {
-            username: form.username.trim(),
-          },
-        },
       });
 
       if (authError) {
@@ -67,27 +63,7 @@ const SignUp = () => {
         return;
       }
 
-      if (authData.session) {
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: authData.session.user.id,
-          username: form.username.trim(),
-          email: form.email.trim(),
-          updated_at: new Date(),
-        });
-
-        if (profileError) {
-          console.error("Erreur lors de la création du profil:", profileError);
-          setError("Erreur lors de la création du profil");
-          return;
-        }
-
-        router.push("/(profile)/editProfile");
-      } else {
-        Alert.alert(
-          "Vérification par email",
-          "Veuillez vérifier votre boîte mail pour confirmer votre inscription."
-        );
-      }
+      router.push("/(tabs)/(profile)/editProfile");
     } catch (error) {
       console.error(error);
       setError("Une erreur inattendue est survenue");
@@ -110,52 +86,59 @@ const SignUp = () => {
     return password.length >= 8;
   };
 
-  const validateLogin = (email: string, password: string) => {
+  const validateLogin = (email: string, password: string): boolean => {
     setError("");
-    if (!validateEmail(email)) {
-      SetErrorEmail(true);
-    } else {
-      SetErrorEmail(false);
-    }
-    if (!validatePassword(password)) {
-      setErrorPassword(true);
-    } else {
-      setErrorPassword(false);
-    }
+    const isEmailValid = validateEmail(email);
+    const isPasswordValid = validatePassword(password);
+
+    SetErrorEmail(!isEmailValid);
+    setErrorPassword(!isPasswordValid);
+
+    return isEmailValid && isPasswordValid; // Return true if both are valid
   };
 
   return (
     <SafeAreaView>
-      <ScrollView className=" h-full bg-light-gray">
+      <StatusBar style="dark" backgroundColor="#F5F8FD" />
+      <ScrollView className=" h-full bg-ghost-white">
         <View className=" justify-center min-h-[85vh] px-4 py-6 ">
           {/* <Image
             source={images.logo}
             className="w-[136px] h-[35px]"
             resizeMode="contain"
           /> */}
-          <Text variant="displayLarge" style={{ fontWeight: "600" }}>
+          <Text
+            variant="displayLarge"
+            style={{ fontWeight: "600", color: "#181F27" }}
+          >
             Bienvenue!
           </Text>
           <View className="mt-4 ">
             <View className=" pb-4">
               <TextInput
                 error={errorEmail}
-                onTextInput={() => validateLogin(form.email, form.password)}
+                onBlur={() => validateLogin(form.email, form.password)}
                 label="Email"
                 onChangeText={(text) => setForm({ ...form, email: text })}
                 value={form.email}
+                style={{
+                  backgroundColor: "#FCFDFE",
+                }}
               />
             </View>
 
             <View className=" pb-4">
               <TextInput
                 error={errorPassword}
-                onTextInput={() => validateLogin(form.email, form.password)}
+                onBlur={() => validateLogin(form.email, form.password)}
                 label="Mot de passe"
                 secureTextEntry={secureTextEntry}
                 onChangeText={(text) => setForm({ ...form, password: text })}
                 value={form.password}
                 right={<TextInput.Icon icon={icon} onPress={handleIconPress} />}
+                style={{
+                  backgroundColor: "#FCFDFE",
+                }}
               />
 
               {error && (
@@ -168,12 +151,20 @@ const SignUp = () => {
 
             <View className="mt-7">
               <Button
-                icon="camera"
+                icon={isSubmitting ? "loading" : ""}
                 mode="contained"
                 className=" p-5 bg-secondary-200 rounded-3xl"
                 onPress={submitForm}
                 disabled={isSubmitting || errorEmail || errorPassword}
-                style={{ width: "100%", padding: 5, borderRadius: 10 }}
+                style={{
+                  width: "100%",
+                  padding: 5,
+                  borderRadius: 10,
+                  backgroundColor: "#181F27",
+
+                  opacity:
+                    isSubmitting || errorEmail || errorPassword ? 0.5 : 1,
+                }}
               >
                 S'inscrir
               </Button>
