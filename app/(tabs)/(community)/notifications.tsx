@@ -84,7 +84,7 @@ const Notifications = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white p-4">
+    <SafeAreaView className="flex-1 bg-ghost-white p-4">
       <FlatList
         data={notifications}
         keyExtractor={(item) => item.id.toString()}

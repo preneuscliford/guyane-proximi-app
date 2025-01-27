@@ -97,10 +97,10 @@ const EditProfil = () => {
 
   return (
     <SafeAreaView className="h-full bg-white">
-      <StatusBar style="light" backgroundColor="#0a7ea4" />
+      <StatusBar style="light" backgroundColor="#181F27" />
       <ScrollView className="h-full">
         {/* En-tête du profil */}
-        <View className="bg-[#0a7ea4] w-[100%] h-[200px] rounded-br-[80px]">
+        <View className="bg-[#181F27] w-[100%] h-[200px] rounded-br-[80px]">
           <View className="flex-row items-center justify-between px-4 py-6">
             <Text className="font-medium text-white">Profile</Text>
             <Link href={"/(tabs)/(profile)/editProfile"}>

@@ -40,12 +40,12 @@ const RichTextEditor = ({ editorRef, onchange }: RichTextEditorProps) => {
           ),
         }}
         style={{
-          backgroundColor: "#D3D3D3",
+          backgroundColor: "#FCFDFE",
           borderTopRightRadius: 10,
           borderTopLeftRadius: 10,
         }}
         flatContainerStyle={{ paddingHorizontal: 10, gap: 3 }}
-        selectedIconTint="#2D6A4F"
+        selectedIconTint="#181F27"
         editor={editorRef}
         desabled={false}
       />
@@ -55,16 +55,16 @@ const RichTextEditor = ({ editorRef, onchange }: RichTextEditorProps) => {
         containerStyle={{
           minHeight: "80%",
           flex: 1,
-          borderWidth: 1.5,
+          borderWidth: 2,
 
           borderBottomRightRadius: 10,
           borderBottomLeftRadius: 10,
-          borderColor: "#D3D3D3",
+          borderColor: "#E5E5E5",
           padding: 5,
         }}
         editorStyle={{
-          color: "#333",
-          placeholderColor: "#D3D3D3",
+          color: "#181F27",
+          placeholderColor: "#FCFDFE",
         }}
         placeholder="Quoi de neuf"
         onChange={onchange}

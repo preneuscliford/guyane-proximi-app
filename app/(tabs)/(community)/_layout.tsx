@@ -7,7 +7,10 @@ const communiyLayout = () => {
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="create" options={{ headerShown: false }} />
-      <Stack.Screen name="notifications" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="notifications"
+        options={{ headerStyle: { backgroundColor: "#F5F8FD" } }}
+      />
       <Stack.Screen
         name="postDetails"
         options={{ headerShown: false, presentation: "modal" }}

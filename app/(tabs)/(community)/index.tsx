@@ -115,8 +115,8 @@ const index = () => {
 
   return (
     <SafeAreaView className=" h-full bg-ghost-white ">
-      <StatusBar style="light" backgroundColor="#0a7ea4" />
-      <Appbar.Header style={{ backgroundColor: "white" }}>
+      <StatusBar style="dark" backgroundColor="#F5F8FD" />
+      <Appbar.Header style={{ backgroundColor: "#F5F8FD" }}>
         <Appbar.Content title="Title" />
         <Appbar.Action
           icon="heart-outline"

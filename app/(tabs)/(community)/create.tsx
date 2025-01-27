@@ -53,8 +53,8 @@ const create = () => {
   };
 
   return (
-    <ScrollView className=" h-full bg-white ">
-      <Appbar.Header style={{ backgroundColor: "white" }}>
+    <ScrollView className=" h-full bg-ghost-white ">
+      <Appbar.Header style={{ backgroundColor: "#F5F8FD" }}>
         <Appbar.BackAction onPress={() => router.back()} />
         <Appbar.Content
           style={{ alignItems: "center" }}
@@ -94,7 +94,12 @@ const create = () => {
           className=" p-5 bg-secondary-200 rounded-3xl"
           disabled={loading}
           onPress={createPost}
-          style={{ width: "100%", padding: 5, borderRadius: 10 }}
+          style={{
+            width: "100%",
+            padding: 5,
+            borderRadius: 10,
+            backgroundColor: "#181F27",
+          }}
         >
           Post
         </Button>
