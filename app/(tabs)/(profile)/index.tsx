@@ -1,172 +1,287 @@
 import {
-  Alert,
-  Image,
+  FlatList,
+  GestureResponderEvent,
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useEffect, useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Link, useNavigation, useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useAuth } from "@/app/provider/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import RemoteImage from "@/components/RemoteImage";
+import {
+  MaterialIcons,
+  Feather,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
+import { useEffect, useState } from "react";
+import RenderHTML from "react-native-render-html";
 
+type Post = {
+  id: string;
+  created_at: string;
+  body: string;
+  userId: string;
+};
+
+type Product = {
+  id: string;
+  title: string;
+  desc: string;
+  price: number;
+  imageUrl: string;
+  category: string;
+};
 const EditProfil = () => {
-  const navigation = useNavigation();
-  const { session, user } = useAuth(); // Ajout de signOut pour la déconnexion
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [userProducts, setUserProducts] = useState<any[]>([]); // Pour stocker les produits de l'utilisateur
+  const { session, user, userData } = useAuth();
+  // const [userData, setUserData] = useState<UserData | null>(null);
 
+  const [activeTab, setActiveTab] = useState<"posts" | "products">("products");
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [userProducts, setUserProducts] = useState<any[]>([]);
   const router = useRouter();
 
-  interface UserData {
-    avatar_url: string;
-    username: string;
-    website?: string;
-  }
-
+  // ... Gardez les fonctions existantes getProfile et getUserProducts ...
   useEffect(() => {
-    if (session) {
-      getProfile();
-      getUserProducts(); // Récupérer les produits de l'utilisateur
-    }
-  }, [session]);
-
-  // Récupérer le profil de l'utilisateur
-  async function getProfile() {
-    try {
-      if (!session?.user) throw new Error("No user on the session!");
-
-      const { data, error, status } = await supabase
-        .from("profiles")
-        .select(`username, website, avatar_url`)
-        .eq("id", session?.user.id)
-        .single();
-
-      if (error && status !== 406) {
-        throw error;
-      }
-      setUserData(data as any);
-    } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert(error.message);
+    if (session?.user.id) {
+      if (activeTab === "products") {
+        loadProducts();
+      } else {
+        loadPosts();
       }
     }
-  }
+  }, [session, activeTab]);
 
-  // Récupérer les produits postés par l'utilisateur
-  async function getUserProducts() {
-    try {
-      if (!session?.user) throw new Error("No user on the session!");
+  const loadProducts = async () => {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("user_id", session!.user.id);
 
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("user_id", session.user.id); // Supposons que la table des produits a une colonne `user_id`
+    if (!error) setProducts(data as Product[]);
+  };
 
-      if (error) {
-        throw error;
-      }
-      setUserProducts(data || []);
-    } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert(
-          "Erreur lors de la récupération des produits",
-          error.message
-        );
-      }
-    }
-  }
+  const loadPosts = async () => {
+    const { data, error } = await supabase
+      .from("posts")
+      .select("*")
+      .eq("userId", session!.user.id)
+      .order("created_at", { ascending: false });
 
-  // Déconnexion de l'utilisateur
+    if (!error) setPosts(data as Post[]);
+  };
+
+  const renderProductItem = ({ item }: { item: Product }) => (
+    <TouchableOpacity className="p-4 bg-white rounded-xl shadow-md mb-4">
+      {/* <RemoteImage
+        path={item.imageUrl}
+        className="w-full h-48 rounded-lg mb-2"
+        fallback="product-placeholder"
+      />
+      <View className="flex-row justify-between items-start">
+        <Text className="text-lg font-semibold flex-1">{item.title}</Text>
+        <Text className="text-blue-600 font-bold">€{item.price}</Text>
+      </View>
+      <Text className="text-gray-500 text-sm">{item.category}</Text>
+      <Text className="text-gray-700 mt-1" numberOfLines={2}>
+        {item.desc}
+      </Text> */}
+    </TouchableOpacity>
+  );
+
+  const renderPostItem = ({ item }: { item: Post }) => (
+    <View className="p-4 bg-white rounded-xl shadow-md mb-4">
+      {/* <Text className="text-gray-500 text-sm mb-2">
+        {new Date(item.created_at).toLocaleDateString()}
+      </Text>
+      <RenderHTML
+        contentWidth={300}
+        source={{ html: item.body }}
+        baseStyle={{ fontSize: 16, lineHeight: 24 }}
+      /> */}
+    </View>
+  );
+
   const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut(); // Utilisez la fonction signOut de votre AuthProvider
-      router.navigate("/(auth)/signUp"); // Redirigez l'utilisateur vers la page d'authentification
-    } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert("Erreur lors de la déconnexion", error.message);
-      }
-    }
+    await supabase.auth.signOut();
   };
 
   return (
-    <SafeAreaView className="h-full bg-white">
+    <View className="flex-1 bg-gray-100">
       <StatusBar style="light" backgroundColor="#181F27" />
-      <ScrollView className="h-full">
-        {/* En-tête du profil */}
-        <View className="bg-[#181F27] w-[100%] h-[200px] rounded-br-[80px]">
-          <View className="flex-row items-center justify-between px-4 py-6">
-            <Text className="font-medium text-white">Profile</Text>
-            <Link href={"/(tabs)/(profile)/editProfile"}>
-              <AntDesign name="edit" size={24} color="white" />
-            </Link>
-          </View>
+
+      {/* En-tête */}
+      <View className="bg-slate-950 h-52 rounded-br-[80px] px-4">
+        <View className="flex-row justify-between items-center pt-16">
+          <Text className="text-white text-xl font-bold">Profil</Text>
+          <Link href={"/(tabs)/(profile)/editProfile"}>
+            <AntDesign name="edit" size={24} color="white" />
+          </Link>
         </View>
+      </View>
 
-        {/* Section du profil */}
-        <View className="relative justify-center items-center mt-20 px-4">
-          <View className="absolute bg-slate-50 w-[100%] h-auto px-4 rounded-[10px] pb-6">
-            <View className="relative justify-center items-center">
-              {/* Avatar */}
-              <RemoteImage
-                path={userData?.avatar_url}
-                fallback="avatarImage"
-                resizeMode="cover"
-                className="w-28 h-28 rounded-2xl justify-center items-center mt-4"
-              />
+      {/* Contenu principal */}
+      <ScrollView className="flex-1 px-4 -mt-20">
+        {/* Carte profil */}
+        <View className="bg-white rounded-3xl shadow-lg p-6 mb-6">
+          <View className=" items-center">
+            <RemoteImage
+              path={userData?.avatar_url}
+              fallback="profile-placeholder"
+              className="w-24 h-24 rounded-full"
+            />
+          </View>
+          <View className="mt-2 items-center">
+            <Text className="text-2xl font-bold text-gray-900">
+              {userData?.username}
+            </Text>
+            <Text className="text-gray-500 mt-1">{session?.user?.email}</Text>
+          </View>
 
-              {/* Nom d'utilisateur et email */}
-              <View className="mt-2">
-                <Text className="text-center font-bold">
-                  {userData?.username}
-                </Text>
-                <Text className="text-center text-gray-500">
-                  {session?.user?.email}
-                </Text>
-              </View>
-
-              {/* Bouton de déconnexion */}
-              <TouchableOpacity
-                onPress={handleSignOut}
-                className="mt-4 bg-red-500 px-6 py-2 rounded-full"
+          {/* Onglets */}
+          <View className="flex-row justify-around my-4">
+            <TouchableOpacity
+              className={`pb-2 px-4 ${
+                activeTab === "products" ? "border-b-2 border-blue-500" : ""
+              }`}
+              onPress={() => setActiveTab("products")}
+            >
+              <Text
+                className={`font-semibold ${
+                  activeTab === "products" ? "text-blue-500" : "text-gray-500"
+                }`}
               >
-                <Text className="text-white font-bold">Se déconnecter</Text>
-              </TouchableOpacity>
-            </View>
+                Produits ({products.length})
+              </Text>
+            </TouchableOpacity>
 
-            {/* Section des produits postés par l'utilisateur */}
-            <View className="mt-6">
-              <Text className="text-lg font-bold mb-4">Mes produits</Text>
-              {userProducts.length > 0 ? (
-                userProducts.map((product) => (
-                  <View
-                    key={product.id}
-                    className="mb-4 p-4 bg-white rounded-lg shadow-sm"
-                  >
-                    <Text className="font-bold">{product.name}</Text>
-                    <Text className="text-gray-500">{product.description}</Text>
-                    <Text className="text-gray-500">
-                      Prix: {product.price} €
-                    </Text>
-                  </View>
-                ))
-              ) : (
-                <Text className="text-gray-500">Aucun produit posté.</Text>
-              )}
-            </View>
+            <TouchableOpacity
+              className={`pb-2 px-4 ${
+                activeTab === "posts" ? "border-b-2 border-blue-500" : ""
+              }`}
+              onPress={() => setActiveTab("posts")}
+            >
+              <Text
+                className={`font-semibold ${
+                  activeTab === "posts" ? "text-blue-500" : "text-gray-500"
+                }`}
+              >
+                Posts ({posts.length})
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Contenu */}
+          {activeTab === "products" ? (
+            <FlatList
+              data={products}
+              renderItem={renderProductItem}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={{ paddingHorizontal: 16 }}
+            />
+          ) : (
+            <FlatList
+              data={posts}
+              renderItem={renderPostItem}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={{ paddingHorizontal: 16 }}
+            />
+          )}
+        </View>
+
+        <View className="mb-8">
+          <Text className="text-lg font-bold text-gray-900 mb-4">
+            Mon compte
+          </Text>
+
+          <View className="grid grid-cols-3 gap-4 mb-6">
+            {/* Bouton Paramètres */}
+            <TouchableOpacity
+              className="items-center p-4 bg-white rounded-xl shadow-sm"
+              // onPress={() => router.push("/settings")}
+            >
+              <Feather name="settings" size={24} color="#0a7ea4" />
+              <Text className="text-sm text-gray-700 mt-2">Paramètres</Text>
+            </TouchableOpacity>
+
+            {/* Bouton Favoris */}
+            <TouchableOpacity
+              className="items-center p-4 bg-white rounded-xl shadow-sm"
+              // onPress={() => router.push("/favorites")}
+            >
+              <MaterialCommunityIcons
+                name="heart-outline"
+                size={24}
+                color="#0a7ea4"
+              />
+              <Text className="text-sm text-gray-700 mt-2">Favoris</Text>
+              <View className="absolute top-2 right-2 bg-red-500 w-5 h-5 rounded-full items-center justify-center">
+                <Text className="text-white text-xs">3</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Bouton Commandes */}
+            <TouchableOpacity
+              className="items-center p-4 bg-white rounded-xl shadow-sm"
+              // onPress={() => router.push("/orders")}
+            >
+              <MaterialIcons name="local-shipping" size={24} color="#0a7ea4" />
+              <Text className="text-sm text-gray-700 mt-2">Commandes</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Ligne de boutons secondaires */}
+          <View className="flex-row justify-between">
+            <TouchableOpacity
+              className="flex-row items-center bg-blue-50 px-4 py-2 rounded-full"
+              // onPress={() => router.push("/help")}
+            >
+              <Feather name="help-circle" size={18} color="#0a7ea4" />
+              <Text className="text-blue-600 ml-2">Aide</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="flex-row items-center bg-blue-50 px-4 py-2 rounded-full"
+              onPress={() => {
+                /* Partage du profil */
+              }}
+            >
+              <Feather name="share-2" size={18} color="#0a7ea4" />
+              <Text className="text-blue-600 ml-2">Partager</Text>
+            </TouchableOpacity>
           </View>
         </View>
+        {/* Ajouter aussi dans la section d'édition du profil */}
+        <TouchableOpacity
+          className="flex-row items-center justify-center bg-blue-100 p-4 rounded-xl mb-4"
+          // onPress={() => router.push("/premium")}
+        >
+          <MaterialIcons name="workspace-premium" size={24} color="#0a7ea4" />
+          <View className="ml-3">
+            <Text className="text-blue-600 font-semibold">
+              Passer à Premium
+            </Text>
+            <Text className="text-blue-500 text-xs">
+              Débloquez des avantages exclusifs
+            </Text>
+          </View>
+        </TouchableOpacity>
+        {/* Bouton de déconnexion */}
+        <TouchableOpacity
+          onPress={handleSignOut}
+          className="border border-red-500 rounded-xl py-4 mb-8"
+        >
+          <Text className="text-red-600 text-center font-semibold">
+            Se déconnecter
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 export default EditProfil;
-
-const styles = StyleSheet.create({});

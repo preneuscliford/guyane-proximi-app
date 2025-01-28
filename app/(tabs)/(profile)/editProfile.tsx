@@ -5,11 +5,12 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/provider/AuthProvider";
 import { Redirect } from "expo-router";
 import Avatar from "@/components/Avatar";
-import { Button, TextInput, Text } from "react-native-paper";
+import { Button, TextInput, Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
 export default function Account() {
+  const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [userInfo, setUserInfo] = useState([]);
   const [usernameError, setUsernameError] = useState("");
@@ -106,8 +107,6 @@ export default function Account() {
     return !data;
   }
 
-  console.log(userData?.username);
-
   async function updateProfile() {
     try {
       setLoading(true);
@@ -152,71 +151,105 @@ export default function Account() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <ScrollView className="px-4 py-6">
-        <View className="items-center mb-6">
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.header}>
+          <Text variant="headlineMedium" style={styles.title}>
+            Modifier le profil
+          </Text>
+        </View>
+
+        <View style={styles.avatarContainer}>
           <Avatar
-            size={120}
+            size={140}
             url={form.avatarUrl ? form.avatarUrl : userData?.avatar_url || null}
             onUpload={(url: string) => {
               setForm({ ...form, avatarUrl: url });
             }}
           />
+          <Button
+            mode="text"
+            icon="camera"
+            onPress={() => console.log("Change photo")}
+            textColor={theme.colors.primary}
+            style={styles.avatarButton}
+          >
+            Changer la photo
+          </Button>
         </View>
 
-        <View className="space-y-4">
-          <TextInput
-            label="Email"
-            value={session?.user?.email}
-            editable={false}
-            left={<TextInput.Icon icon="email" />}
-          />
+        <View style={styles.formContainer}>
+          <Text style={styles.sectionTitle}>Informations Publiques</Text>
 
           <TextInput
+            mode="outlined"
             label="Nom d'utilisateur"
             value={form.username || ""}
-            placeholder={userData?.username || ""}
-            editable
+            placeholder={userData?.username || "Choisissez un pseudonyme"}
             onChangeText={(text) => {
               setForm({ ...form, username: text });
               setUsernameError("");
             }}
-            left={<TextInput.Icon icon="account" />}
+            left={<TextInput.Icon icon="account-circle" />}
             error={!!usernameError}
+            style={styles.input}
+            autoCapitalize="none"
           />
-          {usernameError ? (
-            <Text style={{ color: "red" }}>{usernameError}</Text>
-          ) : null}
+          {usernameError && (
+            <Text style={styles.errorText}>{usernameError}</Text>
+          )}
 
           <TextInput
-            label="Téléphone"
-            value={form.phone}
-            keyboardType="phone-pad"
-            onChangeText={(text) => setForm({ ...form, phone: text })}
-            left={<TextInput.Icon icon="phone" />}
+            mode="outlined"
+            label="Email"
+            value={session?.user?.email}
+            editable={false}
+            left={<TextInput.Icon icon="email" />}
+            style={styles.input}
           />
 
+          <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
+            Informations de Contact
+          </Text>
+
+          <View style={styles.row}>
+            <TextInput
+              mode="outlined"
+              label="Téléphone"
+              value={form.phone}
+              keyboardType="phone-pad"
+              onChangeText={(text) => setForm({ ...form, phone: text })}
+              left={<TextInput.Icon icon="phone" />}
+              style={[styles.input, { flex: 1 }]}
+            />
+            <TextInput
+              mode="outlined"
+              label="Site web"
+              value={form.website}
+              onChangeText={(text) => setForm({ ...form, website: text })}
+              left={<TextInput.Icon icon="web" />}
+              style={[styles.input, { flex: 1, marginLeft: 10 }]}
+            />
+          </View>
+
           <TextInput
+            mode="outlined"
             label="Adresse"
             value={form.address}
             onChangeText={(text) => setForm({ ...form, address: text })}
             left={<TextInput.Icon icon="map-marker" />}
+            style={styles.input}
           />
 
           <TextInput
-            label="Site web"
-            value={form.website}
-            onChangeText={(text) => setForm({ ...form, website: text })}
-            left={<TextInput.Icon icon="web" />}
-          />
-
-          <TextInput
+            mode="outlined"
             label="Bio"
             value={form.bio}
             onChangeText={(text) => setForm({ ...form, bio: text })}
             multiline
             numberOfLines={4}
-            style={{ height: 100 }}
+            style={[styles.input, { height: 120 }]}
+            left={<TextInput.Icon icon="text-box" />}
           />
 
           <Button
@@ -226,13 +259,11 @@ export default function Account() {
             disabled={
               loading || (form.username === "" && userData?.username === null)
             }
-            style={{
-              marginTop: 20,
-              backgroundColor: "#0a7ea4",
-              paddingVertical: 8,
-            }}
+            style={styles.button}
+            labelStyle={styles.buttonLabel}
+            contentStyle={styles.buttonContent}
           >
-            {loading ? "Mise à jour..." : "Mettre à jour le profil"}
+            {loading ? "Sauvegarde..." : "Enregistrer les modifications"}
           </Button>
         </View>
       </ScrollView>
@@ -241,12 +272,62 @@ export default function Account() {
 }
 
 const styles = StyleSheet.create({
-  verticallySpaced: {
-    paddingTop: 4,
-    paddingBottom: 4,
-    alignSelf: "stretch",
+  container: {
+    padding: 24,
+    paddingTop: 16,
   },
-  mt20: {
-    marginTop: 20,
+  header: {
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  title: {
+    fontWeight: "600",
+    letterSpacing: 0.5,
+  },
+  avatarContainer: {
+    alignItems: "center",
+    marginBottom: 32,
+  },
+  avatarButton: {
+    marginTop: 12,
+  },
+  formContainer: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 16,
+    color: "#666",
+  },
+  input: {
+    marginBottom: 16,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  button: {
+    borderRadius: 12,
+    marginTop: 24,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  buttonLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    paddingVertical: 4,
+  },
+  buttonContent: {
+    height: 48,
+  },
+  errorText: {
+    color: "#ff4444",
+    marginTop: -8,
+    marginBottom: 12,
+    fontSize: 13,
   },
 });
