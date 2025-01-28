@@ -1,117 +1,136 @@
-import {
-  Alert,
-  FlatList,
-  Image,
-  StyleSheet,
-  View,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
+import { FlatList, View, ActivityIndicator, Alert } from "react-native";
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-
-import ProductsImage from "./ProductsImage";
-import { Card, Text, Chip, Badge } from "react-native-paper";
+import { Card, Text, Chip, useTheme } from "react-native-paper";
 import { router } from "expo-router";
-import { StatusBar } from "expo-status-bar";
+import ProductCard from "./ProductCard";
+import ProductsImage from "./ProductsImage";
+
+interface Product {
+  id: number;
+  title: string;
+  price: number;
+  category: string;
+  imageUrl: string;
+  condition?: string;
+}
 
 const LastItems = () => {
-  const [product, setProduct] = useState(null);
+  const theme = useTheme();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getProducts();
+    const fetchProducts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(4);
+
+        if (error) throw error;
+        setProducts(data as Product[]);
+      } catch (err) {
+        // setError(err);
+        Alert.alert("Erreur", "Impossible de charger les produits");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, []);
 
-  async function getProducts() {
-    try {
-      const { data, error, status } = await supabase
-        .from("products")
-        .select(`*`)
-        .order("created_at", { ascending: false })
-        .limit(4);
-
-      if (error && status !== 406) {
-        throw error;
-      }
-
-      setProduct(data as any);
-    } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert(error.message);
-      }
-    }
-  }
-
   const handleProductPress = (productId: number) => {
-    router.push({
-      pathname: "/product/details",
-      params: { id: productId },
-    });
+    router.push(`/product/details?id=${productId}`);
   };
 
+  if (loading) {
+    return (
+      <View style={{ padding: 20 }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={{ padding: 20 }}>
+        <Text style={{ color: theme.colors.error }}>{error}</Text>
+      </View>
+    );
+  }
+
   return (
-    <View className="mt-5 p-5" style={{ paddingBottom: 10 }}>
-      <StatusBar style="light" backgroundColor="#181F27" />
-      <Text className="text-2xl font-bold text-rich-black">
-        Derniers produits
+    <View style={{ padding: 16 }}>
+      <Text variant="titleLarge" style={{ marginBottom: 16 }}>
+        Dernières trouvailles
       </Text>
+
       <FlatList
-        data={product}
+        data={products}
         numColumns={2}
         scrollEnabled={false}
-        renderItem={({ item, index }) => (
-          <ScrollView key={index} style={{ paddingBottom: 10 }}>
-            <TouchableOpacity onPress={() => handleProductPress(item.id)}>
-              <View style={{ margin: 5, width: 180 }}>
-                <Card style={{ width: "100%", backgroundColor: "#F5F8FD" }}>
-                  <ProductsImage
-                    path={item?.imageUrl}
-                    fallback={"product image"}
-                    style={{
-                      height: 160,
-                      width: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                  <Chip
-                    style={{
-                      marginVertical: 5,
-                      marginHorizontal: 5,
-                      backgroundColor: "#cccdd1",
-                    }}
-                    className="text-sm"
-                  >
-                    {item?.category}
-                  </Chip>
-                  <Card.Content>
-                    <Badge
-                      size={25}
-                      style={{
-                        alignSelf: "flex-start",
-                        color: "#EAEDF1",
-                        backgroundColor: "#181F27",
-                      }}
-                    >
-                      {` ${item?.price} € `}
-                    </Badge>
-                    <Text
-                      className=" text-rich-black"
-                      variant="titleSmall"
-                      numberOfLines={1}
-                    >
-                      {item?.title}
-                    </Text>
-                  </Card.Content>
-                </Card>
-              </View>
-            </TouchableOpacity>
-          </ScrollView>
+        columnWrapperStyle={{ gap: 16 }}
+        contentContainerStyle={{ gap: 16 }}
+        renderItem={({ item }) => (
+          <Card
+            style={{
+              flex: 1,
+              maxWidth: "48%",
+              backgroundColor: theme.colors.background,
+            }}
+            onPress={() => handleProductPress(item.id)}
+          >
+            <ProductsImage
+              path={item?.imageUrl}
+              fallback={"product image"}
+              style={{
+                height: 160,
+                width: "100%",
+                objectFit: "cover",
+              }}
+            />
+            <Card.Content style={{ paddingTop: 12 }}>
+              <Chip
+                mode="outlined"
+                style={{ alignSelf: "flex-start", marginBottom: 8 }}
+              >
+                {item.category}
+              </Chip>
+              <Text
+                variant="bodyLarge"
+                numberOfLines={2}
+                style={{ fontWeight: "500", marginBottom: 4 }}
+              >
+                {item.title}
+              </Text>
+              <Text
+                variant="titleMedium"
+                style={{ color: theme.colors.primary }}
+              >
+                {item.price.toFixed(2)}€
+              </Text>
+              {item.condition && (
+                <Text
+                  variant="labelSmall"
+                  style={{
+                    color: theme.colors.onSurfaceDisabled,
+                    marginTop: 4,
+                  }}
+                >
+                  {item.condition}
+                </Text>
+              )}
+            </Card.Content>
+          </Card>
         )}
+        keyExtractor={(item) => item.id.toString()}
       />
     </View>
   );
 };
 
 export default LastItems;
-
-const styles = StyleSheet.create({});

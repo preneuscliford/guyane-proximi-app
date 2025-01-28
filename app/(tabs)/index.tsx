@@ -9,6 +9,7 @@ import LastItems from "@/components/LastItems";
 import ProductsImage from "@/components/ProductsImage";
 import Cathegory from "@/components/Cathegory";
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
 interface Product {
   id: number;
@@ -67,8 +68,9 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView scrollEnabled={true} className="bg-ghost-white flex-1">
+    <ScrollView scrollEnabled={true} className=" bg-ghost-white">
       <SafeAreaView>
+        <StatusBar style="dark" backgroundColor="#F5F8FD" />
         <Header />
         <Slider />
 

@@ -1,83 +1,105 @@
-import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
-import React, { useEffect, useState } from "react";
+import { StyleSheet, Text, View, ActivityIndicator } from "react-native";
+import React from "react";
 import { useAuth } from "@/app/provider/AuthProvider";
-import Feather from "@expo/vector-icons/Feather";
 import RemoteImage from "./RemoteImage";
 import { supabase } from "@/lib/supabase";
-import { Searchbar } from "react-native-paper";
 import SearchInput from "./SearchInput";
 import { Link } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { StatusBar } from "expo-status-bar";
 
-interface UserData {
-  avatar_url: string;
-  username: string;
-  // Add other properties as needed
+interface ProfileData {
+  avatar_url?: string | null;
+  username?: string;
 }
 
 const Header = () => {
-  const [userData, setUserData] = useState<UserData | null>(null);
-
-  const { session } = useAuth();
-  useEffect(() => {
-    if (session) getProfile();
-  }, [session]);
-
-  async function getProfile() {
-    try {
-      if (!session?.user) throw new Error("No user on the session!");
-
-      const { data, error, status } = await supabase
-        .from("profiles")
-        .select(`username, website, avatar_url`)
-        .eq("id", session?.user.id)
-        .single();
-      if (error && status !== 406) {
-        throw error;
-      }
-      setUserData(data as any);
-    } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert(error.message);
-      }
-    } finally {
-    }
-  }
+  const { session, userData } = useAuth();
 
   return (
-    <View className="p-5">
-      <View className="flex-row justify-start items-center">
-        <View
-          className="rounded-sm justify-center items-center bg-slate-500 pl-3"
-          style={{ borderRadius: 100, width: 48, height: 48 }}
-        >
+    <View style={styles.container}>
+      <StatusBar style="dark" backgroundColor="#F5F8FD" />
+      <View style={styles.profileContainer}>
+        <View style={styles.avatarWrapper}>
           {session ? (
             <RemoteImage
               path={userData?.avatar_url}
               fallback={"profil image"}
-              className="justify-center items-center"
-              style={{ borderRadius: 100, width: 48, height: 48 }}
-            ></RemoteImage>
+              style={styles.avatar}
+            />
           ) : (
-            <View>
+            <Link href="/(auth)/login" style={styles.loginLink}>
               <AntDesign name="user" size={24} color="black" />
-            </View>
+            </Link>
           )}
         </View>
+
         {session ? (
-          <View style={{ marginLeft: 6 }}>
-            <Link href={"/(auth)/login"}>
-              <Text className=" text-xl text-rich-black">Bienvenue</Text>
-            </Link>
-            <Text className=" font-bold text-[20px] text-rich-black">
-              {userData?.username}
+          <View style={styles.userInfo}>
+            <Text style={styles.welcomeText}>Bienvenue</Text>
+            <Text style={styles.username}>
+              {userData?.username || "Utilisateur"}
             </Text>
           </View>
-        ) : null}
+        ) : (
+          <Link href="/(auth)/login" style={styles.loginLink}>
+            <Text style={styles.loginText}>Se connecter</Text>
+          </Link>
+        )}
       </View>
+
       <SearchInput />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    backgroundColor: "#F5F8FD",
+  },
+  profileContainer: {
+    flexDirection: "row",
+
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  avatarWrapper: {
+    borderRadius: 24,
+    width: 48,
+    height: 48,
+    backgroundColor: "#e0e0e0",
+
+    justifyContent: "center",
+    alignSelf: "center",
+
+    overflow: "hidden",
+  },
+  avatar: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 24,
+  },
+  userInfo: {
+    marginLeft: 12,
+  },
+  welcomeText: {
+    fontSize: 14,
+    color: "#666",
+  },
+  username: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#000",
+  },
+  loginLink: {
+    marginLeft: 12,
+  },
+  loginText: {
+    fontSize: 16,
+    color: "#007AFF",
+    fontWeight: "500",
+  },
+});
 
 export default Header;
