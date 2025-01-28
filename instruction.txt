@@ -1,9 +1,83 @@
-As you can see, the app is not working as expected. I need you to fix the issues and make the app work as expected.
+ -- Types personnalisés
+CREATE TYPE listing_type AS ENUM ('product', 'service', 'innovation');
+CREATE TYPE interaction_type AS ENUM ('like', 'comment', 'share', 'report');
+CREATE TYPE subscription_tier AS ENUM ('starter', 'pro', 'enterprise');
 
-1. The products category is not displaying the products correctly.
-2. The login screen and the signup screen is not working properly i need to fix it as a perferct login and signup screen.
-3. The search page is not displaying the search results correctly.
-4. The app do not have a deleting the products from the database.
-5. The app do not have a updating the products in the database.
-6. The the community page is not working properly, i need to fix the like and add the comment system.
-7- the app do not have a disconnect system.
+-- Table Utilisateurs (Auth intégré)
+CREATE TABLE users (
+    id UUID PRIMARY KEY REFERENCES auth.users ON DELETE CASCADE,
+    email TEXT UNIQUE NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('individual', 'business', 'admin')) DEFAULT 'individual',
+    stripe_customer_id TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Table Profils Étendus
+CREATE TABLE profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(), -- Clé primaire
+    updated_at TIMESTAMPTZ DEFAULT NOW(),          -- Date de mise à jour automatique
+    username TEXT,                                 -- Nom d'utilisateur
+    full_name TEXT,                                -- Nom complet
+    avatar_url TEXT,                               -- URL de l'avatar
+    website TEXT,                                  -- URL du site personnel
+    business_info JSONB DEFAULT '{}',              -- Informations pour les entreprises (JSON)
+    innovation_badges TEXT[],                      -- Badges d'innovation (tableau de texte)
+    social_links JSONB DEFAULT '{}',               -- Liens sociaux (JSON)
+    rating NUMERIC(3,2) DEFAULT 5.0,               -- Note par défaut 5.0
+    CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users (id) ON DELETE CASCADE -- Clé étrangère vers auth.users
+);
+ 
+ 
+ TABLE listings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id),
+    type listing_type NOT NULL,
+    title TEXT NOT NULL CHECK (LENGTH(title) <= 100),
+    description TEXT CHECK (LENGTH(description) <= 1500),
+    specs JSONB NOT NULL, -- Caractéristiques techniques/spécifiques
+    price NUMERIC(12,2) CHECK (price >= 0),
+    commission_rate NUMERIC(5,2) DEFAULT 5.00 CHECK (commission_rate BETWEEN 0 AND 100),
+    media_urls TEXT[] CHECK (array_length(media_urls, 1) <= 10),
+    tags TEXT[] CHECK (array_length(tags, 1) <= 15),
+    is_featured BOOLEAN DEFAULT false,
+    status TEXT CHECK (status IN ('draft', 'active', 'sold', 'archived')) DEFAULT 'draft',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Table des Discussions
+ TABLE threads (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id),
+    title TEXT NOT NULL CHECK (LENGTH(title) <= 120),
+    content TEXT NOT NULL CHECK (LENGTH(content) <= 2000),
+    linked_listing_id UUID REFERENCES listings(id),
+    category TEXT CHECK (category IN ('feedback', 'question', 'showcase')),
+    upvotes INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Table des Interactions
+ TABLE interactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id),
+    target_id UUID NOT NULL, -- Peut référencer listings/threads/etc
+    target_type TEXT CHECK (target_type IN ('listing', 'thread', 'user')),
+    type interaction_type NOT NULL,
+    metadata JSONB, -- Ex: {"comment": "..."}
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (user_id, target_id, type)
+);
+
+ TABLE notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id),
+    type TEXT CHECK (type IN ('transaction', 'interaction', 'system')),
+    title TEXT NOT NULL,
+    content TEXT,
+    is_read BOOLEAN DEFAULT false,
+    metadata JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+

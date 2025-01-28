@@ -3,48 +3,62 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, Text, Chip, useTheme } from "react-native-paper";
 import { router } from "expo-router";
-import ProductCard from "./ProductCard";
 import ProductsImage from "./ProductsImage";
 
-interface Product {
-  id: number;
+interface Listing {
+  id: string; // Changé pour UUID
   title: string;
   price: number;
-  category: string;
-  imageUrl: string;
-  condition?: string;
+  type: "product" | "service" | "innovation";
+  media_urls: string[];
+  specs: {
+    condition?: string;
+    // Ajouter d'autres propriétés possibles du JSON specs
+  };
+  tags?: string[];
+  created_at: string;
 }
 
 const LastItems = () => {
   const theme = useTheme();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchListings = async () => {
       try {
         const { data, error } = await supabase
-          .from("products")
-          .select("*")
+          .from("listings")
+          .select(
+            `
+            id,
+            title,
+            price,
+            type,
+            media_urls,
+            specs,
+            tags,
+            created_at
+          `
+          )
           .order("created_at", { ascending: false })
           .limit(4);
 
         if (error) throw error;
-        setProducts(data as Product[]);
+        setListings(data as Listing[]);
       } catch (err) {
-        // setError(err);
-        Alert.alert("Erreur", "Impossible de charger les produits");
+        Alert.alert("Erreur", "Impossible de charger les annonces");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchListings();
   }, []);
 
-  const handleProductPress = (productId: number) => {
-    router.push(`/product/details?id=${productId}`);
+  const handleProductPress = (listingId: string) => {
+    router.push(`/listing/details?id=${listingId}`);
   };
 
   if (loading) {
@@ -66,11 +80,11 @@ const LastItems = () => {
   return (
     <View style={{ padding: 16 }}>
       <Text variant="titleLarge" style={{ marginBottom: 16 }}>
-        Dernières trouvailles
+        Dernières publications
       </Text>
 
       <FlatList
-        data={products}
+        data={listings}
         numColumns={2}
         scrollEnabled={false}
         columnWrapperStyle={{ gap: 16 }}
@@ -85,8 +99,8 @@ const LastItems = () => {
             onPress={() => handleProductPress(item.id)}
           >
             <ProductsImage
-              path={item?.imageUrl}
-              fallback={"product image"}
+              path={item?.media_urls?.[0]} // Utilisation du premier média
+              fallback={"default-listing.jpg"}
               style={{
                 height: 160,
                 width: "100%",
@@ -98,7 +112,7 @@ const LastItems = () => {
                 mode="outlined"
                 style={{ alignSelf: "flex-start", marginBottom: 8 }}
               >
-                {item.category}
+                {item.type} {/* Type de listing */}
               </Chip>
               <Text
                 variant="bodyLarge"
@@ -111,9 +125,9 @@ const LastItems = () => {
                 variant="titleMedium"
                 style={{ color: theme.colors.primary }}
               >
-                {item.price.toFixed(2)}€
+                {item.price?.toFixed(2)}€
               </Text>
-              {item.condition && (
+              {item.specs?.condition && (
                 <Text
                   variant="labelSmall"
                   style={{
@@ -121,13 +135,24 @@ const LastItems = () => {
                     marginTop: 4,
                   }}
                 >
-                  {item.condition}
+                  {item.specs.condition}
+                </Text>
+              )}
+              {item.tags?.length > 0 && (
+                <Text
+                  variant="labelSmall"
+                  style={{
+                    color: theme.colors.onSurfaceVariant,
+                    marginTop: 4,
+                  }}
+                >
+                  #{item.tags[0]}
                 </Text>
               )}
             </Card.Content>
           </Card>
         )}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id}
       />
     </View>
   );

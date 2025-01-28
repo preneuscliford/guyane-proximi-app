@@ -1,31 +1,33 @@
 import {
   Image,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from "@react-native-picker/picker";
-import { Alert } from "react-native";
 import { supabase } from "@/lib/supabase";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../provider/AuthProvider";
 import { ActivityIndicator } from "react-native-paper";
 
-const create = () => {
+type ListingType = "product" | "service" | "rental";
+
+const Create = () => {
   const [uploading, setUploading] = useState(false);
   const [image, setImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
-  const [imagePath, setImagePath] = useState("");
   const [form, setForm] = useState({
     title: "",
-    desc: "",
+    description: "",
     price: "",
-    categorie: "",
+    type: "product" as ListingType,
+    specs: {} as Record<string, any>,
+    tags: [] as string[],
   });
 
   const { session } = useAuth();
@@ -39,7 +41,7 @@ const create = () => {
       const path = `${Date.now()}.${fileExt}`;
 
       const { data, error: uploadError } = await supabase.storage
-        .from("products")
+        .from("products/listings")
         .upload(path, arraybuffer, {
           contentType: image?.mimeType ?? "image/jpeg",
         });
@@ -52,208 +54,224 @@ const create = () => {
     }
   };
 
+  const validateForm = () => {
+    if (!session?.user?.id) {
+      Alert.alert("Erreur", "Vous devez être connecté pour créer une annonce");
+      return false;
+    }
+
+    if (!form.title.trim()) {
+      Alert.alert("Erreur", "Le titre est obligatoire");
+      return false;
+    }
+
+    if (!form.description.trim()) {
+      Alert.alert("Erreur", "La description est obligatoire");
+      return false;
+    }
+
+    if (!form.price || isNaN(parseFloat(form.price))) {
+      Alert.alert("Erreur", "Le prix doit être un nombre valide");
+      return false;
+    }
+
+    if (!image) {
+      Alert.alert("Erreur", "Veuillez ajouter une image");
+      return false;
+    }
+
+    return true;
+  };
+
   const submitForm = async () => {
     try {
-      if (form.title === "" || form.desc === "" || form.price === "") {
-        Alert.alert("Veuillez remplir tous les champs");
-
-        setUploading(false);
-        return null;
-      }
+      if (!validateForm()) return;
 
       setUploading(true);
 
-      await uploadImage();
+      const mediaUrl = await uploadImage();
 
-      const uploadedPath = await uploadImage();
-      if (!uploadedPath) {
-        throw new Error("Image upload failed");
+      if (!mediaUrl) {
+        throw new Error("Échec du téléchargement de l'image");
       }
 
-      const { data, error } = await supabase.from("products").insert({
-        title: form.title,
-        desc: form.desc,
-        price: form.price,
-        imageUrl: uploadedPath,
-        category: form.categorie,
+      const { error } = await supabase.from("product_listings").insert({
+        user_id: session?.user?.id,
+        title: form.title.trim(),
+        description: form.description.trim(),
+        price: parseFloat(form.price),
+        type: form.type,
+        specs: form.specs,
+        media_urls: [mediaUrl],
+        tags: form.tags,
+        status: "draft",
       });
 
       if (error) {
-        Alert.alert(error.message);
+        console.error("Insert error:", error);
+        Alert.alert("Erreur", error.message);
+        return;
       }
 
-      setForm({
-        title: "",
-        desc: "",
-        price: "",
-        categorie: "",
-      });
-      setImage(null);
-      setUploading(false);
+      Alert.alert("Succès", "Votre annonce a été créée avec succès");
+      resetForm();
     } catch (error) {
+      console.error("Submit error:", error);
       if (error instanceof Error) {
-        Alert.alert(error.message);
-        setUploading(false);
-      } else {
-        setUploading(false);
-        throw error;
+        Alert.alert("Erreur", error.message);
       }
     } finally {
-      setForm({
-        title: "",
-        desc: "",
-        price: "",
-        categorie: "",
-      });
-      setImage(null);
       setUploading(false);
     }
   };
 
-  console.log(uploading);
+  const resetForm = () => {
+    setForm({
+      title: "",
+      description: "",
+      price: "",
+      type: "product",
+      specs: {},
+      tags: [],
+    });
+    setImage(null);
+  };
 
-  async function selectImage() {
+  const selectImage = async () => {
     try {
-      // setUploading(true);
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images, // Restrict to only images
-        allowsMultipleSelection: false, // Can only select one image
-        allowsEditing: true, // Allows the user to crop / rotate their photo before uploading it
-        quality: 1,
-        exif: false, // We don't want nor need that data.
-      });
-
-      if (result.canceled || !result.assets || result.assets.length === 0) {
-        console.log("User cancelled image picker.");
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission refusée",
+          "Nous avons besoin de votre permission pour accéder à vos photos"
+        );
         return;
       }
 
-      const image = result.assets[0];
-      setImage(image);
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: false,
+        quality: 0.8,
+        exif: false,
+      });
 
-      if (!image.uri) {
-        throw new Error("No image uri!"); // Realistically, this should never happen, but just in case...
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setImage(result.assets[0]);
       }
-
-      // onUpload(data.path);
     } catch (error) {
+      console.error("Image selection error:", error);
       if (error instanceof Error) {
-        Alert.alert(error.message);
-      } else {
-        throw error;
+        Alert.alert("Erreur", error.message);
       }
-    } finally {
-      // setUploading(false);
     }
-  }
+  };
 
   return (
     <SafeAreaView className="h-full bg-ghost-white">
       <ScrollView>
         <View className="p-10">
           <Text className="text-[27px] font-bold text-rich-black">
-            Ajouter un nouveau Post
+            Créer une nouvelle annonce
           </Text>
-          <Text className=" text-rich-black">
-            Créer un nouveau post a commencer a vendre
+          <Text className="text-rich-black">
+            Remplissez les informations de votre annonce
           </Text>
         </View>
 
-        <TouchableOpacity onPress={selectImage} className=" px-10 ">
-          {image ? (
-            <Image
-              source={{ uri: image?.uri }}
-              className="w-full h-48 rounded-2xl"
-            />
-          ) : (
-            <Image
-              source={require("../../assets/images/placeholder.jpg")}
-              style={{ width: 120, height: 120, borderRadius: 10 }}
-            />
-          )}
-        </TouchableOpacity>
-        <View className=" px-10 py-4">
-          <TextInput
-            onChangeText={(text) => setForm({ ...form, title: text })}
-            placeholder="Titre"
-            placeholderTextColor="#181F27"
-            value={form.title}
-            className=" bg-white-2 text-textgray mt-3 rounded-xl py-3 px-5"
-          />
-          <TextInput
-            onChangeText={(text) => setForm({ ...form, desc: text })}
-            placeholder="Description"
-            multiline
-            numberOfLines={5}
-            placeholderTextColor="#181F27"
-            value={form.desc}
-            textAlignVertical="top"
-            className="bg-white-2 text-textgray mt-3 rounded-xl py-3 px-5"
-          />
-          <TextInput
-            onChangeText={(text) => setForm({ ...form, price: text })}
-            placeholder="Prix"
-            placeholderTextColor="#181F27"
-            keyboardType="numeric"
-            value={form.price}
-            className="bg-white-2 text-textgray mt-3 rounded-xl py-3 px-5"
-          />
+        <View className="px-10">
+          <TouchableOpacity
+            onPress={selectImage}
+            className="bg-white-2 p-4 rounded-xl mb-4"
+          >
+            <Text className="text-center text-deep-blue mb-2">
+              {image ? "Changer l'image" : "Ajouter une image"}
+            </Text>
+          </TouchableOpacity>
 
-          <View className="mt-5 bg-white-2 rounded-xl">
+          {image && (
+            <View className="mb-4 relative">
+              <Image
+                source={{ uri: image.uri }}
+                className="w-full h-48 rounded-lg"
+              />
+              <TouchableOpacity
+                onPress={() => setImage(null)}
+                className="absolute top-2 right-2 bg-red-500 rounded-full w-8 h-8 items-center justify-center"
+              >
+                <Text className="text-white text-lg">×</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <View className="bg-white-2 rounded-xl mb-4">
             <Picker
-              selectedValue={form.categorie}
-              onValueChange={(itemValue, itemIndex) =>
-                setForm({ ...form, categorie: itemValue })
+              selectedValue={form.type}
+              onValueChange={(value: ListingType) =>
+                setForm({ ...form, type: value })
               }
             >
-              {/* <Picker.Item label="Catégorie" value="" /> */}
-              <Picker.Item
-                label="Choisissez une Catégorie"
-                value="0"
-                enabled={false}
-                style={{ color: "#181F27", opacity: 0.5 }}
-              />
-              <Picker.Item label="Électronique" value="Électronique" />
-              <Picker.Item label="Maison" value="Maison" />
-              <Picker.Item label="Beauté" value="Beaute" />
-              <Picker.Item label="Santé" value="Sante" />
-              <Picker.Item label="Alimentation" value="Alimentation" />
-              <Picker.Item label="Sport" value="Sport" />
-              <Picker.Item label="Divertissement" value="Divertissement" />
-              <Picker.Item label="Tourisme" value="Tourisme" />
+              <Picker.Item label="Produit" value="product" />
+              <Picker.Item label="Service" value="service" />
+              <Picker.Item label="Location" value="rental" />
             </Picker>
           </View>
 
-          <View className="mt-7">
-            <TouchableOpacity
-              disabled={uploading === true || !session}
-              onPress={submitForm}
-              className={` ${
-                !session || uploading
-                  ? " bg-rich-black opacity-85"
-                  : " bg-deep-blue opacity-100"
-              }    rounded-lg justify-center items-center py-4 px-3`}
-            >
-              {uploading ? (
-                <ActivityIndicator size={"small"} />
-              ) : (
-                <Text
-                  className={`${
-                    !session || uploading ? " text-gray-400" : "text-white-2"
-                  }  `}
-                >
-                  Ajouter
-                </Text>
-              )}
-            </TouchableOpacity>
-          </View>
+          <TextInput
+            value={form.title}
+            onChangeText={(text) => setForm({ ...form, title: text })}
+            placeholder="Titre de l'annonce"
+            maxLength={100}
+            className="bg-white-2 text-textgray rounded-xl py-3 px-5 mb-4"
+          />
+
+          <TextInput
+            value={form.description}
+            onChangeText={(text) => setForm({ ...form, description: text })}
+            placeholder="Description détaillée"
+            multiline
+            numberOfLines={5}
+            maxLength={1500}
+            textAlignVertical="top"
+            className="bg-white-2 text-textgray rounded-xl py-3 px-5 mb-4"
+          />
+
+          <TextInput
+            value={form.price}
+            onChangeText={(text) =>
+              setForm({ ...form, price: text.replace(/[^0-9.]/g, "") })
+            }
+            placeholder="Prix"
+            keyboardType="numeric"
+            className="bg-white-2 text-textgray rounded-xl py-3 px-5 mb-4"
+          />
+
+          <TouchableOpacity
+            disabled={uploading || !session}
+            onPress={submitForm}
+            className={`${
+              !session || uploading
+                ? "bg-rich-black opacity-85"
+                : "bg-deep-blue opacity-100"
+            } rounded-lg justify-center items-center py-4 px-3 mb-6`}
+          >
+            {uploading ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <Text
+                className={`${
+                  !session || uploading ? "text-gray-400" : "text-white-2"
+                }`}
+              >
+                Publier l'annonce
+              </Text>
+            )}
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-export default create;
-
-const styles = StyleSheet.create({});
+export default Create;

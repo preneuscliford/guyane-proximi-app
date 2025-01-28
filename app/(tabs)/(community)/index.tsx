@@ -113,6 +113,8 @@ const index = () => {
     getPosts();
   }, [filter]);
 
+  console.log(userData);
+
   return (
     <SafeAreaView className=" h-full bg-ghost-white ">
       <StatusBar style="dark" backgroundColor="#F5F8FD" />
