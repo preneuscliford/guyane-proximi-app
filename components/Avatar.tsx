@@ -1,7 +1,16 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { StyleSheet, View, Alert, Image, Button } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Alert,
+  Image,
+  Button,
+  TouchableOpacity,
+  Text,
+} from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { Entypo } from "@expo/vector-icons";
 
 interface Props {
   size: number;
@@ -95,20 +104,26 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
   return (
     <View>
       {avatarUrl ? (
-        <Image
-          source={{ uri: avatarUrl }}
-          accessibilityLabel="Avatar"
-          style={[avatarSize, styles.avatar, styles.image]}
-        />
+        <TouchableOpacity
+          className=" relative justify-center"
+          onPress={uploadAvatar}
+        >
+          <Entypo
+            style={{ position: "absolute", alignSelf: "center", zIndex: 1 }}
+            name="camera"
+            size={50}
+            color="#E5E5E5"
+          />
+          <Image
+            source={{ uri: avatarUrl }}
+            style={[avatarSize, styles.avatar, styles.image]}
+          />
+        </TouchableOpacity>
       ) : (
         <View style={[avatarSize, styles.avatar, styles.noImage]} />
       )}
       <View>
-        <Button
-          title={uploading ? "Uploading ..." : "Upload"}
-          onPress={uploadAvatar}
-          disabled={uploading}
-        />
+        <Text> {uploading ? "Uploading ..." : ""}</Text>
       </View>
     </View>
   );
@@ -116,13 +131,15 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
 
 const styles = StyleSheet.create({
   avatar: {
-    borderRadius: 5,
+    borderRadius: 80,
     overflow: "hidden",
     maxWidth: "100%",
   },
   image: {
     objectFit: "cover",
     paddingTop: 0,
+    zIndex: 0,
+    opacity: 1,
   },
   noImage: {
     backgroundColor: "#333",

@@ -8,6 +8,7 @@ import Avatar from "@/components/Avatar";
 import { Button, TextInput, Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
 export default function Account() {
   const theme = useTheme();
@@ -151,7 +152,8 @@ export default function Account() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F5F8FD" }}>
+      <StatusBar style="dark" backgroundColor="#F5F8FD" />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <Text variant="headlineMedium" style={styles.title}>
@@ -167,15 +169,6 @@ export default function Account() {
               setForm({ ...form, avatarUrl: url });
             }}
           />
-          <Button
-            mode="text"
-            icon="camera"
-            onPress={() => console.log("Change photo")}
-            textColor={theme.colors.primary}
-            style={styles.avatarButton}
-          >
-            Changer la photo
-          </Button>
         </View>
 
         <View style={styles.formContainer}>
@@ -302,6 +295,7 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 16,
+    backgroundColor: "#FCFDFE",
   },
   row: {
     flexDirection: "row",
@@ -315,6 +309,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    backgroundColor: "#181F27",
   },
   buttonLabel: {
     fontSize: 16,

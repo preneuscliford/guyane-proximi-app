@@ -71,9 +71,7 @@ const Explore = () => {
   ];
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <SafeAreaView style={[styles.container, { backgroundColor: "#F5F8FD" }]}>
       {/* Header */}
       <View style={styles.header}>
         <Text variant="headlineMedium" style={styles.title}>
@@ -90,7 +88,7 @@ const Explore = () => {
       <SearchBar
         placeholder="Rechercher des produits, créateurs..."
         style={styles.searchBar}
-        iconColor={theme.colors.primary}
+        iconColor="#181F27"
         inputStyle={{ color: theme.colors.onSurface }}
       />
 
