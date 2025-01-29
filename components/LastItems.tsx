@@ -1,19 +1,26 @@
-import { FlatList, View, ActivityIndicator, Alert } from "react-native";
-import React, { useEffect, useState } from "react";
+import {
+  FlatList,
+  View,
+  ActivityIndicator,
+  Alert,
+  Animated,
+  TouchableWithoutFeedback,
+} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Card, Text, Chip, useTheme } from "react-native-paper";
+import { Card, Text, Chip, useTheme, IconButton } from "react-native-paper";
 import { router } from "expo-router";
 import ProductsImage from "./ProductsImage";
 
 interface Listing {
-  id: string; // Changé pour UUID
+  id: string;
   title: string;
   price: number;
   type: "product" | "service" | "innovation";
   media_urls: string[];
   specs: {
     condition?: string;
-    // Ajouter d'autres propriétés possibles du JSON specs
+    [key: string]: any;
   };
   tags?: string[];
   created_at: string;
@@ -24,12 +31,13 @@ const LastItems = () => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const animValues = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     const fetchListings = async () => {
       try {
         const { data, error } = await supabase
-          .from("listings")
+          .from("product_listings")
           .select(
             `
             id,
@@ -48,6 +56,7 @@ const LastItems = () => {
         if (error) throw error;
         setListings(data as Listing[]);
       } catch (err) {
+        setError("Impossible de charger les annonces");
         Alert.alert("Erreur", "Impossible de charger les annonces");
       } finally {
         setLoading(false);
@@ -57,6 +66,20 @@ const LastItems = () => {
     fetchListings();
   }, []);
 
+  const handlePressIn = () => {
+    Animated.spring(animValues, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(animValues, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
   const handleProductPress = (listingId: string) => {
     router.push(`/listing/details?id=${listingId}`);
   };
@@ -64,7 +87,7 @@ const LastItems = () => {
   if (loading) {
     return (
       <View style={{ padding: 20 }}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -77,9 +100,26 @@ const LastItems = () => {
     );
   }
 
+  if (!listings.length) {
+    return (
+      <View style={{ padding: 16 }}>
+        <Text style={{ color: theme.colors.onSurfaceVariant }}>
+          Aucune annonce disponible
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={{ padding: 16 }}>
-      <Text variant="titleLarge" style={{ marginBottom: 16 }}>
+      <Text
+        variant="titleLarge"
+        style={{
+          marginBottom: 24,
+          fontWeight: "700",
+          color: theme.colors.onSurface,
+        }}
+      >
         Dernières publications
       </Text>
 
@@ -90,67 +130,131 @@ const LastItems = () => {
         columnWrapperStyle={{ gap: 16 }}
         contentContainerStyle={{ gap: 16 }}
         renderItem={({ item }) => (
-          <Card
-            style={{
-              flex: 1,
-              maxWidth: "48%",
-              backgroundColor: theme.colors.background,
-            }}
+          <TouchableWithoutFeedback
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
             onPress={() => handleProductPress(item.id)}
           >
-            <ProductsImage
-              path={item?.media_urls?.[0]} // Utilisation du premier média
-              fallback={"default-listing.jpg"}
+            <Animated.View
               style={{
-                height: 160,
-                width: "100%",
-                objectFit: "cover",
+                transform: [{ scale: animValues }],
+                flex: 1,
+                maxWidth: "48%",
               }}
-            />
-            <Card.Content style={{ paddingTop: 12 }}>
-              <Chip
-                mode="outlined"
-                style={{ alignSelf: "flex-start", marginBottom: 8 }}
+            >
+              <Card
+                style={{
+                  backgroundColor: theme.colors.surface,
+                  borderRadius: 16,
+                  elevation: 4,
+                  shadowColor: theme.colors.shadow,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 8,
+                }}
               >
-                {item.type} {/* Type de listing */}
-              </Chip>
-              <Text
-                variant="bodyLarge"
-                numberOfLines={2}
-                style={{ fontWeight: "500", marginBottom: 4 }}
-              >
-                {item.title}
-              </Text>
-              <Text
-                variant="titleMedium"
-                style={{ color: theme.colors.primary }}
-              >
-                {item.price?.toFixed(2)}€
-              </Text>
-              {item.specs?.condition && (
-                <Text
-                  variant="labelSmall"
-                  style={{
-                    color: theme.colors.onSurfaceDisabled,
-                    marginTop: 4,
-                  }}
-                >
-                  {item.specs.condition}
-                </Text>
-              )}
-              {item.tags?.length > 0 && (
-                <Text
-                  variant="labelSmall"
-                  style={{
-                    color: theme.colors.onSurfaceVariant,
-                    marginTop: 4,
-                  }}
-                >
-                  #{item.tags[0]}
-                </Text>
-              )}
-            </Card.Content>
-          </Card>
+                <View style={{ position: "relative" }}>
+                  <ProductsImage
+                    path={item?.media_urls?.[0]}
+                    fallback={"product image"}
+                    style={{
+                      height: 180,
+                      width: "100%",
+                      borderTopLeftRadius: 16,
+                      borderTopRightRadius: 16,
+                    }}
+                  />
+                  <IconButton
+                    icon="heart-outline"
+                    size={20}
+                    style={{
+                      position: "absolute",
+                      right: 8,
+                      top: 8,
+                      backgroundColor: theme.colors.surfaceVariant,
+                    }}
+                    iconColor={theme.colors.error}
+                  />
+                </View>
+
+                <Card.Content style={{ padding: 16 }}>
+                  <Chip
+                    mode="outlined"
+                    style={{
+                      alignSelf: "flex-start",
+                      marginBottom: 12,
+                      borderColor: theme.colors.primaryContainer,
+                      backgroundColor: theme.colors.primaryContainer,
+                    }}
+                    textStyle={{
+                      color: theme.colors.onPrimaryContainer,
+                      fontSize: 12,
+                    }}
+                  >
+                    {item.type}
+                  </Chip>
+
+                  <Text
+                    variant="titleMedium"
+                    numberOfLines={1}
+                    style={{
+                      fontWeight: "700",
+                      marginBottom: 8,
+                      color: theme.colors.onSurface,
+                    }}
+                  >
+                    {item.title}
+                  </Text>
+
+                  <Text
+                    variant="titleLarge"
+                    style={{
+                      color: theme.colors.primary,
+                      fontWeight: "800",
+                      marginBottom: 12,
+                    }}
+                  >
+                    {new Intl.NumberFormat("fr-FR", {
+                      style: "currency",
+                      currency: "EUR",
+                    }).format(item.price)}
+                  </Text>
+
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    {item.specs?.condition && (
+                      <Chip
+                        mode="flat"
+                        style={{
+                          backgroundColor: theme.colors.secondaryContainer,
+                        }}
+                        textStyle={{ fontSize: 12 }}
+                      >
+                        {item.specs.condition}
+                      </Chip>
+                    )}
+
+                    {item.tags?.length > 0 && (
+                      <Text
+                        variant="labelSmall"
+                        style={{
+                          color: theme.colors.onSurfaceVariant,
+                          fontWeight: "500",
+                        }}
+                      >
+                        #{item.tags[0]}
+                      </Text>
+                    )}
+                  </View>
+                </Card.Content>
+              </Card>
+            </Animated.View>
+          </TouchableWithoutFeedback>
         )}
         keyExtractor={(item) => item.id}
       />

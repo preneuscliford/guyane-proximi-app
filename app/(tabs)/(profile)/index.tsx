@@ -125,7 +125,7 @@ const EditProfil = () => {
       </View>
 
       {/* Contenu principal */}
-      <ScrollView className="flex-1 px-4 -mt-20">
+      <ScrollView scrollEnabled={true} className="flex-1 px-4 -mt-20">
         {/* Carte profil */}
         <View className="bg-white rounded-3xl shadow-lg p-6 mb-6">
           <View className=" items-center">
@@ -178,6 +178,7 @@ const EditProfil = () => {
           {/* Contenu */}
           {activeTab === "products" ? (
             <FlatList
+              scrollEnabled={false}
               data={products}
               renderItem={renderProductItem}
               keyExtractor={(item) => item.id.toString()}
@@ -185,6 +186,7 @@ const EditProfil = () => {
             />
           ) : (
             <FlatList
+              scrollEnabled={false}
               data={posts}
               renderItem={renderPostItem}
               keyExtractor={(item) => item.id.toString()}

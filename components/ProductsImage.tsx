@@ -19,7 +19,7 @@ const ProductsImage = ({
     (async () => {
       setImage("");
       const { data, error } = await supabase.storage
-        .from("products")
+        .from("products/listings")
         .download(path);
 
       if (error) {
