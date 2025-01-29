@@ -110,6 +110,8 @@ const LastItems = () => {
     );
   }
 
+  console.log(listings[0].media_urls);
+
   return (
     <View style={{ padding: 16 }}>
       <Text

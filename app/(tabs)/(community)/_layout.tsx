@@ -13,7 +13,12 @@ const communiyLayout = () => {
       />
       <Stack.Screen
         name="postDetails"
-        options={{ headerShown: false, presentation: "modal" }}
+        options={{
+          headerShown: false,
+          presentation: "modal",
+          headerTitle: "",
+          headerStyle: { backgroundColor: "#F5F8FD" },
+        }}
       />
     </Stack>
   );

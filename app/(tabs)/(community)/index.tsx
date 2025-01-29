@@ -118,7 +118,14 @@ const index = () => {
   return (
     <SafeAreaView className=" h-full bg-ghost-white ">
       <StatusBar style="dark" backgroundColor="#F5F8FD" />
-      <Appbar.Header style={{ backgroundColor: "#F5F8FD" }}>
+      <Appbar.Header
+        style={{
+          backgroundColor: "#F5F8FD",
+          elevation: 2,
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+        }}
+      >
         <Appbar.Content title="Title" />
         <Appbar.Action
           icon="heart-outline"
@@ -138,7 +145,7 @@ const index = () => {
               width: 28,
               height: 28,
               marginHorizontal: 10,
-              borderRadius: 5,
+              borderRadius: 14,
             }}
           />
         </TouchableOpacity>
@@ -159,7 +166,11 @@ const index = () => {
             value={filter}
             onValueChange={handleFilterChange as any}
             buttons={[
-              { value: "new", label: "Nouveaux" },
+              {
+                value: "new",
+                label: "Nouveaux",
+              },
+
               { value: "trending", label: "Tendances" },
               { value: "myPosts", label: "Mes posts" },
             ]}

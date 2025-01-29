@@ -29,7 +29,15 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      "expo-image-picker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow access to your photos",
+          "cameraPermission": "Allow access to your camera"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

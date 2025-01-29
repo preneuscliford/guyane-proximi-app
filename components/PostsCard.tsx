@@ -5,10 +5,17 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   Share,
+  Animated,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { shadow } from "react-native-paper";
 import Entypo from "@expo/vector-icons/Entypo";
+import {
+  AntDesign,
+  Feather,
+  Ionicons,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 
 import RemoteImage from "./RemoteImage";
 import moment from "moment";
@@ -16,6 +23,8 @@ import RenderHTML from "react-native-render-html";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { supabase } from "@/lib/supabase";
 import { Link } from "expo-router";
+
+import { Easing } from "react-native-reanimated";
 
 const textStyles = {
   fontSize: 16,
@@ -37,6 +46,15 @@ const PostsCard = ({
   const [likes, setLikes] = useState<any[]>([]);
   const [isLiking, setIsLiking] = useState(false);
   const dataTime = moment(item?.created_at).fromNow();
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  // Styles modernes
+  const textStyles = {
+    fontSize: 16,
+    lineHeight: 22,
+    color: "#1F2937",
+  };
 
   const hasShadowStyle = {
     shadowOffset: {
@@ -170,103 +188,175 @@ const PostsCard = ({
     return html.replace(/<br\s*\/?>/g, "");
   };
 
+  const colors = {
+    primary: "#6366F1",
+    secondary: "#4F46E5",
+    accent: "#EC4899",
+    background: "#F8FAFC",
+    text: "#1F2937",
+  };
+
+  const animateLike = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 1.2,
+        duration: 100,
+        easing: Easing.ease,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 3,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   return (
-    <View style={[styles.container, hasShadow && hasShadowStyle]}>
-      <View className=" flex-row justify-between">
-        <View className=" flex-row items-center gap-3">
-          <TouchableOpacity onPress={() => router.push("/(profile)")}>
+    <Animated.View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+          transform: [{ scale: scaleAnim }],
+          opacity: fadeAnim,
+        },
+      ]}
+    >
+      {/* En-tête */}
+      <View className="flex-row justify-between items-center mb-4">
+        <TouchableOpacity
+          className="flex-row items-center gap-3"
+          onPress={() => router.push("/(profile)")}
+        >
+          <View className="relative">
             <RemoteImage
               path={item?.profiles?.avatar_url}
               fallback="profile image"
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 20,
-                marginHorizontal: 5,
-              }}
+              style={styles.avatar}
             />
-          </TouchableOpacity>
-          <View className=" gap-0">
-            <Text className=" text-lg font-medium">
+            <View className="absolute -bottom-1 -right-1 bg-white rounded-full p-1">
+              <View className="w-3 h-3 bg-green-500 rounded-full" />
+            </View>
+          </View>
+
+          <View>
+            <Text className="text-base font-semibold text-gray-900">
               {item?.profiles?.username}
             </Text>
-            <Text className=" text-sm font-light">{dataTime}</Text>
+            <Text className="text-xs text-gray-500">
+              {moment(item?.created_at).fromNow()}
+            </Text>
           </View>
-        </View>
+        </TouchableOpacity>
+
         {showMoreIcons && (
-          <Entypo name="dots-three-vertical" size={18} color="black" />
+          <TouchableOpacity>
+            <Ionicons
+              name="ellipsis-horizontal"
+              size={20}
+              color={colors.text}
+            />
+          </TouchableOpacity>
         )}
       </View>
 
-      <View>
-        <View className=" gap-0">
-          {item?.body && (
-            <RenderHTML
-              contentWidth={width}
-              source={{ html: removeExcessSpaces(item?.body) }}
-              tagsStyles={tagsStyles}
-            />
-          )}
-        </View>
+      {/* Contenu */}
+      <View className="mb-5">
+        {item?.body && (
+          <RenderHTML
+            contentWidth={width - 40}
+            source={{ html: item.body }}
+            tagsStyles={tagsStyles}
+            renderersProps={{
+              a: {
+                onPress: (_, href) => router.push(href),
+              },
+            }}
+            baseStyle={{ paddingHorizontal: 8 }}
+          />
+        )}
       </View>
 
-      <View className=" flex-row items-center gap-14">
-        <View className=" flex-row items-center px-4 gap-4">
+      {/* Actions */}
+      <View className="flex-row justify-between items-center px-2">
+        <View className="flex-row items-center gap-4">
           <TouchableOpacity
-            onPress={handleLike}
-            className="mr-3"
-            disabled={isLiking}
+            onPress={() => {
+              handleLike();
+              animateLike();
+            }}
+            className="flex-row items-center gap-2"
           >
-            <Entypo
-              name={liked ? "heart" : "heart-outlined"}
-              size={24}
-              color={liked ? "red" : "black"}
+            <AntDesign
+              name={liked ? "heart" : "hearto"}
+              size={22}
+              color={liked ? colors.accent : colors.text}
             />
+            <Text className="text-gray-600 font-medium">
+              {likes?.length || 0}
+            </Text>
           </TouchableOpacity>
-          <Text className=" text-sm font-medium">{likes?.length || 0}</Text>
-        </View>
 
-        <View className=" flex-row items-center mr-5 gap-4">
           <Link
             href={{
               pathname: "/(tabs)/(community)/postDetails",
               params: { postId: item?.id },
             }}
-            className="mr-3"
           >
-            <FontAwesome5 name="comment" size={24} color="black" />
+            <View className="flex-row items-center gap-2">
+              <Feather name="message-circle" size={22} color={colors.text} />
+              <Text className="text-gray-600 font-medium">
+                {item?.comments?.length}
+              </Text>
+            </View>
           </Link>
-          <Text className=" text-sm font-medium">
-            {" "}
-            {item?.comments?.length}{" "}
-          </Text>
         </View>
 
-        <View className=" flex-row items-center px-4 gap-4">
-          <TouchableOpacity onPress={handleShare} className=" mr-3">
-            <Entypo name="share-alternative" size={24} color="black" />
+        <View className="flex-row items-center gap-4">
+          <TouchableOpacity onPress={handleShare}>
+            <MaterialCommunityIcons
+              name="share-outline"
+              size={24}
+              color={colors.text}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity>
+            <Feather name="bookmark" size={22} color={colors.text} />
           </TouchableOpacity>
         </View>
-
-        <View className=" flex-row items-center mr-5 gap-4"></View>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 
-export default PostsCard;
-
 const styles = StyleSheet.create({
   container: {
-    gap: 10,
-    marginBottom: 15,
-    borderRadius: 10,
-    padding: 10,
-    borderCurve: "continuous",
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#D3D3D3",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    backgroundColor: "#FFF",
     shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+  },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 2,
+    borderColor: "#E0E7FF",
+  },
+  interactionButton: {
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: "#F8FAFC",
   },
 });
+
+export default PostsCard;

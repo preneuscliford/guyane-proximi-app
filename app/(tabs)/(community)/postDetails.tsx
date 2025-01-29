@@ -6,7 +6,9 @@ import { supabase } from "@/lib/supabase";
 import PostsCard from "@/components/PostsCard";
 import CommentSection from "@/components/CommentSection";
 import { useAuth } from "@/app/provider/AuthProvider";
-import { ActivityIndicator } from "react-native-paper";
+import { ActivityIndicator, Appbar } from "react-native-paper";
+import { StatusBar } from "expo-status-bar";
+import BackAppbar from "@/components/AppBar";
 
 const postDetails = () => {
   const { postId } = useLocalSearchParams();
@@ -90,9 +92,11 @@ const postDetails = () => {
   }
 
   return (
-    <SafeAreaView>
+    <View>
+      <StatusBar style="dark" backgroundColor="#F5F8FD" />
+      <BackAppbar title="" />
       <ScrollView
-        className="h-full"
+        className="h-full bg-ghost-white"
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 10 }}
       >
@@ -111,7 +115,7 @@ const postDetails = () => {
           />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

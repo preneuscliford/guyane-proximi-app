@@ -14,13 +14,16 @@ import { Picker } from "@react-native-picker/picker";
 import { supabase } from "@/lib/supabase";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../provider/AuthProvider";
+import * as FileSystem from "expo-file-system";
+import { Buffer } from "buffer";
+
 import { ActivityIndicator } from "react-native-paper";
 
 type ListingType = "product" | "service" | "rental";
 
 const Create = () => {
   const [uploading, setUploading] = useState(false);
-  const [image, setImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -31,29 +34,57 @@ const Create = () => {
   });
 
   const { session } = useAuth();
+  const uploadImages = async (images: ImagePicker.ImagePickerAsset[]) => {
+    if (!images || images.length === 0) return [];
 
-  const uploadImage = async () => {
-    if (image) {
-      const arraybuffer = await fetch(image?.uri).then((res) =>
-        res.arrayBuffer()
+    try {
+      const uploadedPaths = await Promise.all(
+        images.map(async (image) => {
+          // Vérification renforcée de l'URI
+          if (!image.uri) {
+            console.warn("Image URI is missing, skipping upload");
+            return null;
+          }
+
+          try {
+            // Conversion sécurisée en base64
+            const base64 = await FileSystem.readAsStringAsync(image.uri, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+
+            // Conversion alternative pour React Native
+            const raw = Buffer.from(base64, "base64");
+            const arraybuffer = new Uint8Array(raw).buffer;
+
+            // Génération du nom de fichier
+            const fileExt = image.uri.split(".").pop()?.toLowerCase() || "jpeg";
+            const path = `${Date.now()}-${Math.random()
+              .toString(36)
+              .substring(7)}.${fileExt}`;
+
+            // Upload avec type MIME par défaut
+            const { data, error: uploadError } = await supabase.storage
+              .from("products/listings")
+              .upload(path, arraybuffer, {
+                contentType: image.mimeType || "image/jpeg",
+              });
+
+            console.log(data?.path);
+            if (uploadError) throw uploadError;
+            return data?.path;
+          } catch (error) {
+            console.error("Image processing error:", error);
+            return null;
+          }
+        })
       );
-      const fileExt = image?.uri?.split(".").pop()?.toLowerCase() ?? "jpeg";
-      const path = `${Date.now()}.${fileExt}`;
 
-      const { data, error: uploadError } = await supabase.storage
-        .from("products/listings")
-        .upload(path, arraybuffer, {
-          contentType: image?.mimeType ?? "image/jpeg",
-        });
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      return data.path;
+      return uploadedPaths.filter((path): path is string => !!path);
+    } catch (error) {
+      console.error("Global upload error:", error);
+      return [];
     }
   };
-
   const validateForm = () => {
     if (!session?.user?.id) {
       Alert.alert("Erreur", "Vous devez être connecté pour créer une annonce");
@@ -75,7 +106,7 @@ const Create = () => {
       return false;
     }
 
-    if (!image) {
+    if (!images) {
       Alert.alert("Erreur", "Veuillez ajouter une image");
       return false;
     }
@@ -89,10 +120,10 @@ const Create = () => {
 
       setUploading(true);
 
-      const mediaUrl = await uploadImage();
+      const mediaUrls = await uploadImages(images);
 
-      if (!mediaUrl) {
-        throw new Error("Échec du téléchargement de l'image");
+      if (mediaUrls.length === 0) {
+        throw new Error("Aucune image n'a pu être téléversée");
       }
 
       const { error } = await supabase.from("product_listings").insert({
@@ -102,7 +133,7 @@ const Create = () => {
         price: parseFloat(form.price),
         type: form.type,
         specs: form.specs,
-        media_urls: [mediaUrl],
+        media_urls: mediaUrls,
         tags: form.tags,
         status: "draft",
       });
@@ -134,7 +165,7 @@ const Create = () => {
       specs: {},
       tags: [],
     });
-    setImage(null);
+    setImages([]);
   };
 
   const selectImage = async () => {
@@ -152,13 +183,13 @@ const Create = () => {
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: false,
+        allowsMultipleSelection: true,
         quality: 0.8,
         exif: false,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setImage(result.assets[0]);
+        setImages(result.assets); // ✅ Stocker toutes les images sélectionnées
       }
     } catch (error) {
       console.error("Image selection error:", error);
@@ -186,11 +217,11 @@ const Create = () => {
             className="bg-white-2 p-4 rounded-xl mb-4"
           >
             <Text className="text-center text-deep-blue mb-2">
-              {image ? "Changer l'image" : "Ajouter une image"}
+              {images ? "Changer l'image" : "Ajouter une image"}
             </Text>
           </TouchableOpacity>
 
-          {image && (
+          {/* {image && (
             <View className="mb-4 relative">
               <Image
                 source={{ uri: image.uri }}
@@ -203,7 +234,7 @@ const Create = () => {
                 <Text className="text-white text-lg">×</Text>
               </TouchableOpacity>
             </View>
-          )}
+          )} */}
 
           <View className="bg-white-2 rounded-xl mb-4">
             <Picker
