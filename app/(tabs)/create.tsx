@@ -18,6 +18,7 @@ import * as FileSystem from "expo-file-system";
 import { Buffer } from "buffer";
 
 import { ActivityIndicator } from "react-native-paper";
+import { MaterialIcons } from "@expo/vector-icons";
 
 type ListingType = "product" | "service" | "rental";
 
@@ -199,6 +200,10 @@ const Create = () => {
     }
   };
 
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <SafeAreaView className="h-full bg-ghost-white">
       <ScrollView>
@@ -217,24 +222,26 @@ const Create = () => {
             className="bg-white-2 p-4 rounded-xl mb-4"
           >
             <Text className="text-center text-deep-blue mb-2">
-              {images ? "Changer l'image" : "Ajouter une image"}
+              Ajouter des images ({images.length}/10)
             </Text>
           </TouchableOpacity>
 
-          {/* {image && (
-            <View className="mb-4 relative">
-              <Image
-                source={{ uri: image.uri }}
-                className="w-full h-48 rounded-lg"
-              />
-              <TouchableOpacity
-                onPress={() => setImage(null)}
-                className="absolute top-2 right-2 bg-red-500 rounded-full w-8 h-8 items-center justify-center"
-              >
-                <Text className="text-white text-lg">×</Text>
-              </TouchableOpacity>
-            </View>
-          )} */}
+          <ScrollView horizontal className="mb-4">
+            {images.map((image, index) => (
+              <View key={index} className="mr-2 relative">
+                <Image
+                  source={{ uri: image.uri }}
+                  className="w-24 h-24 rounded-lg"
+                />
+                <TouchableOpacity
+                  onPress={() => removeImage(index)}
+                  className="absolute top-1 right-1 bg-red-500 rounded-full w-6 h-6 items-center justify-center"
+                >
+                  <Text className="text-white text-sm">×</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
 
           <View className="bg-white-2 rounded-xl mb-4">
             <Picker
