@@ -18,13 +18,14 @@ import * as FileSystem from "expo-file-system";
 import { Buffer } from "buffer";
 
 import { ActivityIndicator } from "react-native-paper";
-import { MaterialIcons } from "@expo/vector-icons";
+import { EventForm } from "@/components/EventPicker";
 
-type ListingType = "product" | "service" | "rental";
+type ListingType = "product" | "service" | "event" | "rental";
 
 const Create = () => {
   const [uploading, setUploading] = useState(false);
   const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
+
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -32,6 +33,9 @@ const Create = () => {
     type: "product" as ListingType,
     specs: {} as Record<string, any>,
     tags: [] as string[],
+    startDate: new Date(),
+    endDate: new Date(),
+    location: "",
   });
 
   const { session } = useAuth();
@@ -86,6 +90,7 @@ const Create = () => {
       return [];
     }
   };
+
   const validateForm = () => {
     if (!session?.user?.id) {
       Alert.alert("Erreur", "Vous devez être connecté pour créer une annonce");
@@ -102,14 +107,32 @@ const Create = () => {
       return false;
     }
 
-    if (!form.price || isNaN(parseFloat(form.price))) {
-      Alert.alert("Erreur", "Le prix doit être un nombre valide");
-      return false;
-    }
+    // if (
+    //   (!form.price && form.type !== "event") ||
+    //   isNaN(parseFloat(form.price))
+    // ) {
+    //   Alert.alert("Erreur", "Le prix doit être un nombre valide");
+    //   return false;
+    // }
 
-    if (!images) {
-      Alert.alert("Erreur", "Veuillez ajouter une image");
-      return false;
+    // if (!images ) {
+    //   Alert.alert("Erreur", "Veuillez ajouter une image");
+    //   return false;
+    // }
+
+    if (form.type === "event") {
+      if (!form.location.trim()) {
+        Alert.alert("Erreur", "Le lieu est obligatoire pour les événements");
+        return false;
+      }
+
+      if (form.startDate >= form.endDate) {
+        Alert.alert(
+          "Erreur",
+          "La date de fin doit être après la date de début"
+        );
+        return false;
+      }
     }
 
     return true;
@@ -118,7 +141,6 @@ const Create = () => {
   const submitForm = async () => {
     try {
       if (!validateForm()) return;
-
       setUploading(true);
 
       const mediaUrls = await uploadImages(images);
@@ -127,26 +149,47 @@ const Create = () => {
         throw new Error("Aucune image n'a pu être téléversée");
       }
 
-      const { error } = await supabase.from("product_listings").insert({
-        user_id: session?.user?.id,
-        title: form.title.trim(),
-        description: form.description.trim(),
-        price: parseFloat(form.price),
-        type: form.type,
-        specs: form.specs,
-        media_urls: mediaUrls,
-        tags: form.tags,
-        status: "draft",
-      });
+      let error;
+      if (form.type === "event") {
+        const { data, error: eventError } = await supabase
+          .from("events")
+          .insert({
+            title: form.title.trim(),
+            description: form.description.trim(),
+            start_date: form.startDate.toISOString(),
+            end_date: form.endDate.toISOString(),
+            file: mediaUrls,
+            location: form.location,
+            organizer_id: session?.user?.id,
+          });
+        error = eventError;
 
-      if (error) {
-        console.error("Insert error:", error);
-        Alert.alert("Erreur", error.message);
-        return;
+        if (error) throw error;
+
+        Alert.alert("Succès", "Votre événement a été ajouté avec succès");
+        resetForm();
+      } else {
+        const { error } = await supabase.from("product_listings").insert({
+          user_id: session?.user?.id,
+          title: form.title.trim(),
+          description: form.description.trim(),
+          price: parseFloat(form.price),
+          type: form.type,
+          specs: form.specs,
+          media_urls: mediaUrls,
+          tags: form.tags,
+          status: "draft",
+        });
+
+        if (error) {
+          console.error("Insert error:", error);
+          Alert.alert("Erreur", error.message);
+          return;
+        }
+
+        Alert.alert("Succès", "Votre annonce a été créée avec succès");
+        resetForm();
       }
-
-      Alert.alert("Succès", "Votre annonce a été créée avec succès");
-      resetForm();
     } catch (error) {
       console.error("Submit error:", error);
       if (error instanceof Error) {
@@ -165,6 +208,9 @@ const Create = () => {
       type: "product",
       specs: {},
       tags: [],
+      location: "",
+      startDate: new Date(),
+      endDate: new Date(),
     });
     setImages([]);
   };
@@ -253,13 +299,20 @@ const Create = () => {
               <Picker.Item label="Produit" value="product" />
               <Picker.Item label="Service" value="service" />
               <Picker.Item label="Location" value="rental" />
+              <Picker.Item label="Événement" value="event" />
             </Picker>
           </View>
+
+          {form.type === "event" && (
+            <>
+              <EventForm form={form} setForm={setForm} />
+            </>
+          )}
 
           <TextInput
             value={form.title}
             onChangeText={(text) => setForm({ ...form, title: text })}
-            placeholder="Titre de l'annonce"
+            placeholder={form.type !== "event" ? "Titre de l'annonce" : "Titre"}
             maxLength={100}
             className="bg-white-2 text-textgray rounded-xl py-3 px-5 mb-4"
           />
@@ -267,7 +320,9 @@ const Create = () => {
           <TextInput
             value={form.description}
             onChangeText={(text) => setForm({ ...form, description: text })}
-            placeholder="Description détaillée"
+            placeholder={
+              form.type !== "event" ? "Description de l'annonce" : "Description"
+            }
             multiline
             numberOfLines={5}
             maxLength={1500}
@@ -275,15 +330,25 @@ const Create = () => {
             className="bg-white-2 text-textgray rounded-xl py-3 px-5 mb-4"
           />
 
-          <TextInput
-            value={form.price}
-            onChangeText={(text) =>
-              setForm({ ...form, price: text.replace(/[^0-9.]/g, "") })
-            }
-            placeholder="Prix"
-            keyboardType="numeric"
-            className="bg-white-2 text-textgray rounded-xl py-3 px-5 mb-4"
-          />
+          {form.type !== "event" ? (
+            <TextInput
+              value={form.price}
+              onChangeText={(text) =>
+                setForm({ ...form, price: text.replace(/[^0-9.]/g, "") })
+              }
+              placeholder="Prix"
+              keyboardType="numeric"
+              className="bg-white-2 text-textgray rounded-xl py-3 px-5 mb-4"
+            />
+          ) : (
+            <TextInput
+              value={form.location}
+              onChangeText={(text) => setForm({ ...form, location: text })}
+              placeholder="lieu"
+              maxLength={100}
+              className="bg-white-2 text-textgray rounded-xl py-3 px-5 mb-4"
+            />
+          )}
 
           <TouchableOpacity
             disabled={uploading || !session}
