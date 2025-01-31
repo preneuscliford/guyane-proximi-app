@@ -8,7 +8,13 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useAuth } from "../provider/AuthProvider";
+import { LogBox } from "react-native";
 
+LogBox.ignoreLogs([
+  "Warning: TNodeChildrenRenderer",
+  "Warning: MemoizedTNodeRenderer",
+  "Warning: TRenderEngineProvider",
+]);
 export default function TabLayout() {
   const { session } = useAuth();
   const pathname = usePathname();

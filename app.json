@@ -5,8 +5,23 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "gsr",
+    "newArchEnabled": false,
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "enabled": true,
+        "exclude": [
+          "react-native-pell-rich-editor",
+          "base64-arraybuffer",
+          "buffer",
+          "moment",
+          "tailwindcss"
+        ],
+        "listUnknownPackages": true
+      }
+    },
     "userInterfaceStyle": "automatic",
+
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
