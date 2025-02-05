@@ -10,6 +10,7 @@ import ProductsImage from "@/components/ProductsImage";
 import Cathegory from "@/components/Cathegory";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import DisplayEvents from "@/components/DisplayEvent";
 
 interface Product {
   id: number;
@@ -79,6 +80,8 @@ export default function HomeScreen() {
 
         {/* Section Derniers Produits */}
         <LastItems />
+
+        <DisplayEvents />
 
         {/* Section par Catégories */}
         {/* {categories.map(
