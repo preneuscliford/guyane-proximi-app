@@ -1,4 +1,10 @@
-import { StyleSheet, Text, View, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+  TouchableOpacity,
+} from "react-native";
 import React from "react";
 import { useAuth } from "@/app/provider/AuthProvider";
 import RemoteImage from "./RemoteImage";
@@ -7,6 +13,7 @@ import SearchInput from "./SearchInput";
 import { Link } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { StatusBar } from "expo-status-bar";
+import { useClerk, useSession } from "@clerk/clerk-expo";
 
 interface ProfileData {
   avatar_url?: string | null;
@@ -15,6 +22,18 @@ interface ProfileData {
 
 const Header = () => {
   const { session, userData } = useAuth();
+  const { user } = useAuth();
+
+  const { signOut } = useClerk();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      // Redirect to your desired page
+    } catch (err) {
+      console.error(JSON.stringify(err, null, 2));
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -28,7 +47,7 @@ const Header = () => {
               style={styles.avatar}
             />
           ) : (
-            <Link href="/(auth)/login" style={styles.loginLink}>
+            <Link href="/(auth)/signIn" style={styles.loginLink}>
               <AntDesign name="user" size={24} color="black" />
             </Link>
           )}
@@ -42,9 +61,15 @@ const Header = () => {
             </Text>
           </View>
         ) : (
-          <Link href="/(auth)/login" style={styles.loginLink}>
-            <Text style={styles.loginText}>Se connecter</Text>
-          </Link>
+          <View>
+            <Link href="/(auth)/signIn" style={styles.loginLink}>
+              <Text style={styles.loginText}>Connexion</Text>
+            </Link>
+
+            <TouchableOpacity onPress={() => handleSignOut()}>
+              <Text>se deconnecter</Text>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
 

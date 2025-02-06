@@ -1,129 +1,233 @@
-import * as React from "react";
-import { Text, TextInput, Button, View } from "react-native";
-import { useSignUp, useUser } from "@clerk/clerk-expo";
-import { useRouter } from "expo-router";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useSignUp, useUser, useOAuth } from "@clerk/clerk-expo";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { client } from "@/hooks/supabaseClient";
+import { useWarmUpBrowser } from "@/hooks/useFunctions";
+import * as Linking from "expo-linking";
 
-export default function SignUpScreen() {
+const SignUp = () => {
+  useWarmUpBrowser();
   const { isLoaded, signUp, setActive } = useSignUp();
+  const { user, isSignedIn } = useUser();
   const router = useRouter();
-  const { isSignedIn, user } = useUser();
+  const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
 
-  const [emailAddress, setEmailAddress] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [pendingVerification, setPendingVerification] = React.useState(false);
-  const [code, setCode] = React.useState("");
+  const [username, setUsername] = useState("");
+  const [emailAddress, setEmailAddress] = useState("");
+  const [password, setPassword] = useState("");
+  const [pendingVerification, setPendingVerification] = useState(false);
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Handle submission of sign-up form
-  const onSignUpPress = async () => {
-    if (user) {
-      await createUserInDb(user);
-    } else {
-      console.error("Aucun utilisateur Clerk trouvé");
-    }
+  const syncUserWithSupabase = useCallback(async () => {
+    if (!user) return;
 
-    if (!isLoaded) return;
-
-    // Start sign-up process using email and password provided
     try {
-      await signUp.create({
-        emailAddress,
-        password,
+      const { data, error } = await client.rpc("get_or_create_user");
+      console.log(data);
+
+      if (error) {
+        console.error("Erreur de synchronisation:", error);
+        return;
+      }
+
+      console.log("Utilisateur synchronisé:", data);
+      router.replace("/");
+    } catch (error) {
+      console.error("Erreur globale:", error);
+    }
+  }, [user, router]);
+
+  useEffect(() => {
+    if (isSignedIn && user) {
+      syncUserWithSupabase();
+    }
+  }, [isSignedIn, user, syncUserWithSupabase]);
+
+  // Connexion Google
+  const handleGoogleSignUp = useCallback(async () => {
+    try {
+      const { createdSessionId } = await startOAuthFlow({
+        redirectUrl: Linking.createURL("/(auth)/callback"),
       });
 
-      // Send user an email with verification code
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      if (createdSessionId) {
+        await setActive!({ session: createdSessionId });
+      }
+    } catch (err) {
+      alert(err);
+    }
+  }, [startOAuthFlow, setActive]);
 
-      // Set 'pendingVerification' to true to display second form
-      // and capture OTP code
+  const onSignUpPress = async () => {
+    if (!isLoaded || !emailAddress || !password || !username) {
+      alert("Veuillez remplir tous les champs");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await signUp.create({ emailAddress, password });
+      await signUp.update({ username });
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setPendingVerification(true);
     } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2));
+      handleSignUpError(err);
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Vérification du code
   const onVerifyPress = async () => {
     if (!isLoaded) return;
 
+    setLoading(true);
     try {
-      const signUpAttempt = await signUp.attemptEmailAddressVerification({
-        code,
-      });
-
-      if (signUpAttempt.status === "complete") {
-        await setActive({ session: signUpAttempt.createdSessionId });
-
-        if (user) {
-          await createUserInDb(user);
-        } else {
-          console.error("Aucun utilisateur Clerk trouvé");
-        }
-
-        router.replace("/");
-      } else {
-        console.error(
-          "Vérification incomplète :",
-          JSON.stringify(signUpAttempt, null, 2)
-        );
+      const result = await signUp.attemptEmailAddressVerification({ code });
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
       }
     } catch (err) {
-      console.error(JSON.stringify(err, null, 2));
+      alert(
+        `Code invalide: ${
+          err instanceof Error ? err.message : "Format incorrect"
+        }`
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Exemple d'insertion dans la table "users"
-  const createUserInDb = async (clerkUser: any) => {
-    const { id, emailAddresses, imageUrl, firstName, lastName } = clerkUser;
-    // On suppose que clerkUser.emailAddresses est un tableau et que vous souhaitez utiliser le premier email
-    const email = emailAddresses?.[0]?.emailAddress || "";
+  // Gestion des erreurs
+  const handleSignUpError = (error: any) => {
+    const errorMap: Record<string, string> = {
+      form_password_incorrect: "Mot de passe trop faible (min. 8 caractères)",
+      form_identifier_exists: "Un compte existe déjà avec cet email",
+      form_param_format_invalid: "Format email invalide",
+    };
 
-    const { data, error } = await client.from("test").insert([
-      {
-        email: "preneus@example.com",
-        // Ajoutez d'autres champs si nécessaire
-      },
-    ]);
+    const message = error.errors?.[0]?.code
+      ? errorMap[error.errors[0].code] || "Erreur inconnue"
+      : "Échec de la création du compte";
 
-    if (error) {
-      console.error("Erreur lors de l'insertion dans Supabase :", error);
-    } else {
-      console.log("Utilisateur inséré dans Supabase :", data);
-    }
+    alert(message);
   };
 
   if (pendingVerification) {
     return (
-      <>
-        <Text>Verify your email</Text>
+      <SafeAreaView className="flex-1 bg-white px-6 justify-center">
+        <View className="mb-8">
+          <Text className="text-3xl font-bold text-gray-900">Vérification</Text>
+          <Text className="text-gray-500 mt-2">
+            Entrez le code reçu par email
+          </Text>
+        </View>
         <TextInput
           value={code}
-          placeholder="Enter your verification code"
-          onChangeText={(code) => setCode(code)}
+          placeholder="Code de vérification"
+          onChangeText={setCode}
+          className="h-12 border border-gray-200 rounded-lg px-4 mb-4"
+          autoCapitalize="none"
         />
-        <Button title="Verify" onPress={onVerifyPress} />
-      </>
+        <TouchableOpacity
+          onPress={onVerifyPress}
+          disabled={loading}
+          className="h-12 bg-blue-500 rounded-lg justify-center items-center"
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text className="text-white font-medium">Vérifier</Text>
+          )}
+        </TouchableOpacity>
+      </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView>
-      <Text>Sign up</Text>
-      <TextInput
-        autoCapitalize="none"
-        value={emailAddress}
-        placeholder="Enter email"
-        onChangeText={(email) => setEmailAddress(email)}
-      />
-      <TextInput
-        value={password}
-        placeholder="Enter password"
-        secureTextEntry={true}
-        onChangeText={(password) => setPassword(password)}
-      />
-      <Button title="Continue" onPress={onSignUpPress} />
+    <SafeAreaView className="flex-1 bg-white px-6 justify-center">
+      <View className="mb-8">
+        <Text className="text-3xl font-bold text-gray-900">
+          Créer un compte
+        </Text>
+        <Text className="text-gray-500 mt-2">Rejoignez notre communauté</Text>
+      </View>
+      <View className="space-y-4">
+        <View>
+          <Text className="text-gray-700 mb-1">Nom d'utilisateur</Text>
+          <TextInput
+            value={username}
+            placeholder="Votre pseudo"
+            onChangeText={setUsername}
+            className="h-12 border border-gray-200 rounded-lg px-4"
+            autoCapitalize="none"
+          />
+        </View>
+        <View>
+          <Text className="text-gray-700 mb-1">Email</Text>
+          <TextInput
+            autoCapitalize="none"
+            value={emailAddress}
+            placeholder="exemple@email.com"
+            onChangeText={setEmailAddress}
+            className="h-12 border border-gray-200 rounded-lg px-4"
+            keyboardType="email-address"
+          />
+        </View>
+        <View>
+          <Text className="text-gray-700 mb-1">Mot de passe</Text>
+          <TextInput
+            value={password}
+            placeholder="••••••••"
+            secureTextEntry
+            onChangeText={setPassword}
+            className="h-12 border border-gray-200 rounded-lg px-4"
+          />
+        </View>
+      </View>
+      <TouchableOpacity
+        onPress={onSignUpPress}
+        disabled={loading}
+        className="h-12 bg-blue-500 rounded-lg justify-center items-center mt-8"
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text className="text-white font-medium">Créer mon compte</Text>
+        )}
+      </TouchableOpacity>
+      <View className="flex-row items-center my-6">
+        <View className="flex-1 h-px bg-gray-200" />
+        <Text className="mx-4 text-gray-400">Ou</Text>
+        <View className="flex-1 h-px bg-gray-200" />
+      </View>
+      <TouchableOpacity
+        onPress={handleGoogleSignUp}
+        className="h-12 border border-gray-200 rounded-lg flex-row items-center justify-center space-x-2"
+      >
+        <Ionicons name="logo-google" size={20} color="#DB4437" />
+        <Text className="text-gray-700 font-medium">Continuer avec Google</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => router.push("/(auth)/signIn")}
+        className="mt-6"
+      >
+        <Text className="text-center text-gray-500">
+          Déjà un compte ? <Text className="text-blue-500">Se connecter</Text>
+        </Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
-}
+};
+
+export default SignUp;
