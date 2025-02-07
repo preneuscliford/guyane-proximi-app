@@ -1,8 +1,9 @@
-import { useEffect } from "react"
+
 import * as WebBrowser from 'expo-web-browser'
+import React from 'react'
 
 export const useWarmUpBrowser = () => {
-  useEffect(() => {
+  React.useEffect(() => {
     // Warm up the android browser to improve UX
     // https://docs.expo.dev/guides/authentication/#improving-user-experience
     void WebBrowser.warmUpAsync()
@@ -12,4 +13,3 @@ export const useWarmUpBrowser = () => {
   }, [])
 }
 
-WebBrowser.maybeCompleteAuthSession()

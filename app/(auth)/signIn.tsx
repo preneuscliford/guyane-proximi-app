@@ -10,24 +10,50 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useSignIn, useOAuth, useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-
+import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
-
-import { useWarmUpBrowser } from "@/hooks/useFunctions";
+import { useWarmUpBrowser } from "@/hooks/useWarmUpBrowser";
 import { client } from "@/hooks/supabaseClient";
+
+WebBrowser.maybeCompleteAuthSession();
 
 const signIn = () => {
   useWarmUpBrowser();
   // Utiliser useSignIn pour le login par email/mot de passe
   const { isLoaded, signIn, setActive } = useSignIn();
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isSignedIn } = useUser();
 
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
 
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const syncUserWithSupabase = React.useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await client.rpc("get_or_create_user");
+      console.log(data);
+
+      if (error) {
+        console.error("Erreur de synchronisation:", error);
+        return;
+      }
+
+      console.log("Utilisateur synchronisé:", data);
+      router.replace("/");
+    } catch (error) {
+      console.error("Erreur globale:", error);
+    }
+  }, [user, router]);
+
+  useEffect(() => {
+    if (isSignedIn && user) {
+      syncUserWithSupabase();
+    }
+  }, [isSignedIn, user, syncUserWithSupabase]);
 
   // Connexion par email et mot de passe
   const onSignInPress = async () => {
@@ -61,15 +87,20 @@ const signIn = () => {
           redirectUrl: Linking.createURL("/(tabs)", { scheme: "myapp" }),
         });
 
-      // If sign in was successful, set the active session
       if (createdSessionId) {
-        setActive!({ session: createdSessionId });
+        await setActive!({ session: createdSessionId });
+        router.replace("/(tabs)");
       } else {
-        // Use signIn or signUp returned from startOAuthFlow
-        // for next steps, such as MFA
+        const response = await signUp?.update({
+          username: signUp!.emailAddress!.split("@")[0],
+        });
+        if (response?.status === "complete") {
+          await setActive!({ session: signUp!.createdSessionId });
+          router.replace("/(tabs)");
+        }
       }
-    } catch (err) {
-      console.error(JSON.stringify(err, null, 2));
+    } catch (error) {
+      console.error("Error signing up with Google:", error);
     }
   }, []);
 

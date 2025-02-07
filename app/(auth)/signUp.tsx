@@ -11,10 +11,12 @@ import { useSignUp, useUser, useOAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { client } from "@/hooks/supabaseClient";
-import { useWarmUpBrowser } from "@/hooks/useFunctions";
+import { useWarmUpBrowser } from "@/hooks/useWarmUpBrowser";
 import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 
-const SignUp = () => {
+WebBrowser.maybeCompleteAuthSession();
+const signUp = () => {
   useWarmUpBrowser();
   const { isLoaded, signUp, setActive } = useSignUp();
   const { user, isSignedIn } = useUser();
@@ -28,7 +30,7 @@ const SignUp = () => {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const syncUserWithSupabase = useCallback(async () => {
+  const syncUserWithSupabase = React.useCallback(async () => {
     if (!user) return;
 
     try {
@@ -56,17 +58,27 @@ const SignUp = () => {
   // Connexion Google
   const handleGoogleSignUp = useCallback(async () => {
     try {
-      const { createdSessionId } = await startOAuthFlow({
-        redirectUrl: Linking.createURL("/(auth)/callback"),
-      });
+      const { createdSessionId, signIn, signUp, setActive } =
+        await startOAuthFlow({
+          redirectUrl: Linking.createURL("/(tabs)", { scheme: "myapp" }),
+        });
 
       if (createdSessionId) {
         await setActive!({ session: createdSessionId });
+        router.replace("/(tabs)");
+      } else {
+        const response = await signUp?.update({
+          username: signUp!.emailAddress!.split("@")[0],
+        });
+        if (response?.status === "complete") {
+          await setActive!({ session: signUp!.createdSessionId });
+          router.replace("/(tabs)");
+        }
       }
-    } catch (err) {
-      alert(err);
+    } catch (error) {
+      console.error("Error signing up with Google:", error);
     }
-  }, [startOAuthFlow, setActive]);
+  }, []);
 
   const onSignUpPress = async () => {
     if (!isLoaded || !emailAddress || !password || !username) {
@@ -230,4 +242,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default signUp;
