@@ -7,21 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "gsr",
     "newArchEnabled": false,
-    "doctor": {
-      "reactNativeDirectoryCheck": {
-        "enabled": true,
-        "exclude": [
-          "react-native-pell-rich-editor",
-          "base64-arraybuffer",
-          "buffer",
-          "moment",
-          "tailwindcss"
-        ],
-        "listUnknownPackages": true
-      }
-    },
     "userInterfaceStyle": "automatic",
-
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
@@ -52,7 +38,8 @@
           "photosPermission": "Allow access to your photos",
           "cameraPermission": "Allow access to your camera"
         }
-      ]
+      ],
+      "expo-build-properties"
     ],
     "experiments": {
       "typedRoutes": true
