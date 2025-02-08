@@ -53,7 +53,21 @@
           "cameraPermission": "Allow access to your camera"
         }
       ],
-      "expo-build-properties"
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-5480489692705139~3020600371",
+          "iosAppId": "ca-app-pub-5480489692705139/7450761986"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
