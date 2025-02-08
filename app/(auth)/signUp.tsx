@@ -14,6 +14,7 @@ import { client } from "@/hooks/supabaseClient";
 import { useWarmUpBrowser } from "@/hooks/useWarmUpBrowser";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import { Image } from "expo-image";
 
 WebBrowser.maybeCompleteAuthSession();
 const signUp = () => {
@@ -227,17 +228,49 @@ const signUp = () => {
         onPress={handleGoogleSignUp}
         className="h-12 border border-gray-200 rounded-lg flex-row items-center justify-center space-x-2"
       >
-        <Ionicons name="logo-google" size={20} color="#DB4437" />
-        <Text className="text-gray-700 font-medium">Continuer avec Google</Text>
+        <Image
+          source={require("../../assets/icons/logo-google.svg")}
+          style={{
+            width: 25,
+            height: 25,
+            objectFit: "contain",
+          }}
+        />
+        <Text className="text-gray-700 font-medium">
+          {" "}
+          Continuer avec Google
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity
         onPress={() => router.push("/(auth)/signIn")}
         className="mt-6"
       >
-        <Text className="text-center text-gray-500">
-          Déjà un compte ? <Text className="text-blue-500">Se connecter</Text>
+        <Text className="text-center text-gray-600 text-base">
+          Déjà un compte ?{" "}
+          <Text className="text-blue-500 font-bold underline">
+            Se connecter
+          </Text>
         </Text>
       </TouchableOpacity>
+
+      <View className="flex items-center mt-8">
+        <Text onPress={() => {}} className="text-center text-gray-500 text-xs">
+          En continuant, vous acceptez nos{" "}
+          <Text className="text-blue-500 underline">
+            Conditions d'utilisation
+          </Text>{" "}
+          et{" "}
+          <Text className="text-blue-500 underline">
+            Politique de confidentialité
+          </Text>
+        </Text>
+        <Text
+          onPress={() => {}}
+          className="text-center text-gray-500 text-xs mt-2"
+        >
+          Version 1.0.0
+        </Text>
+      </View>
     </SafeAreaView>
   );
 };
