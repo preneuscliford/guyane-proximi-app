@@ -9,25 +9,25 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "@EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "@EXPO_PUBLIC_SUPABASE_ANON_KEY",
-        "EXPO_PUBLIC_SUPABASE_URL": "@EXPO_PUBLIC_SUPABASE_URL"
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_YmVsb3ZlZC1nYXItNjUuY2xlcmsuYWNjb3VudHMuZGV2JA",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0aGZqd2FrcG1hb29ubHFkdmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEzNjQwNTQsImV4cCI6MjA0Njk0MDA1NH0.JpGpGul7rZVKRvkdss5f4WgaOaJneLEaswRNOpWkoUI",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://vthfjwakpmaoonlqdvhg.supabase.co"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "@EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "@EXPO_PUBLIC_SUPABASE_ANON_KEY",
-        "EXPO_PUBLIC_SUPABASE_URL": "@EXPO_PUBLIC_SUPABASE_URL"
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_YmVsb3ZlZC1nYXItNjUuY2xlcmsuYWNjb3VudHMuZGV2JA",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0aGZqd2FrcG1hb29ubHFkdmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEzNjQwNTQsImV4cCI6MjA0Njk0MDA1NH0.JpGpGul7rZVKRvkdss5f4WgaOaJneLEaswRNOpWkoUI",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://vthfjwakpmaoonlqdvhg.supabase.co"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "@EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "@EXPO_PUBLIC_SUPABASE_ANON_KEY",
-        "EXPO_PUBLIC_SUPABASE_URL": "@EXPO_PUBLIC_SUPABASE_URL"
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_YmVsb3ZlZC1nYXItNjUuY2xlcmsuYWNjb3VudHMuZGV2JA",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0aGZqd2FrcG1hb29ubHFkdmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEzNjQwNTQsImV4cCI6MjA0Njk0MDA1NH0.JpGpGul7rZVKRvkdss5f4WgaOaJneLEaswRNOpWkoUI",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://vthfjwakpmaoonlqdvhg.supabase.co"
       }
     }
   },
