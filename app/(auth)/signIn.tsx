@@ -7,103 +7,30 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useSignIn, useOAuth, useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { useWarmUpBrowser } from "@/hooks/useWarmUpBrowser";
 import { client } from "@/hooks/supabaseClient";
-import { Image } from "expo-image";
+
+import SignInWithGoogleBotton from "@/components/SignInWithGoogleBotton";
 
 WebBrowser.maybeCompleteAuthSession();
 
 const signIn = () => {
   useWarmUpBrowser();
-  // Utiliser useSignIn pour le login par email/mot de passe
-  const { isLoaded, signIn, setActive } = useSignIn();
-  const router = useRouter();
-  const { user, isSignedIn } = useUser();
 
-  const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
+  const router = useRouter();
 
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const syncUserWithSupabase = React.useCallback(async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await client.rpc("get_or_create_user");
-      console.log(data);
-
-      if (error) {
-        console.error("Erreur de synchronisation:", error);
-        return;
-      }
-
-      console.log("Utilisateur synchronisé:", data);
-      router.replace("/");
-    } catch (error) {
-      console.error("Erreur globale:", error);
-    }
-  }, [user, router]);
-
-  useEffect(() => {
-    if (isSignedIn && user) {
-      syncUserWithSupabase();
-    }
-  }, [isSignedIn, user, syncUserWithSupabase]);
-
   // Connexion par email et mot de passe
-  const onSignInPress = async () => {
-    if (!isLoaded) return;
-    setLoading(true);
-    try {
-      // Créer une tentative de connexion avec email et mot de passe
-      const result = await signIn.create({
-        identifier: emailAddress,
-        password,
-      });
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-      } else {
-        console.log("Connexion incomplète :", result);
-      }
-    } catch (err: any) {
-      console.error("Erreur de connexion :", err);
-      alert(err.message || "Erreur lors de la connexion");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const onSignInPress = async () => {};
 
   // Connexion via Google OAuth
-
-  const handleGoogleSignIn = useCallback(async () => {
-    try {
-      const { createdSessionId, signIn, signUp, setActive } =
-        await startOAuthFlow({
-          redirectUrl: Linking.createURL("/(tabs)", { scheme: "myapp" }),
-        });
-
-      if (createdSessionId) {
-        await setActive!({ session: createdSessionId });
-        router.replace("/(tabs)");
-      } else {
-        const response = await signUp?.update({
-          username: signUp!.emailAddress!.split("@")[0],
-        });
-        if (response?.status === "complete") {
-          await setActive!({ session: signUp!.createdSessionId });
-          router.replace("/(tabs)");
-        }
-      }
-    } catch (error) {
-      console.error("Error signing up with Google:", error);
-    }
-  }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-white px-6 justify-center">
@@ -165,23 +92,9 @@ const signIn = () => {
         <View className="flex-1 h-px bg-gray-200" />
       </View>
 
-      <TouchableOpacity
-        onPress={handleGoogleSignIn}
-        className="h-12 border border-gray-200 rounded-lg flex-row items-center justify-center space-x-2"
-      >
-        <Image
-          source={require("../../assets/icons/logo-google.svg")}
-          style={{
-            width: 25,
-            height: 25,
-            objectFit: "contain",
-          }}
-        />
-        <Text className="text-gray-700 font-medium">
-          {" "}
-          Continuer avec Google
-        </Text>
-      </TouchableOpacity>
+      <View>
+        <SignInWithGoogleBotton />
+      </View>
 
       <TouchableOpacity
         onPress={() => router.push("/(auth)/signUp")}

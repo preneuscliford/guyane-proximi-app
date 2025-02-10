@@ -11,7 +11,6 @@ import Cathegory from "@/components/Cathegory";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import DisplayEvents from "@/components/DisplayEvent";
-import { useAuth, useUser } from "@clerk/clerk-expo";
 
 interface Product {
   id: number;
@@ -28,15 +27,9 @@ export default function HomeScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const router = useRouter();
-  const { user } = useUser();
 
   useEffect(() => {
     fetchProducts();
-    if (user) {
-      console.log(user);
-    } else {
-      console.log("Utilisateur non connecté");
-    }
   }, []);
 
   const fetchProducts = async () => {

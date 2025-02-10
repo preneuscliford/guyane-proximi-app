@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useSignUp, useUser, useOAuth } from "@clerk/clerk-expo";
+
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { client } from "@/hooks/supabaseClient";
@@ -15,14 +15,10 @@ import { useWarmUpBrowser } from "@/hooks/useWarmUpBrowser";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import { Image } from "expo-image";
+import SignInWithGoogleBotton from "@/components/SignInWithGoogleBotton";
 
-WebBrowser.maybeCompleteAuthSession();
 const signUp = () => {
-  useWarmUpBrowser();
-  const { isLoaded, signUp, setActive } = useSignUp();
-  const { user, isSignedIn } = useUser();
   const router = useRouter();
-  const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
 
   const [username, setUsername] = useState("");
   const [emailAddress, setEmailAddress] = useState("");
@@ -31,95 +27,15 @@ const signUp = () => {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const syncUserWithSupabase = React.useCallback(async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await client.rpc("get_or_create_user");
-      console.log(data);
-
-      if (error) {
-        console.error("Erreur de synchronisation:", error);
-        return;
-      }
-
-      console.log("Utilisateur synchronisé:", data);
-      router.replace("/");
-    } catch (error) {
-      console.error("Erreur globale:", error);
-    }
-  }, [user, router]);
-
-  useEffect(() => {
-    if (isSignedIn && user) {
-      syncUserWithSupabase();
-    }
-  }, [isSignedIn, user, syncUserWithSupabase]);
-
-  // Connexion Google
-  const handleGoogleSignUp = useCallback(async () => {
-    try {
-      const { createdSessionId, signIn, signUp, setActive } =
-        await startOAuthFlow({
-          redirectUrl: Linking.createURL("/(tabs)", { scheme: "myapp" }),
-        });
-
-      if (createdSessionId) {
-        await setActive!({ session: createdSessionId });
-        router.replace("/(tabs)");
-      } else {
-        const response = await signUp?.update({
-          username: signUp!.emailAddress!.split("@")[0],
-        });
-        if (response?.status === "complete") {
-          await setActive!({ session: signUp!.createdSessionId });
-          router.replace("/(tabs)");
-        }
-      }
-    } catch (error) {
-      console.error("Error signing up with Google:", error);
-    }
-  }, []);
-
   const onSignUpPress = async () => {
-    if (!isLoaded || !emailAddress || !password || !username) {
+    if (!emailAddress || !password || !username) {
       alert("Veuillez remplir tous les champs");
       return;
-    }
-
-    setLoading(true);
-    try {
-      await signUp.create({ emailAddress, password });
-      await signUp.update({ username });
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-      setPendingVerification(true);
-    } catch (err) {
-      handleSignUpError(err);
-    } finally {
-      setLoading(false);
     }
   };
 
   // Vérification du code
-  const onVerifyPress = async () => {
-    if (!isLoaded) return;
-
-    setLoading(true);
-    try {
-      const result = await signUp.attemptEmailAddressVerification({ code });
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-      }
-    } catch (err) {
-      alert(
-        `Code invalide: ${
-          err instanceof Error ? err.message : "Format incorrect"
-        }`
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  const onVerifyPress = async () => {};
 
   // Gestion des erreurs
   const handleSignUpError = (error: any) => {
@@ -224,23 +140,9 @@ const signUp = () => {
         <Text className="mx-4 text-gray-400">Ou</Text>
         <View className="flex-1 h-px bg-gray-200" />
       </View>
-      <TouchableOpacity
-        onPress={handleGoogleSignUp}
-        className="h-12 border border-gray-200 rounded-lg flex-row items-center justify-center space-x-2"
-      >
-        <Image
-          source={require("../../assets/icons/logo-google.svg")}
-          style={{
-            width: 25,
-            height: 25,
-            objectFit: "contain",
-          }}
-        />
-        <Text className="text-gray-700 font-medium">
-          {" "}
-          Continuer avec Google
-        </Text>
-      </TouchableOpacity>
+      <View>
+        <SignInWithGoogleBotton />
+      </View>
       <TouchableOpacity
         onPress={() => router.push("/(auth)/signIn")}
         className="mt-6"
