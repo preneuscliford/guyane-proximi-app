@@ -22,6 +22,8 @@ import { useAuth } from "@/app/provider/AuthProvider";
 import { useRouter } from "expo-router";
 import PostsCard from "@/components/PostsCard";
 
+import NativeAdComponent from "@/components/NativeAdComponent";
+
 let limit = 0;
 
 const MORE_ICON = Platform.OS === "ios" ? "dots-horizontal" : "dots-vertical";
@@ -154,11 +156,19 @@ const index = () => {
       <FlatList
         data={post}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 20, paddingHorizontal: 10 }}
         keyExtractor={(item) => item?.id.toString() as any}
-        renderItem={({ item }) => (
-          <PostsCard item={item} router={router} currentUser={userData} />
-        )}
+        renderItem={({ item, index }) =>
+          item?.id % 5 === 2 ? ( // Toutes les 5 publications
+            <NativeAdComponent key={`ad-${index}`} />
+          ) : (
+            <PostsCard
+              key={`post-${item.id}`}
+              item={item}
+              router={router}
+              currentUser={userData}
+            />
+          )
+        }
         onEndReached={getPosts}
         onEndReachedThreshold={0}
         ListHeaderComponent={

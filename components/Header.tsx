@@ -13,27 +13,10 @@ import SearchInput from "./SearchInput";
 import { Link } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { StatusBar } from "expo-status-bar";
-import { useClerk, useSession } from "@clerk/clerk-expo";
-
-interface ProfileData {
-  avatar_url?: string | null;
-  username?: string;
-}
 
 const Header = () => {
   const { session, userData } = useAuth();
   const { user } = useAuth();
-
-  const { signOut } = useClerk();
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      // Redirect to your desired page
-    } catch (err) {
-      console.error(JSON.stringify(err, null, 2));
-    }
-  };
 
   return (
     <View style={styles.container}>
@@ -65,10 +48,6 @@ const Header = () => {
             <Link href="/(auth)/signIn" style={styles.loginLink}>
               <Text style={styles.loginText}>Connexion</Text>
             </Link>
-
-            <TouchableOpacity onPress={() => handleSignOut()}>
-              <Text>se deconnecter</Text>
-            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -82,22 +61,38 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     backgroundColor: "#F5F8FD",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   profileContainer: {
     flexDirection: "row",
-
     alignItems: "center",
     marginBottom: 15,
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 15,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   avatarWrapper: {
     borderRadius: 24,
     width: 48,
     height: 48,
     backgroundColor: "#e0e0e0",
-
     justifyContent: "center",
     alignSelf: "center",
-
     overflow: "hidden",
   },
   avatar: {

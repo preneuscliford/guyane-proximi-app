@@ -333,10 +333,9 @@ const PostsCard = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 16,
     padding: 16,
-    marginBottom: 16,
-    backgroundColor: "#FFF",
+    marginBottom: 2,
+    backgroundColor: "#F5F8FD",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -351,6 +350,7 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     borderWidth: 2,
     borderColor: "#E0E7FF",
+    marginRight: 4,
   },
   interactionButton: {
     padding: 8,
