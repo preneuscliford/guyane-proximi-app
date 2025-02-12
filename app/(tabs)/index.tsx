@@ -1,4 +1,4 @@
-import { ScrollView, View, TouchableOpacity } from "react-native";
+import { ScrollView, View, TouchableOpacity, StyleSheet } from "react-native";
 import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "@/lib/supabase";
@@ -69,75 +69,83 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView scrollEnabled={true} className=" bg-ghost-white">
-      <SafeAreaView>
-        <StatusBar style="dark" backgroundColor="#F5F8FD" />
-        <Header />
-        <Slider />
+    <SafeAreaView style={styles.container}>
+      <View>
+        <StatusBar style="light" backgroundColor="#9333EA" />
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* En-tête avec recherche et profil */}
+          <Header />
 
-        {/* Section Catégories */}
-        <Cathegory />
+          {/* Section des catégories */}
+          <View style={{ marginTop: 20, marginBottom: 10 }}>
+            <Text
+              style={{
+                paddingHorizontal: 15,
+                fontSize: 20,
+                fontWeight: "bold",
+                color: "#1A1A1A",
+              }}
+            >
+              Nos Meilleurs offres
+            </Text>
+            <Slider />
+          </View>
+          <Cathegory />
 
-        {/* Section Derniers Produits */}
-        <LastItems />
+          {/* Dernières publications */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Dernières activités</Text>
+            <Text style={styles.seeAll}>Voir tout</Text>
+          </View>
+          <LastItems />
 
-        <DisplayEvents />
-
-        {/* Section par Catégories */}
-        {/* {categories.map(
-          (category) =>
-            category && (
-              <View key={category} className="mt-6 px-4">
-                <Text
-                  variant="titleLarge"
-                  className="font-bold mb-4 text-ice-white"
-                >
-                  {category}
-                </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {products
-                    .filter((p) => p.category === category)
-                    .map((product) => (
-                      <TouchableOpacity
-                        key={product.id}
-                        onPress={() => handleProductPress(product.id)}
-                      >
-                        <View style={{ margin: 5, width: 180 }}>
-                          <Card style={{ width: "100%" }}>
-                            <ProductsImage
-                              path={product.imageUrl}
-                              fallback={"product image"}
-                              style={{
-                                height: 160,
-                                width: "100%",
-                                objectFit: "cover",
-                              }}
-                            />
-                            <Chip
-                              style={{ marginVertical: 5, marginHorizontal: 5 }}
-                            >
-                              {product.category}
-                            </Chip>
-                            <Card.Content>
-                              <Badge
-                                size={25}
-                                style={{ alignSelf: "flex-start" }}
-                              >
-                                {`${product.price} €`}
-                              </Badge>
-                              <Text variant="titleSmall" numberOfLines={1}>
-                                {product.title}
-                              </Text>
-                            </Card.Content>
-                          </Card>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
-                </ScrollView>
-              </View>
-            )
-        )} */}
-      </SafeAreaView>
-    </ScrollView>
+          {/* Événements à venir */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Événements</Text>
+            <Text style={styles.seeAll}>Voir tout</Text>
+          </View>
+          {/* <EventItem /> */}
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F8FD",
+  },
+  promoBanner: {
+    backgroundColor: "#007AFF",
+    marginHorizontal: 20,
+    marginVertical: 15,
+    borderRadius: 10,
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  promoText: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1A1A1A",
+  },
+  seeAll: {
+    color: "#007AFF",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+});

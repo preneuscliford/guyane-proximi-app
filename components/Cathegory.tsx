@@ -1,117 +1,92 @@
+import React from "react";
 import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
-  Image,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
   FlatList,
 } from "react-native";
-import React from "react";
-import { router } from "expo-router";
-import index from "@/app/(tabs)/(community)";
+import { Wrench, Truck, PaintBucket, Ratio } from "lucide-react-native";
 
 const categories = [
-  {
-    id: 1,
-    name: "Électronique",
-    icon: require("../assets/icons/appareils-electroniques.png"),
-    value: "Électronique",
-  },
-  {
-    id: 2,
-    name: "Maison",
-    icon: require("../assets/icons/maison.png"),
-    value: "Maison",
-  },
-  {
-    id: 3,
-    name: "Beauté",
-    icon: require("../assets/icons/beaute.png"),
-    value: "Beaute",
-  },
-  {
-    id: 4,
-    name: "Sport",
-    icon: require("../assets/icons/musculation.png"),
-    value: "Sport",
-  },
-  {
-    id: 5,
-    name: "Santé",
-    icon: require("../assets/icons/soins-de-sante.png"),
-    value: "Sante",
-  },
-  {
-    id: 6,
-    name: "Alimentation",
-    icon: require("../assets/icons/alimentation-equilibree.png"),
-    value: "Alimentation",
-  },
-  {
-    id: 7,
-    name: "Mode",
-    icon: require("../assets/icons/mode.png"),
-    value: "Mode",
-  },
-  {
-    id: 8,
-    name: "Divertissement",
-    icon: require("../assets/icons/divertissement.png"),
-    value: "Divertissement",
-  },
+  { id: "1", name: "Cleaning", icon: Ratio },
+  { id: "2", name: "Repairing", icon: Wrench },
+  { id: "3", name: "Painting", icon: PaintBucket },
+  { id: "4", name: "Shifting", icon: Truck },
 ];
 
-const Cathegory = () => {
-  const handleCategoryPress = (category: string) => {
-    router.push({
-      pathname: "/product",
-      params: { category },
-    });
-  };
-
+const Categories = () => {
   return (
-    <View className="mt-5 px-5">
-      <Text className="text-2xl font-bold text-rich-black">Catégories</Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Categories</Text>
+        <TouchableOpacity>
+          <Text style={styles.viewAll}>View All</Text>
+        </TouchableOpacity>
+      </View>
+
       <FlatList
         data={categories}
-        scrollEnabled={false}
-        nestedScrollEnabled={true}
-        numColumns={4}
-        renderItem={({ item, index }) => (
-          <View
-            className=" flex-1 flex-row flex-wrap justify-center items-center mt-5 border"
-            style={{
-              borderWidth: 1,
-              borderColor: "#EAEDF1",
-              margin: 5,
-              borderRadius: 5,
-            }}
-          >
-            <TouchableOpacity
-              key={index}
-              className="w-[23%] items-center mb-4"
-              onPress={() => handleCategoryPress(item.value)}
-            >
-              <View className=" rounded-lg p-2 w-14 h-14 items-center justify-center">
-                <Image
-                  source={item.icon}
-                  style={{ width: 30, height: 30, objectFit: "contain" }}
-                />
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.list}
+        renderItem={({ item }) => {
+          const Icon = item.icon;
+          return (
+            <TouchableOpacity style={styles.category}>
+              <View style={styles.iconContainer}>
+                <Icon size={24} color="#9333EA" />
               </View>
-              <Text
-                numberOfLines={1}
-                className="text-xs text-center mt-1 text-rich-black"
-              >
-                {item.name}
-              </Text>
+              <Text style={styles.categoryName}>{item.name}</Text>
             </TouchableOpacity>
-          </View>
-        )}
+          );
+        }}
+        keyExtractor={(item) => item.id}
       />
     </View>
   );
 };
 
-export default Cathegory;
+const styles = StyleSheet.create({
+  container: {
+    paddingVertical: 16,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1F2937",
+  },
+  viewAll: {
+    color: "#9333EA",
+    fontSize: 14,
+  },
+  list: {
+    paddingHorizontal: 16,
+    gap: 16,
+  },
+  category: {
+    alignItems: "center",
+    gap: 8,
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#F3E8FF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  categoryName: {
+    fontSize: 12,
+    color: "#4B5563",
+  },
+});
 
-const styles = StyleSheet.create({});
+export default Categories;

@@ -1,45 +1,51 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import React, { useEffect } from "react";
+
+import { Image } from "expo-image";
 import {
   GoogleSignin,
-  GoogleSigninButton,
-  isErrorWithCode,
-  isSuccessResponse,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
-import { Image } from "expo-image";
-import * as WebBrowser from "expo-web-browser";
-import * as Linking from "expo-linking";
-import { useWarmUpBrowser } from "@/hooks/useWarmUpBrowser";
-import * as Google from "expo-auth-session/providers/google";
-
-WebBrowser.maybeCompleteAuthSession();
+import { supabase } from "@/lib/supabase";
 
 const SignInWithGoogleBotton = () => {
-  useWarmUpBrowser();
-
-  const config = {
-    webClientId: process.env.EXPO_PUBLIC_WEBCLIENT_ID,
-    androidClientId: process.env.EXPO_PUBLIC_ANDROID_ID,
-  };
-
-  const [request, response, prompAsync] = Google.useAuthRequest(config);
+  GoogleSignin.configure({
+    scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+    webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID,
+  });
 
   const handleSignIn = async () => {
-    if (response?.type === "success") {
-      const { authentication } = response;
-      const token = authentication?.accessToken;
-      console.log(token);
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      if (userInfo?.data?.idToken) {
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: userInfo.data.idToken,
+        });
+        // console.log(error, data);
+      } else {
+        throw new Error("no ID token present!");
+      }
+    } catch (error: any) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // user cancelled the login flow
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        // operation (e.g. sign in) is in progress already
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        // play services not available or outdated
+      } else {
+        // some other error happened
+      }
     }
   };
 
-  useEffect(() => {
-    handleSignIn();
-  }, [response]);
+  //   useEffect(() => {
+  //     handleSignIn();
+  //   }, [response]);
 
   return (
     <TouchableOpacity
-      onPress={() => prompAsync()}
+      onPress={handleSignIn}
       className="h-12 border border-gray-200 rounded-lg flex-row items-center justify-center space-x-2"
     >
       <Image

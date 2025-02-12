@@ -8,7 +8,7 @@ const profileLayout = () => {
 
   const { session } = useAuth();
 
-  if (!session) router.push("/(auth)/login");
+  if (!session) router.push("/(auth)/signIn");
 
   return (
     <Stack>

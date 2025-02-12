@@ -1,267 +1,142 @@
+import React from "react";
 import {
-  FlatList,
   View,
-  ActivityIndicator,
-  Alert,
-  Animated,
-  TouchableWithoutFeedback,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Image,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { Card, Text, Chip, useTheme, IconButton } from "react-native-paper";
-import { router } from "expo-router";
-import ProductsImage from "./ProductsImage";
 
-interface Listing {
-  id: string;
-  title: string;
-  price: number;
-  type: "product" | "service" | "innovation";
-  media_urls: string[];
-  specs: {
-    condition?: string;
-    [key: string]: any;
-  };
-  tags?: string[];
-  created_at: string;
-}
+const items = [
+  {
+    id: "1",
+    title: "House Cleaning",
+    provider: "Jenny Wilson",
+    type: "Cleaning",
+    image:
+      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=200",
+  },
+  {
+    id: "2",
+    title: "Washing Clothes",
+    provider: "Emma Potter",
+    type: "Cleaning",
+    image:
+      "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?auto=format&fit=crop&q=80&w=200",
+  },
+];
 
 const LastItems = () => {
-  const theme = useTheme();
-  const [listings, setListings] = useState<Listing[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const animValues = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    const fetchListings = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("product_listings")
-          .select(
-            `
-            id,
-            title,
-            price,
-            type,
-            media_urls,
-            specs,
-            tags,
-            created_at
-          `
-          )
-          .order("created_at", { ascending: false })
-          .limit(4);
-
-        if (error) throw error;
-        setListings(data as Listing[]);
-      } catch (err) {
-        setError("Impossible de charger les annonces");
-        Alert.alert("Erreur", "Impossible de charger les annonces");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchListings();
-  }, []);
-
-  const handlePressIn = () => {
-    Animated.spring(animValues, {
-      toValue: 0.95,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(animValues, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handleProductPress = (listingId: string) => {
-    router.push(`/listing/details?id=${listingId}`);
-  };
-
-  if (loading) {
-    return (
-      <View style={{ padding: 20 }}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={{ padding: 20 }}>
-        <Text style={{ color: theme.colors.error }}>{error}</Text>
-      </View>
-    );
-  }
-
-  if (!listings.length) {
-    return (
-      <View style={{ padding: 16 }}>
-        <Text style={{ color: theme.colors.onSurfaceVariant }}>
-          Aucune annonce disponible
-        </Text>
-      </View>
-    );
-  }
-
-  console.log(listings[0].media_urls);
-
   return (
-    <View style={{ padding: 16 }}>
-      <Text
-        variant="titleLarge"
-        style={{
-          marginBottom: 24,
-          fontWeight: "700",
-          color: theme.colors.onSurface,
-        }}
-      >
-        Dernières publications
-      </Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Latest Business</Text>
+        <TouchableOpacity>
+          <Text style={styles.viewAll}>View All</Text>
+        </TouchableOpacity>
+      </View>
 
       <FlatList
-        data={listings}
+        data={items}
         numColumns={2}
-        scrollEnabled={false}
-        columnWrapperStyle={{ gap: 16 }}
-        contentContainerStyle={{ gap: 16 }}
+        columnWrapperStyle={styles.row}
         renderItem={({ item }) => (
-          <TouchableWithoutFeedback
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            onPress={() => handleProductPress(item.id)}
-          >
-            <Animated.View
-              style={{
-                transform: [{ scale: animValues }],
-                flex: 1,
-                maxWidth: "48%",
-              }}
-            >
-              <Card
-                style={{
-                  backgroundColor: theme.colors.surface,
-                  borderRadius: 16,
-                  elevation: 4,
-                  shadowColor: theme.colors.shadow,
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 8,
-                }}
-              >
-                <View style={{ position: "relative" }}>
-                  <ProductsImage
-                    path={item?.media_urls?.[0]}
-                    fallback={"product image"}
-                    style={{
-                      height: 180,
-                      width: "100%",
-                      borderTopLeftRadius: 16,
-                      borderTopRightRadius: 16,
-                    }}
-                  />
-                  <IconButton
-                    icon="heart-outline"
-                    size={20}
-                    style={{
-                      position: "absolute",
-                      right: 8,
-                      top: 8,
-                      backgroundColor: theme.colors.surfaceVariant,
-                    }}
-                    iconColor={theme.colors.error}
-                  />
-                </View>
-
-                <Card.Content style={{ padding: 16 }}>
-                  <Chip
-                    mode="outlined"
-                    style={{
-                      alignSelf: "flex-start",
-                      marginBottom: 12,
-                      borderColor: theme.colors.primaryContainer,
-                      backgroundColor: theme.colors.primaryContainer,
-                    }}
-                    textStyle={{
-                      color: theme.colors.onPrimaryContainer,
-                      fontSize: 12,
-                    }}
-                  >
-                    {item.type}
-                  </Chip>
-
-                  <Text
-                    variant="titleMedium"
-                    numberOfLines={1}
-                    style={{
-                      fontWeight: "700",
-                      marginBottom: 8,
-                      color: theme.colors.onSurface,
-                    }}
-                  >
-                    {item.title}
-                  </Text>
-
-                  <Text
-                    variant="titleLarge"
-                    style={{
-                      color: theme.colors.primary,
-                      fontWeight: "800",
-                      marginBottom: 12,
-                    }}
-                  >
-                    {new Intl.NumberFormat("fr-FR", {
-                      style: "currency",
-                      currency: "EUR",
-                    }).format(item.price)}
-                  </Text>
-
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    {item.specs?.condition && (
-                      <Chip
-                        mode="flat"
-                        style={{
-                          backgroundColor: theme.colors.secondaryContainer,
-                        }}
-                        textStyle={{ fontSize: 12 }}
-                      >
-                        {item.specs.condition}
-                      </Chip>
-                    )}
-
-                    {item.tags?.length > 0 && (
-                      <Text
-                        variant="labelSmall"
-                        style={{
-                          color: theme.colors.onSurfaceVariant,
-                          fontWeight: "500",
-                        }}
-                      >
-                        #{item.tags[0]}
-                      </Text>
-                    )}
-                  </View>
-                </Card.Content>
-              </Card>
-            </Animated.View>
-          </TouchableWithoutFeedback>
+          <TouchableOpacity style={styles.card}>
+            <View style={styles.imageContainer}>
+              <Image source={{ uri: item.image }} style={styles.image} />
+              <TouchableOpacity style={styles.heartButton}></TouchableOpacity>
+            </View>
+            <View style={styles.content}>
+              <Text style={styles.itemTitle}>{item.title}</Text>
+              <Text style={styles.provider}>{item.provider}</Text>
+              <View style={styles.typeContainer}>
+                <Text style={styles.type}>{item.type}</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
         )}
         keyExtractor={(item) => item.id}
       />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    paddingVertical: 16,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1F2937",
+  },
+  viewAll: {
+    color: "#9333EA",
+    fontSize: 14,
+  },
+  row: {
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+  },
+  card: {
+    width: "48%",
+    backgroundColor: "white",
+    borderRadius: 12,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  imageContainer: {
+    position: "relative",
+  },
+  image: {
+    width: "100%",
+    height: 120,
+  },
+  heartButton: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    borderRadius: 12,
+    padding: 6,
+  },
+  content: {
+    padding: 12,
+  },
+  itemTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#1F2937",
+    marginBottom: 4,
+  },
+  provider: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 8,
+  },
+  typeContainer: {
+    backgroundColor: "#F3E8FF",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+  },
+  type: {
+    color: "#9333EA",
+    fontSize: 12,
+  },
+});
 
 export default LastItems;
