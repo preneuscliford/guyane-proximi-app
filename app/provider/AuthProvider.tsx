@@ -68,6 +68,48 @@ export default function AuthProvider({ children }: PropsWithChildren) {
     });
   }, []);
 
+  const fetchUserDetails = async () => {
+    try {
+      // Récupérer la session actuelle
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      if (error) throw error;
+
+      if (session) {
+        const user = session.user;
+
+        const userDetails = {
+          UID: user.id, // ID unique
+          displayName: user.user_metadata?.name || "N/A", // Nom affiché (si configuré)
+          email: user.email, // Email
+          phone: user.phone, // Téléphone
+          providers: user.app_metadata?.providers || [], // Liste des providers (e.g., ['google'])
+          providerType: user.app_metadata?.provider || "N/A", // Type de provider principal
+          createdAt: user.created_at, // Date de création
+          lastSignInAt: session.expires_at, // Date d'expiration (approximation de dernière connexion)
+        };
+
+        console.log("User Details:", userDetails);
+
+        return userDetails;
+      } else {
+        console.log("No active session");
+        return null;
+      }
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération des informations utilisateur :",
+        error
+      );
+      return null;
+    }
+  };
+
+  fetchUserDetails();
+
   return (
     <AuthContext.Provider
       value={{

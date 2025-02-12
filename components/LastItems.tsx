@@ -39,6 +39,7 @@ const LastItems = () => {
 
       <FlatList
         data={items}
+        scrollEnabled={false}
         numColumns={2}
         columnWrapperStyle={styles.row}
         renderItem={({ item }) => (

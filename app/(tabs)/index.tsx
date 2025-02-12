@@ -72,7 +72,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <View>
         <StatusBar style="light" backgroundColor="#9333EA" />
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView horizontal={false} scrollEnabled={true}>
           {/* En-tête avec recherche et profil */}
           <Header />
 

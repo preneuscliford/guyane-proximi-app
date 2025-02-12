@@ -28,7 +28,7 @@ const Categories = () => {
       <FlatList
         data={categories}
         horizontal
-        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => {
           const Icon = item.icon;

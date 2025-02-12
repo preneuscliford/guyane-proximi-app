@@ -5,10 +5,11 @@ import { useAuth } from "@/app/provider/AuthProvider";
 
 const profileLayout = () => {
   const router = useRouter();
-
   const { session } = useAuth();
 
-  if (!session) router.push("/(auth)/signIn");
+  useEffect(() => {
+    if (!session) router.push("/(auth)/signUp");
+  }, [session]);
 
   return (
     <Stack>

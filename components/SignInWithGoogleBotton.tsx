@@ -1,4 +1,10 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  AppState,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import { Image } from "expo-image";
 import {
@@ -6,6 +12,13 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 import { supabase } from "@/lib/supabase";
+AppState.addEventListener("change", (state) => {
+  if (state === "active") {
+    supabase.auth.startAutoRefresh();
+  } else {
+    supabase.auth.stopAutoRefresh();
+  }
+});
 
 const SignInWithGoogleBotton = () => {
   GoogleSignin.configure({
@@ -22,7 +35,7 @@ const SignInWithGoogleBotton = () => {
           provider: "google",
           token: userInfo.data.idToken,
         });
-        // console.log(error, data);
+        console.log(error, data);
       } else {
         throw new Error("no ID token present!");
       }
@@ -38,10 +51,6 @@ const SignInWithGoogleBotton = () => {
       }
     }
   };
-
-  //   useEffect(() => {
-  //     handleSignIn();
-  //   }, [response]);
 
   return (
     <TouchableOpacity

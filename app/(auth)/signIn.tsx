@@ -5,32 +5,92 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   View,
+  AppState,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import * as WebBrowser from "expo-web-browser";
-import * as Linking from "expo-linking";
-import { useWarmUpBrowser } from "@/hooks/useWarmUpBrowser";
-import { client } from "@/hooks/supabaseClient";
+import * as Burnt from "burnt";
 
 import SignInWithGoogleBotton from "@/components/SignInWithGoogleBotton";
-
-WebBrowser.maybeCompleteAuthSession();
+import { supabase } from "@/lib/supabase";
+AppState.addEventListener("change", (state) => {
+  if (state === "active") {
+    supabase.auth.startAutoRefresh();
+  } else {
+    supabase.auth.stopAutoRefresh();
+  }
+});
 
 const signIn = () => {
-  useWarmUpBrowser();
-
   const router = useRouter();
-
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  // Valider les champs avant de soumettre
+  const validateFields = () => {
+    let isValid = true;
+
+    if (!emailAddress) {
+      setEmailError("L'adresse email est requise.");
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(emailAddress)) {
+      setEmailError("L'adresse email n'est pas valide.");
+      isValid = false;
+    } else {
+      setEmailError("");
+    }
+
+    if (!password) {
+      setPasswordError("Le mot de passe est requis.");
+      isValid = false;
+    } else {
+      setPasswordError("");
+    }
+
+    return isValid;
+  };
 
   // Connexion par email et mot de passe
-  const onSignInPress = async () => {};
+  const signInWithEmail = async () => {
+    if (!validateFields()) {
+      return; // Arrêter si la validation échoue
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: emailAddress,
+      password: password,
+    });
 
-  // Connexion via Google OAuth
+    if (error) {
+      if (error.message === "Invalid login credentials") {
+        setPasswordError("Email ou mot de passe incorrect.");
+        setEmailError(" Email ou mot de passe incorrect.");
+      } else {
+        Burnt.toast({
+          title: "Erreur inconnue",
+          preset: "error",
+          message: error.message || "Une erreur s'est produite.",
+        });
+      }
+      setLoading(false);
+      return;
+    }
+    Burnt.toast({
+      title: "Connexion réussie",
+      preset: "done",
+      message: "Vous êtes maintenant connecté.",
+    });
+
+    setEmailAddress("");
+    setPassword("");
+    setLoading(false);
+
+    router.push("/"); // Redirection après succès
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white px-6 justify-center">
@@ -49,9 +109,14 @@ const signIn = () => {
             value={emailAddress}
             placeholder="exemple@email.com"
             onChangeText={setEmailAddress}
-            className="h-12 border border-gray-200 rounded-lg px-4"
+            className={`h-12 border ${
+              emailError ? "border-red-500" : "border-gray-200"
+            } rounded-lg px-4`}
             keyboardType="email-address"
           />
+          {emailError ? (
+            <Text className="text-red-500 text-sm mt-1">{emailError}</Text>
+          ) : null}
         </View>
 
         <View>
@@ -61,21 +126,26 @@ const signIn = () => {
             placeholder="••••••••"
             secureTextEntry
             onChangeText={setPassword}
-            className="h-12 border border-gray-200 rounded-lg px-4"
+            className={`h-12 border ${
+              passwordError ? "border-red-500" : "border-gray-200"
+            } rounded-lg px-4`}
           />
+          {passwordError ? (
+            <Text className="text-red-500 text-sm mt-1">{passwordError}</Text>
+          ) : null}
         </View>
         <TouchableOpacity
           onPress={() => router.push("/")}
           className="mt-2 self-end"
         >
           <Text className="text-center text-gray-500 underline">
-            Mot de passe oublé ?
+            Mot de passe oublié ?
           </Text>
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity
-        onPress={onSignInPress}
+        onPress={signInWithEmail}
         disabled={loading}
         className="h-12 bg-blue-500 rounded-lg justify-center items-center mt-8"
       >

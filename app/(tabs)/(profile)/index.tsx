@@ -19,6 +19,7 @@ import {
 } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import RenderHTML from "react-native-render-html";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 type Post = {
   id: string;
@@ -107,7 +108,19 @@ const EditProfil = () => {
   );
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      // Déconnexion de Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      // Révocation du token Google
+      await GoogleSignin.signOut();
+
+      // Rediriger vers la page de connexion ou autre
+      router.push("/(auth)/signIn");
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion :", error);
+    }
   };
 
   return (
