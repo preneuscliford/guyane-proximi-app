@@ -4,208 +4,221 @@ import {
   Text,
   View,
   SafeAreaView,
-  Alert,
   TouchableOpacity,
   FlatList,
-} from "react-native";
-import {
   ActivityIndicator,
-  Appbar,
-  Avatar,
-  SegmentedButtons,
-} from "react-native-paper";
-import { Platform } from "react-native";
+  Pressable,
+} from "react-native";
 import { StatusBar } from "expo-status-bar";
-import RemoteImage from "@/components/RemoteImage";
-import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/provider/AuthProvider";
-import { useRouter } from "expo-router";
+import { Link, Stack, useNavigation, useRouter } from "expo-router";
 import PostsCard from "@/components/PostsCard";
-
 import NativeAdComponent from "@/components/NativeAdComponent";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+  getNewPosts,
+  getTrendingPosts,
+  getUserPosts,
+  PAGE_SIZE,
+} from "@/lib/supabase";
+import Animated from "react-native-reanimated";
+import { Bell, Ratio, SquarePlus } from "lucide-react-native";
+import { Appbar } from "react-native-paper";
+import { Image } from "expo-image";
+import RemoteImage from "@/components/RemoteImage";
 
-let limit = 0;
-
-const MORE_ICON = Platform.OS === "ios" ? "dots-horizontal" : "dots-vertical";
-
-interface Post {
-  id: number;
-  avatar_url: string;
-  username: string;
-  body: string;
-}
-const index = () => {
-  const [post, setPost] = useState<Post[]>([]);
-  const { session, user, userData } = useAuth();
-  const [filter, setFilter] = useState<"new" | "trending" | "myPosts">("new"); // Filtre actif
-  const [hasMore, setHasMore] = useState(true);
+const Index = () => {
+  const { userData, user, session } = useAuth();
   const router = useRouter();
+  const navigation = useNavigation();
+  const [activeTab, setActiveTab] = useState<
+    "nouveaux" | "tendances" | "mesPosts"
+  >("nouveaux");
 
-  // Fonction pour récupérer les posts en fonction du filtre
-  async function getPosts() {
-    if (!hasMore) return null;
-    limit = limit + 4;
+  // Requête pour les nouveaux posts
+  const newPostsQuery = useInfiniteQuery({
+    queryKey: ["posts", "nouveaux"],
+    queryFn: ({ pageParam }) => getNewPosts(pageParam),
+    getNextPageParam: (lastPage, allPages) =>
+      allPages.length * PAGE_SIZE < lastPage.totalCount
+        ? allPages.length + 1
+        : undefined,
+    initialPageParam: 1,
+    enabled: activeTab === "nouveaux",
+  });
 
-    try {
-      let query = supabase
-        .from("posts")
-        .select(
-          "*, profiles(id, username, avatar_url), postLikes(*), comments(*)"
-        )
-        .limit(limit);
+  // Requête pour les tendances
+  const trendingPostsQuery = useInfiniteQuery({
+    queryKey: ["posts", "tendances"],
+    queryFn: ({ pageParam }) => getTrendingPosts(pageParam),
+    getNextPageParam: (lastPage, allPages) =>
+      allPages.length * PAGE_SIZE < lastPage.totalCount
+        ? allPages.length + 1
+        : undefined,
+    initialPageParam: 1,
+    enabled: activeTab === "tendances",
+  });
 
-      // Appliquer les filtres
-      if (filter === "new") {
-        query = query.order("created_at", { ascending: false });
-      } else if (filter === "trending") {
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  // Requête pour les posts utilisateur
+  const userPostsQuery = useInfiniteQuery({
+    queryKey: ["posts", "mesPosts", user?.id],
+    queryFn: ({ pageParam }) => getUserPosts(pageParam, user?.id as string),
+    getNextPageParam: (lastPage, allPages) =>
+      allPages.length * PAGE_SIZE < lastPage.totalCount
+        ? allPages.length + 1
+        : undefined,
+    initialPageParam: 1,
+    enabled: activeTab === "mesPosts" && !!user?.id,
+  });
 
-        const { data, error } = await query
-          .gt("created_at", oneWeekAgo.toISOString()) // Posts des 7 derniers jours
-          .order("created_at", { ascending: false }); // Ordre initial
+  // Sélection des données actives
+  const activeQuery = {
+    nouveaux: newPostsQuery,
+    tendances: trendingPostsQuery,
+    mesPosts: userPostsQuery,
+  }[activeTab];
 
-        if (error) throw error;
+  const flattenedData =
+    activeQuery.data?.pages.flatMap((page) => page.data) || [];
+  const totalCount = activeQuery.data?.pages[0]?.totalCount || 0;
 
-        // Calculer la popularité (likes + commentaires) pour chaque post
-        const trendingPosts = (data || []).sort((a, b) => {
-          const aPopularity =
-            (a.postLikes?.length || 0) + (a.comments?.length || 0);
-          const bPopularity =
-            (b.postLikes?.length || 0) + (b.comments?.length || 0);
-          return bPopularity - aPopularity; // Trier par popularité décroissante
-        });
-
-        setPost(trendingPosts);
-        setHasMore(trendingPosts.length === limit);
-        return; // Les posts avec le plus de likes
-      } else if (filter === "myPosts" && user) {
-        query = query
-          .eq("userId", user.id)
-          .order("created_at", { ascending: false });
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        throw error;
-      }
-
-      if (post.length === data.length) {
-        setHasMore(false);
-      }
-      setPost(data as any);
-    } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert(error.message);
-      }
+  const renderPostItem = ({ item, index }: { item: any; index: number }) => {
+    if (index % 5 === 2) {
+      return <NativeAdComponent key={`ad-${index}`} />;
     }
-  }
-
-  // Gérer les changements de filtre
-  const handleFilterChange = (value: "new" | "trending" | "myPosts") => {
-    setFilter(value);
-    setHasMore(true); // Réinitialiser la pagination
-    limit = 0; // Réinitialiser la limite
-    setPost([]); // Réinitialiser les posts
-    getPosts(); // Recharger les posts avec le nouveau filtre
+    return (
+      <PostsCard
+        key={`post-${item.id}`}
+        item={item}
+        router={router}
+        currentUser={userData}
+      />
+    );
   };
 
-  useEffect(() => {
-    getPosts();
-  }, [filter]);
+  const handlePress = () => {
+    console.log("Button pressed:");
+  };
 
-  console.log(userData);
+  console.log(userData?.avatar_url);
 
   return (
-    <SafeAreaView className=" h-full bg-ghost-white ">
+    <SafeAreaView className="h-full bg-ghost-white">
       <StatusBar style="dark" backgroundColor="#F5F8FD" />
-      <Appbar.Header
-        style={{
-          backgroundColor: "#F5F8FD",
-          elevation: 2,
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-        }}
-      >
-        <Appbar.Content title="Title" />
+      <Appbar.Header style={{ backgroundColor: "#F5F8FD" }}>
+        <Appbar.Content title="Feed" />
+
         <Appbar.Action
-          icon="heart-outline"
-          size={28}
-          onPress={() => router.push("/(tabs)/(community)/notifications")}
-        />
-        <Appbar.Action
-          icon="plus-box-outline"
-          size={28}
+          icon={() => <SquarePlus size={24} color="#9333EA" />}
           onPress={() => router.push("/(tabs)/(community)/create")}
         />
-        <TouchableOpacity onPress={() => router.push("/(tabs)/(profile)")}>
-          <RemoteImage
-            path={userData?.avatar_url}
-            fallback="profile image"
-            style={{
-              width: 28,
-              height: 28,
-              marginHorizontal: 10,
-              borderRadius: 14,
-            }}
-          />
-        </TouchableOpacity>
+        <Appbar.Action
+          icon={() => <Bell size={24} color="#9333EA" />}
+          onPress={() => {}}
+        />
+        <Appbar.Action
+          icon={() =>
+            userData?.avatar_url.startsWith("https://") ? (
+              <Image
+                source={{ uri: userData?.avatar_url }}
+                style={{ width: 28, height: 28, borderRadius: 20 }}
+              />
+            ) : (
+              <RemoteImage
+                path={userData?.avatar_url}
+                fallback="profile-placeholder"
+                style={{ width: 28, height: 28, borderRadius: 20 }}
+              />
+            )
+          }
+          onPress={() => {}}
+        />
       </Appbar.Header>
 
-      <FlatList
-        data={post}
-        showsVerticalScrollIndicator={false}
-        keyExtractor={(item) => item?.id.toString() as any}
-        renderItem={({ item, index }) =>
-          item?.id % 5 === 2 ? ( // Toutes les 5 publications
-            <NativeAdComponent key={`ad-${index}`} />
-          ) : (
-            <PostsCard
-              key={`post-${item.id}`}
-              item={item}
-              router={router}
-              currentUser={userData}
-            />
-          )
-        }
-        onEndReached={getPosts}
-        onEndReachedThreshold={0}
-        ListHeaderComponent={
-          <SegmentedButtons
-            value={filter}
-            onValueChange={handleFilterChange as any}
-            buttons={[
-              {
-                value: "new",
-                label: "Nouveaux",
-              },
-
-              { value: "trending", label: "Tendances" },
-              { value: "myPosts", label: "Mes posts" },
-            ]}
-            style={{ marginBottom: 16 }}
-          />
-        }
-        ListFooterComponent={
-          hasMore ? (
-            <View style={{ marginVertical: post?.length === 0 ? 200 : 30 }}>
-              <ActivityIndicator size={"small"} />
-            </View>
-          ) : (
-            <View className="items-center">
-              <Text className=" text-lg font-medium">
-                {" "}
-                Il n'y a plus de posts{" "}
+      {/* Barre d'onglets */}
+      <View className="flex-row justify-between px-4 pt-4 border-b border-gray-100">
+        {(["nouveaux", "tendances", "mesPosts"] as const).map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            className={`pb-4 px-2 ${
+              activeTab === tab ? "border-b-2 border-purple-600" : ""
+            }`}
+            onPress={() => setActiveTab(tab)}
+            activeOpacity={0.7}
+          >
+            <View className="flex-row items-center gap-2">
+              <Text
+                className={`text-sm font-semibold ${
+                  activeTab === tab ? "text-purple-600" : "text-gray-400"
+                }`}
+              >
+                {
+                  {
+                    nouveaux: "Nouveaux",
+                    tendances: "Tendances",
+                    mesPosts: "Mes posts",
+                  }[tab]
+                }
               </Text>
+              {activeTab === tab && (
+                <View className="h-5 w-5 bg-purple-100 rounded-full items-center justify-center">
+                  <Text className="text-purple-600 text-xs font-bold">
+                    {flattenedData.length}
+                  </Text>
+                </View>
+              )}
             </View>
-          )
-        }
-      />
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Contenu */}
+      <Animated.View className="flex-1">
+        <FlatList
+          data={flattenedData}
+          renderItem={renderPostItem}
+          keyExtractor={(item) => item.id.toString()}
+          onEndReached={() => {
+            if (activeQuery.hasNextPage) {
+              activeQuery.fetchNextPage();
+            }
+          }}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            activeQuery.isFetchingNextPage ? (
+              <View className="py-4">
+                <ActivityIndicator size="small" color="#9333EA" />
+              </View>
+            ) : !activeQuery.hasNextPage && flattenedData.length > 0 ? (
+              <View className="py-4 items-center">
+                <Text className="text-gray-500">Fin des résultats</Text>
+              </View>
+            ) : null
+          }
+          ListEmptyComponent={
+            !activeQuery.isLoading ? (
+              <View className="flex-1 items-center justify-center pt-20">
+                <Text className="text-gray-500">
+                  {activeTab === "mesPosts" && !user?.id
+                    ? "Connectez-vous pour voir vos posts"
+                    : "Aucun post trouvé"}
+                </Text>
+              </View>
+            ) : null
+          }
+        />
+      </Animated.View>
+
+      {/* Chargement initial */}
+      {activeQuery.isLoading && (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#9333EA" />
+        </View>
+      )}
     </SafeAreaView>
   );
 };
 
-export default index;
+export default Index;
 
 const styles = StyleSheet.create({});

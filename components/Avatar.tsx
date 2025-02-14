@@ -102,14 +102,11 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
   }
 
   return (
-    <View>
+    <TouchableOpacity onPress={uploadAvatar}>
       {avatarUrl ? (
-        <TouchableOpacity
-          className=" relative justify-center"
-          onPress={uploadAvatar}
-        >
+        <View className=" relative justify-center">
           <Entypo
-            style={{ position: "absolute", alignSelf: "center", zIndex: 1 }}
+            style={{ position: "absolute", alignSelf: "center", zIndex: 100 }}
             name="camera"
             size={50}
             color="#E5E5E5"
@@ -118,14 +115,14 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
             source={{ uri: avatarUrl }}
             style={[avatarSize, styles.avatar, styles.image]}
           />
-        </TouchableOpacity>
+        </View>
       ) : (
         <View style={[avatarSize, styles.avatar, styles.noImage]} />
       )}
       <View>
         <Text> {uploading ? "Uploading ..." : ""}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

@@ -43,7 +43,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
       const { data, error, status } = await supabase
         .from("profiles")
-        .select(`username, website, avatar_url, id`)
+        .select(`username, website, avatar_url, id, full_name`)
         .eq("id", session?.user.id)
         .single();
       if (error && status !== 406) {
@@ -85,14 +85,13 @@ export default function AuthProvider({ children }: PropsWithChildren) {
           UID: user.id, // ID unique
           displayName: user.user_metadata?.name || "N/A", // Nom affiché (si configuré)
           email: user.email, // Email
-          phone: user.phone, // Téléphone
+          phone: user.phone,
+          full_name: user.user_metadata?.full_name || "N/A",
           providers: user.app_metadata?.providers || [], // Liste des providers (e.g., ['google'])
           providerType: user.app_metadata?.provider || "N/A", // Type de provider principal
           createdAt: user.created_at, // Date de création
           lastSignInAt: session.expires_at, // Date d'expiration (approximation de dernière connexion)
         };
-
-        console.log("User Details:", userDetails);
 
         return userDetails;
       } else {

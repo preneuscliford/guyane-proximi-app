@@ -20,6 +20,7 @@ import {
 import { useEffect, useState } from "react";
 import RenderHTML from "react-native-render-html";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { Image } from "expo-image";
 
 type Post = {
   id: string;
@@ -142,16 +143,25 @@ const EditProfil = () => {
         {/* Carte profil */}
         <View className="bg-white rounded-3xl shadow-lg p-6 mb-6">
           <View className=" items-center">
-            <RemoteImage
-              path={userData?.avatar_url}
-              fallback="profile-placeholder"
-              className="w-24 h-24 rounded-full"
-            />
+            {userData?.avatar_url.startsWith("https://") ? (
+              <View className="flex-col items-center">
+                <Image
+                  source={{ uri: userData?.avatar_url }}
+                  style={{ width: 34, height: 34, borderRadius: 20 }}
+                />
+                <Text className="text-2xl font-bold text-gray-900">
+                  {session?.user?.user_metadata?.full_name}
+                </Text>
+              </View>
+            ) : (
+              <RemoteImage
+                path={userData?.avatar_url}
+                fallback="profile-placeholder"
+                style={{ width: 28, height: 28, borderRadius: 20 }}
+              />
+            )}
           </View>
           <View className="mt-2 items-center">
-            <Text className="text-2xl font-bold text-gray-900">
-              {userData?.username}
-            </Text>
             <Text className="text-gray-500 mt-1">{session?.user?.email}</Text>
           </View>
 

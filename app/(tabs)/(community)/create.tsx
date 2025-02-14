@@ -100,7 +100,6 @@ const CreatePost = () => {
                 contentType: image.mimeType || "image/jpeg",
               });
 
-            console.log(data?.path);
             if (uploadError) throw uploadError;
             return data?.path;
           } catch (error) {
@@ -142,6 +141,8 @@ const CreatePost = () => {
         setLoading(false);
       }
 
+      console.log(data);
+
       setLoading(false);
       bodyRef.current = "";
       editorRef.current?.setContentHTML("");
@@ -161,11 +162,18 @@ const CreatePost = () => {
 
       <ScrollView className="flex-1 px-4">
         <View className="flex-row items-center my-6 space-x-3">
-          <RemoteImage
-            path={userData?.avatar_url}
-            fallback="profile"
-            className="w-12 h-12 rounded-full border-2 border-white shadow-sm"
-          />
+          {userData?.avatar_url.startsWith("https://") ? (
+            <Image
+              source={{ uri: userData?.avatar_url }}
+              style={{ width: 28, height: 28, borderRadius: 20 }}
+            />
+          ) : (
+            <RemoteImage
+              path={userData?.avatar_url}
+              fallback="profile-placeholder"
+              style={{ width: 28, height: 28, borderRadius: 20 }}
+            />
+          )}
           <View>
             <Text className="text-lg font-semibold text-gray-900">
               {userData?.username}

@@ -1,16 +1,33 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Bookmark } from "lucide-react-native";
+import { Bookmark, CircleUserRound } from "lucide-react-native";
 import SearchInput from "./SearchInput";
+import RemoteImage from "./RemoteImage";
+import { Image } from "expo-image";
+import { useAuth } from "@/app/provider/AuthProvider";
 
 const Header = () => {
+  const { userData, session } = useAuth();
+
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
         <View style={styles.logoContainer}>
-          <View style={styles.logoCircle}>
-            <Text style={styles.logoText}>G</Text>
-          </View>
+          {session &&
+          userData?.avatar_url.startsWith("https://") && (
+            <Image
+              source={{ uri: userData?.avatar_url }}
+              style={{ width: 28, height: 28, borderRadius: 20 }}
+            />
+          ) ? (
+            <RemoteImage
+              path={userData?.avatar_url}
+              fallback="profile-placeholder"
+              style={{ width: 28, height: 28, borderRadius: 20 }}
+            />
+          ) : (
+            <CircleUserRound size={28} color="white" />
+          )}
           <Text style={styles.appName}>Game Play</Text>
         </View>
         <TouchableOpacity>

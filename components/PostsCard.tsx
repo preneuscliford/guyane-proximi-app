@@ -78,7 +78,7 @@ const PostsCard = ({
         setLikes(updatedLikes);
 
         const { error } = await supabase
-          .from("postLikes")
+          .from("post_likes")
           .delete()
           .eq("userId", currentUser.id)
           .eq("postId", item.id);
@@ -97,7 +97,7 @@ const PostsCard = ({
         setLikes([...likes, newLike]);
 
         const { data, error } = await supabase
-          .from("postLikes")
+          .from("post_likes")
           .insert({
             postId: item.id,
             userId: currentUser.id,
@@ -122,7 +122,7 @@ const PostsCard = ({
     const fetchLikes = async () => {
       try {
         const { data, error } = await supabase
-          .from("postLikes")
+          .from("post_likes")
           .select("*")
           .eq("postId", item.id);
 
@@ -150,12 +150,12 @@ const PostsCard = ({
         {
           event: "*",
           schema: "public",
-          table: "postLikes",
+          table: "post_likes",
           filter: `postId=eq.${item.id}`,
         },
         async (payload) => {
           const { data, error } = await supabase
-            .from("postLikes")
+            .from("post_likes")
             .select("*")
             .eq("postId", item.id);
 

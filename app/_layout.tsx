@@ -5,14 +5,20 @@ import { useEffect, useState } from "react";
 import "react-native-reanimated";
 import "../globals.css";
 import { useColorScheme } from "@/hooks/useColorScheme";
-
 import AuthProvider from "./provider/AuthProvider";
-
 import AnimationScreen from "@/components/AnimationScreen";
-import { StatusBar } from "expo-status-bar";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 
 SplashScreen.preventAutoHideAsync();
 
+// @ts-ignore
+const queryClient = new QueryClient();
 export default function RootLayout() {
   const [appIsReady, setAppIsReady] = useState(false);
   const [animationFinished, setAnimationFinished] = useState(false);
@@ -46,12 +52,13 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <Stack>
-        <StatusBar style="dark" backgroundColor="#fff" />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Stack screenOptions={{ headerShadowVisible: false }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)/(community)" />
+        </Stack>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

@@ -1,29 +1,16 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import React from "react";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 
-const communiyLayout = () => {
+const communityLayout = () => {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="create" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="notifications"
-        options={{ headerStyle: { backgroundColor: "#F5F8FD" } }}
-      />
-      <Stack.Screen
-        name="postDetails"
-        options={{
-          headerShown: false,
-          presentation: "modal",
-          headerTitle: "",
-          headerStyle: { backgroundColor: "#F5F8FD" },
-        }}
-      />
+      <Stack.Screen name="notifications" options={{ headerShown: false }} />
+      <Stack.Screen name="postDetails" options={{ headerShown: false }} />
     </Stack>
   );
 };
 
-export default communiyLayout;
-
-const styles = StyleSheet.create({});
+export default communityLayout;
