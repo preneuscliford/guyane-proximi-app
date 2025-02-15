@@ -23,8 +23,9 @@ const AuthContext = createContext<AuthContext>({
 });
 
 interface UserData {
-  avatar_url: string;
+  id: string;
   username: string;
+  avatar_url: string;
 }
 
 export default function AuthProvider({ children }: PropsWithChildren) {

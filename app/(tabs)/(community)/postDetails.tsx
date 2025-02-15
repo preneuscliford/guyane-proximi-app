@@ -13,8 +13,6 @@ import BackAppbar from "@/components/AppBar";
 const postDetails = () => {
   const { postId } = useLocalSearchParams();
 
-  console.log(postId);
-
   const [post, setPost] = useState<any>(null);
   const [comments, setComments] = useState<any[]>([]);
   const { userData } = useAuth();
@@ -93,8 +91,6 @@ const postDetails = () => {
       </View>
     );
   }
-
-  console.log(post);
 
   return (
     <View>

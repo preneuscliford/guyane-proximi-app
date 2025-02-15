@@ -18,7 +18,7 @@ export const useProfile = (userId?: string) => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('username, avatar_url')
+          .select('id, username, avatar_url')
           .eq('id', userId)
           .single();
 
@@ -39,6 +39,8 @@ export const useProfile = (userId?: string) => {
 };
 
 interface ProfileData {
+  id: string;
   username?: string;
   avatar_url?: string;
+
 }

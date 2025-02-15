@@ -29,7 +29,7 @@ const CreatePost = () => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
-  const { session, userData } = useAuth();
+  const { userData, user } = useAuth();
   const router = useRouter();
   const bodyRef = useRef("");
   const editorRef = useRef<RichTextEditor>(null);
@@ -122,33 +122,28 @@ const CreatePost = () => {
 
       const mediaUrls = await uploadImages(images);
 
-      if (mediaUrls.length === 0) {
-        throw new Error("Aucune image n'a pu être téléversée");
-      }
-
       const { data, error, status } = await supabase
         .from("posts")
         .upsert({
           body: bodyRef.current,
-          userId: session?.user.id,
+          userId: user?.id,
           file: mediaUrls,
         })
         .select()
         .single();
 
       if (error) {
-        console.log(error);
+        console.log("Error creating post:", error);
         setLoading(false);
+        // Manque un "return" ici pour stopper l'exécution
       }
-
-      console.log(data);
 
       setLoading(false);
       bodyRef.current = "";
       editorRef.current?.setContentHTML("");
       router.back();
     } catch (error) {
-      console.log(error);
+      console.log("Error creating post:", error);
     }
   };
 
@@ -232,7 +227,7 @@ const CreatePost = () => {
         <Button
           mode="contained"
           loading={loading || uploading}
-          disabled={loading || uploading || !bodyRef.current}
+          // disabled={loading || uploading || !bodyRef.current}
           onPress={createPost}
           className="rounded-full py-2 shadow-sm"
           labelStyle={{ fontSize: 16, fontWeight: "600" }}

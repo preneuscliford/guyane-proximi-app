@@ -62,7 +62,7 @@ const Index = () => {
   // Requête pour les posts utilisateur
   const userPostsQuery = useInfiniteQuery({
     queryKey: ["posts", "mesPosts", user?.id],
-    queryFn: ({ pageParam }) => getUserPosts(pageParam, user?.id as string),
+    queryFn: ({ pageParam }) => getUserPosts(pageParam, user?.id || ""),
     getNextPageParam: (lastPage, allPages) =>
       allPages.length * PAGE_SIZE < lastPage.totalCount
         ? allPages.length + 1
@@ -83,8 +83,18 @@ const Index = () => {
   const totalCount = activeQuery.data?.pages[0]?.totalCount || 0;
 
   const renderPostItem = ({ item, index }: { item: any; index: number }) => {
-    if (index % 5 === 2) {
-      return <NativeAdComponent key={`ad-${index}`} />;
+    if (index > 0 && index % 5 === 0) {
+      return (
+        <>
+          <NativeAdComponent key={`ad-${index}`} />
+          <PostsCard
+            key={`post-${item.id}`}
+            item={item}
+            router={router}
+            currentUser={userData}
+          />
+        </>
+      );
     }
     return (
       <PostsCard
@@ -95,12 +105,6 @@ const Index = () => {
       />
     );
   };
-
-  const handlePress = () => {
-    console.log("Button pressed:");
-  };
-
-  console.log(userData?.avatar_url);
 
   return (
     <SafeAreaView className="h-full bg-ghost-white">

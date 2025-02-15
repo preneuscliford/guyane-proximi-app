@@ -73,19 +73,25 @@ export const getUserPosts = async (pageParam: number = 1, userId: string) => {
   if (!userId) throw new Error("User ID required");
 
   const from = (pageParam - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
 
   const { data, error, count } = await supabase
     .from("posts")
-    .select("*, profiles(*), postLikes(*), comments(*)", { count: "exact" })
+    .select("*, profiles(*), post_likes(*), comments(*)", {
+      count: "exact",
+    })
     .eq("userId", userId)
     .order("created_at", { ascending: false })
-    .range(from, from + PAGE_SIZE - 1);
+    .range(from, to);
+
+  const currentPageSize = (data || []).length;
 
   if (error) throw new Error(error.message);
   return {
     data: data as Post[],
     totalCount: count || 0,
     currentPage: pageParam,
+    currentPageSize,
   };
 };
 
