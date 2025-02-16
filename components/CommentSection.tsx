@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,10 @@ import {
   ActivityIndicator,
   Animated,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Button,
 } from "react-native";
 import { supabase } from "@/lib/supabase";
 import moment from "moment";
@@ -14,6 +18,10 @@ import Feather from "@expo/vector-icons/Feather";
 import { TextInput } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { Image } from "expo-image";
+import Burnt from "burnt"; // Assurez-vous d'installer la librairie
+import Toast, { ToastHandles } from "./Toast";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface Comment {
   id: number;
@@ -24,6 +32,7 @@ interface Comment {
   profiles: {
     username: string;
     avatar_url: string;
+    full_name: string;
   };
 }
 
@@ -31,7 +40,7 @@ interface CommentSectionProps {
   postId: string;
   currentUser: any;
   comments: Comment[];
-  onCommentAdded: () => void;
+  onCommentAdded: (success: boolean) => void;
 }
 
 const CommentSection: React.FC<CommentSectionProps> = ({
@@ -64,17 +73,22 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     if (!newComment.trim() || !currentUser?.id || isSubmitting) return;
 
     setIsSubmitting(true);
+    animateInput();
+
     try {
-      const { error } = await supabase.from("comments").insert({
+      const { error } = await supabase.from("comment").insert({
         text: newComment.trim(),
-        postId: parseInt(postId),
+        postId: parseInt(postId, 10),
         userId: currentUser.id,
       });
 
-      if (error) throw error;
+      if (error) {
+        onCommentAdded(false); // Signal d'échec
+        throw error;
+      }
 
       setNewComment("");
-      onCommentAdded();
+      onCommentAdded(true);
     } catch (error) {
       console.error("Erreur lors de l'ajout du commentaire:", error);
     } finally {
@@ -83,102 +97,193 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   return (
-    <View className="mt-4">
-      <Text className="text-lg font-bold mb-4">Commentaire(s)</Text>
-
-      {/* Zone de saisie du commentaire */}
-      <Animated.View style={{ transform: [{ scale: inputScale }] }}>
-        <TextInput
-          mode="outlined"
-          placeholder="Écrire un commentaire..."
-          value={newComment}
-          onChangeText={setNewComment}
-          multiline
-          outlineColor="transparent"
-          style={[styles.input, { backgroundColor: "#FCFDFE" }]}
-          contentStyle={{ textAlignVertical: "center" }}
-          right={
-            <TextInput.Icon
-              icon={() => (
-                <TouchableOpacity
-                  onPress={handleAddComment}
-                  disabled={isSubmitting || !newComment.trim()}
-                >
-                  <MaterialCommunityIcons
-                    name="send-circle"
-                    size={32}
-                    color={
-                      isSubmitting || !newComment.trim() ? "#181F27" : "#F5F8FD"
-                    }
-                  />
-                </TouchableOpacity>
-              )}
-            />
-          }
-          theme={{
-            colors: {
-              primary: "#1E293B",
-              placeholder: "#F5F8FD",
-            },
-            roundness: 12,
-          }}
-        />
-      </Animated.View>
-
-      {/* Liste des commentaires */}
-      <View className="mt-4">
-        {comments.map((comment) => (
-          <View
-            style={{ marginBottom: 4, padding: 5 }}
-            key={comment.id}
-            className="flex-row gap-6 bg-white p-3 px-4 rounded-lg"
+    <SafeAreaView>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.container}
+      >
+        <View style={styles.commentsContainer}>
+          <Text style={styles.title}>Commentaire(s)</Text>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
           >
-            <RemoteImage
-              path={comment.profiles.avatar_url}
-              fallback="profile image"
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 20,
-                marginHorizontal: 5,
-              }}
-            />
-            <View className="flex-1">
-              <View className="flex-row items-center gap-2">
-                <Text className="font-bold">{comment.profiles.username}</Text>
-                <Text className="text-gray-500 text-xs">
-                  {moment(comment.created_at).fromNow()}
-                </Text>
+            {comments.map((comment) => (
+              <View key={comment.id} style={styles.commentContainer}>
+                {comment.profiles.avatar_url.startsWith("https://") ? (
+                  <Image
+                    source={{ uri: comment.profiles.avatar_url }}
+                    style={styles.avatar}
+                  />
+                ) : (
+                  <RemoteImage
+                    path={comment.profiles.avatar_url}
+                    fallback="profile image"
+                    style={styles.avatar}
+                  />
+                )}
+                <View style={styles.commentContent}>
+                  <View style={styles.commentHeader}>
+                    <Text style={styles.username}>
+                      {comment.profiles.username || comment.profiles.full_name}
+                    </Text>
+                    <Text style={styles.timestamp}>
+                      {moment(comment.created_at).fromNow()}
+                    </Text>
+                  </View>
+                  <Text style={styles.commentText}>{comment.text}</Text>
+                  <View style={styles.actions}>
+                    <TouchableOpacity style={styles.actionButton}>
+                      <Feather name="heart" size={16} color="#64748B" />
+                      <Text style={styles.actionText}>12</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.actionButton}>
+                      <Feather
+                        name="message-circle"
+                        size={16}
+                        color="#64748B"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
               </View>
-              <Text className="mt-1">{comment.text}</Text>
-              <View className="flex-row items-center mt-3  gap-4">
-                <TouchableOpacity className="flex-row items-center space-x-1">
-                  <Feather name="heart" size={16} color="#64748B" />
-                  <Text className="text-gray-500 text-sm">12</Text>
-                </TouchableOpacity>
-                <TouchableOpacity>
-                  <Feather name="message-circle" size={16} color="#64748B" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        ))}
-      </View>
-    </View>
+            ))}
+          </ScrollView>
+        </View>
+        {/* Zone de saisie en mode absolute en bas de l'écran */}
+        <Animated.View
+          style={[
+            styles.inputContainer,
+            { transform: [{ scale: inputScale }] },
+          ]}
+        >
+          <TextInput
+            mode="flat"
+            placeholder="Écrire un commentaire..."
+            value={newComment}
+            onChangeText={setNewComment}
+            multiline
+            style={styles.input}
+            underlineColor="transparent"
+            theme={{
+              colors: {
+                primary: "#9333EA",
+                placeholder: "#94A3B8",
+              },
+              roundness: 12,
+            }}
+            right={
+              <TextInput.Icon
+                icon={() => (
+                  <TouchableOpacity
+                    onPress={handleAddComment}
+                    disabled={isSubmitting || !newComment.trim()}
+                    style={{ padding: 8 }}
+                  >
+                    {isSubmitting ? (
+                      <ActivityIndicator color="#9333EA" />
+                    ) : (
+                      <MaterialCommunityIcons
+                        name="send-circle"
+                        size={32}
+                        color={newComment.trim() ? "#9333EA" : "#CBD5E1"}
+                      />
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+            }
+          />
+        </Animated.View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
+
 const styles = StyleSheet.create({
-  input: {
-    borderRadius: 12,
-    fontSize: 16,
-    lineHeight: 24,
+  container: {
+    flex: 1,
+  },
+  commentsContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    marginBottom: 80, // espace pour laisser la zone input visible
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 100, // pour que le dernier commentaire ne soit pas caché
+  },
+  commentContainer: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: "#E2E8F0",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginHorizontal: 5,
+  },
+  commentContent: {
+    flex: 1,
+  },
+  commentHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  username: {
+    fontWeight: "bold",
+    marginRight: 8,
+  },
+  timestamp: {
+    fontSize: 12,
+    color: "#64748B",
+  },
+  commentText: {
+    marginBottom: 8,
+  },
+  actions: {
+    flexDirection: "row",
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  actionText: {
+    fontSize: 12,
+    color: "#64748B",
+    marginLeft: 4,
+  },
+  inputContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderColor: "#F1F5F9",
+  },
+  input: {
+    backgroundColor: "#F8FAFC",
+    borderRadius: 24,
+    fontSize: 16,
+    lineHeight: 24,
+    paddingHorizontal: 16,
+    maxHeight: 120,
   },
 });
 

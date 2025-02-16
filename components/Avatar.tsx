@@ -4,13 +4,15 @@ import {
   StyleSheet,
   View,
   Alert,
-  Image,
   Button,
   TouchableOpacity,
   Text,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Entypo } from "@expo/vector-icons";
+import RemoteImage from "./RemoteImage";
+import { Image } from "expo-image";
+import { useAuth } from "@/app/provider/AuthProvider";
 
 interface Props {
   size: number;
@@ -22,6 +24,7 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const avatarSize = { height: size, width: size };
+  const { userData } = useAuth();
 
   useEffect(() => {
     if (url) downloadImage(url);
@@ -103,7 +106,7 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
 
   return (
     <TouchableOpacity onPress={uploadAvatar}>
-      {avatarUrl ? (
+      {(avatarUrl && (
         <View className=" relative justify-center">
           <Entypo
             style={{ position: "absolute", alignSelf: "center", zIndex: 100 }}
@@ -116,8 +119,29 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
             style={[avatarSize, styles.avatar, styles.image]}
           />
         </View>
+      )) ||
+      (userData && userData.avatar_url?.startsWith("https://")) ? (
+        <View className=" justify-center items-center">
+          <Entypo
+            style={{ position: "absolute", alignSelf: "center", zIndex: 100 }}
+            name="camera"
+            size={50}
+            color="#E5E5E5"
+          />
+          <Image
+            source={{ uri: userData?.avatar_url }}
+            style={[avatarSize, styles.avatar, styles.image]}
+          />
+        </View>
       ) : (
-        <View style={[avatarSize, styles.avatar, styles.noImage]} />
+        <View style={[avatarSize, styles.avatar, styles.noImage]}>
+          <Entypo
+            style={{ position: "absolute", alignSelf: "center", zIndex: 100 }}
+            name="camera"
+            size={50}
+            color="#E5E5E5"
+          />
+        </View>
       )}
       <View>
         <Text> {uploading ? "Uploading ..." : ""}</Text>
@@ -143,6 +167,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderStyle: "solid",
     borderColor: "rgb(200, 200, 200)",
-    borderRadius: 5,
+    borderRadius: 80,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

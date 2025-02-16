@@ -1,247 +1,167 @@
 import {
   ScrollView,
-  StyleSheet,
-  Text,
   View,
   TouchableOpacity,
   Image,
   Alert,
+  Text,
 } from "react-native";
 import React, { useRef, useState } from "react";
 import { useAuth } from "@/app/provider/AuthProvider";
-import { Appbar, Button, ActivityIndicator } from "react-native-paper";
+import { Button, ActivityIndicator } from "react-native-paper";
 import { useRouter } from "expo-router";
 import RemoteImage from "@/components/RemoteImage";
 import RichTextEditor from "@/components/RichTextEditor";
 import { supabase } from "@/lib/supabase";
-import * as ImagePicker from "expo-image-picker";
 import { MaterialIcons } from "@expo/vector-icons";
-
 import BackAppbar from "@/components/AppBar";
-import * as FileSystem from "expo-file-system";
-import { Buffer } from "buffer";
-
-interface RichTextEditor {
-  setContentHTML(html: string): void;
-}
+import { StatusBar } from "expo-status-bar";
+import Toast, { ToastHandles } from "@/components/Toast";
+import { uploadImages } from "@/lib/postServices";
+import { useImagePicker } from "@/hooks/useImagePicker";
 
 const CreatePost = () => {
-  const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const { userData, user } = useAuth();
   const router = useRouter();
-  const bodyRef = useRef("");
-  const editorRef = useRef<RichTextEditor>(null);
+  const editorRef = useRef<any>(null);
+  const toastRef = useRef<ToastHandles>(null);
+  const { images, pickImages, removeImage } = useImagePicker();
+  const [loading, setLoading] = useState(false);
+  const [content, setContent] = useState("");
 
-  const pickImages = async () => {
-    try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission refusée",
-          "Nous avons besoin de votre permission pour accéder à vos photos"
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true,
-        quality: 0.8,
-        exif: false,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setImages(result.assets); // ✅ Stocker toutes les images sélectionnées
-      }
-    } catch (error) {
-      console.error("Image selection error:", error);
-      if (error instanceof Error) {
-        Alert.alert("Erreur", error.message);
-      }
-    }
+  const isValidPost = () => {
+    return content.trim().length > 0 || images.length > 0;
   };
 
-  const uploadImages = async (images: ImagePicker.ImagePickerAsset[]) => {
-    if (!images || images.length === 0) return [];
-
-    try {
-      const uploadedPaths = await Promise.all(
-        images.map(async (image) => {
-          // Vérification renforcée de l'URI
-          if (!image.uri) {
-            console.warn("Image URI is missing, skipping upload");
-            return null;
-          }
-
-          try {
-            // Conversion sécurisée en base64
-            const base64 = await FileSystem.readAsStringAsync(image.uri, {
-              encoding: FileSystem.EncodingType.Base64,
-            });
-
-            // Conversion alternative pour React Native
-            const raw = Buffer.from(base64, "base64");
-            const arraybuffer = new Uint8Array(raw).buffer;
-
-            // Génération du nom de fichier
-            const fileExt = image.uri.split(".").pop()?.toLowerCase() || "jpeg";
-            const path = `${Date.now()}-${Math.random()
-              .toString(36)
-              .substring(7)}.${fileExt}`;
-
-            // Upload avec type MIME par défaut
-            const { data, error: uploadError } = await supabase.storage
-              .from("products/listings")
-              .upload(path, arraybuffer, {
-                contentType: image.mimeType || "image/jpeg",
-              });
-
-            if (uploadError) throw uploadError;
-            return data?.path;
-          } catch (error) {
-            console.error("Image processing error:", error);
-            return null;
-          }
-        })
-      );
-
-      return uploadedPaths.filter((path): path is string => !!path);
-    } catch (error) {
-      console.error("Global upload error:", error);
-      return [];
+  const handleCreatePost = async () => {
+    if (!isValidPost()) {
+      toastRef.current?.show("Le post ne peut pas être vide", "info", 1500);
+      return;
     }
-  };
 
-  const createPost = async () => {
     try {
       setLoading(true);
-
       const mediaUrls = await uploadImages(images);
 
-      const { data, error, status } = await supabase
-        .from("posts")
-        .upsert({
-          body: bodyRef.current,
-          userId: user?.id,
-          file: mediaUrls,
-        })
-        .select()
-        .single();
+      const { error } = await supabase.from("posts").upsert({
+        body: content,
+        userId: user?.id,
+        file: mediaUrls,
+      });
 
-      if (error) {
-        console.log("Error creating post:", error);
-        setLoading(false);
-        // Manque un "return" ici pour stopper l'exécution
-      }
+      if (error) throw error;
 
-      setLoading(false);
-      bodyRef.current = "";
-      editorRef.current?.setContentHTML("");
+      toastRef.current?.show("Post publié avec succès", "success", 1500);
       router.back();
     } catch (error) {
-      console.log("Error creating post:", error);
+      console.error("Erreur:", error);
+      toastRef.current?.show("Échec de la publication", "error", 2000);
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
     <View className="flex-1 bg-ghost-white">
+      <StatusBar style="dark" backgroundColor="#F5F8FD" />
+      <Toast ref={toastRef} />
       <BackAppbar title="Créer un post" />
 
-      <ScrollView className="flex-1 px-4">
+      <ScrollView
+        className="flex-1 px-4"
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
+        {/* En-tête utilisateur */}
         <View className="flex-row items-center my-6 space-x-3">
-          {userData?.avatar_url.startsWith("https://") ? (
-            <Image
-              source={{ uri: userData?.avatar_url }}
-              style={{ width: 28, height: 28, borderRadius: 20 }}
-            />
-          ) : (
-            <RemoteImage
-              path={userData?.avatar_url}
-              fallback="profile-placeholder"
-              style={{ width: 28, height: 28, borderRadius: 20 }}
-            />
-          )}
+          <View className="w-9 h-9 rounded-full overflow-hidden bg-gray-100">
+            {userData?.avatar_url?.startsWith("https://") ? (
+              <Image
+                source={{ uri: userData.avatar_url }}
+                className="w-full h-full"
+              />
+            ) : (
+              <RemoteImage
+                path={userData?.avatar_url}
+                fallback="profile-placeholder"
+                className="w-full h-full"
+              />
+            )}
+          </View>
           <View>
             <Text className="text-lg font-semibold text-gray-900">
-              {userData?.username}
+              {userData?.username || user?.user_metadata?.full_name}
             </Text>
             <Text className="text-sm text-gray-500">Post public</Text>
           </View>
         </View>
 
+        {/* Éditeur de texte enrichi */}
         <RichTextEditor
           editorRef={editorRef}
-          onchange={(body: string) => (bodyRef.current = body)}
+          onchange={(body: string) => setContent(body)}
         />
 
-        {/* {images && !uploading && (
-          <TouchableOpacity
-            onPress={pickImages}
-            className="ml-4 w-24 h-24 bg-gray-100 rounded-lg items-center justify-center"
-          >
-            <MaterialIcons name="add-a-photo" size={32} color="black" />
-          </TouchableOpacity>
-        )} */}
-
-        {images.length > 0 ? (
-          <View className="my-4 px-4">
-            <Text className="text-gray-600 mb-2">{images.length} photo(s)</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {images.map((uri, index) => (
-                <View key={index} className="relative mr-2">
-                  <Image
-                    source={{ uri: uri.uri }}
-                    className="w-24 h-24 rounded-lg"
-                  />
-                  <TouchableOpacity
-                    onPress={() => removeImage(index)}
-                    className="absolute top-1 right-1 bg-black/50 rounded-full p-1"
-                  >
-                    <MaterialIcons name="close" size={16} color="white" />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        ) : (
-          <View className="my-4 px-4">
+        {/* Galerie d'images */}
+        <View className="my-4">
+          {images.length > 0 ? (
+            <>
+              <Text className="text-gray-600 mb-2 px-4">
+                {images.length} photo(s)
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {images.map((uri, index) => (
+                  <View key={index} className="relative mr-2 ml-4">
+                    <Image
+                      source={{ uri: uri.uri }}
+                      className="w-28 h-28 rounded-xl"
+                    />
+                    <TouchableOpacity
+                      className="absolute top-1 right-1 bg-black/50 rounded-full p-1"
+                      onPress={() => removeImage(index)}
+                    >
+                      <MaterialIcons name="close" size={16} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            </>
+          ) : (
             <TouchableOpacity
               onPress={pickImages}
-              className="w-12 h-12 bg-gray-100 rounded-lg items-center justify-center"
+              className="mx-4 w-14 h-14 bg-gray-100 rounded-xl items-center justify-center border-2 border-dashed border-gray-300"
             >
-              <MaterialIcons name="add-a-photo" size={32} color="black" />
+              <MaterialIcons name="add-a-photo" size={28} color="#64748B" />
             </TouchableOpacity>
-          </View>
-        )}
+          )}
+        </View>
       </ScrollView>
 
-      <View className="p-4 bg-white border-t border-gray-100">
+      {/* Bouton de publication */}
+      <View className="p-4 bg-white border-t border-gray-100 shadow-md">
         <Button
           mode="contained"
-          loading={loading || uploading}
-          // disabled={loading || uploading || !bodyRef.current}
-          onPress={createPost}
+          loading={loading}
+          disabled={!isValidPost() || loading}
+          onPress={handleCreatePost}
           className="rounded-full py-2 shadow-sm"
           labelStyle={{ fontSize: 16, fontWeight: "600" }}
           contentStyle={{ height: 48 }}
+          theme={{
+            colors: {
+              primary: isValidPost() ? "#9333EA" : "#CBD5E1",
+            },
+          }}
         >
-          {uploading ? "Publication..." : "Publier"}
+          {loading ? "Publication..." : "Publier"}
         </Button>
       </View>
 
-      {(loading || uploading) && (
+      {/* Overlay de chargement */}
+      {loading && (
         <View className="absolute inset-0 bg-black/50 justify-center items-center">
           <ActivityIndicator size="large" color="#fff" />
-          <Text className="text-white mt-2">
-            {uploading
+          <Text className="text-white mt-2 text-center">
+            {images.length > 0
               ? "Téléversement des images..."
               : "Publication en cours..."}
           </Text>
@@ -252,5 +172,3 @@ const CreatePost = () => {
 };
 
 export default CreatePost;
-
-const styles = StyleSheet.create({});

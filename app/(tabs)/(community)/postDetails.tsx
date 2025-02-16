@@ -1,5 +1,12 @@
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
-import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  RefreshControl,
+} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
@@ -9,60 +16,46 @@ import { useAuth } from "@/app/provider/AuthProvider";
 import { ActivityIndicator, Appbar } from "react-native-paper";
 import { StatusBar } from "expo-status-bar";
 import BackAppbar from "@/components/AppBar";
+import { Post } from "@/types/postTypes";
+import { fetchComments, fetchPostDetails } from "@/lib/postServices";
+import Toast, { ToastHandles } from "@/components/Toast";
+import { Button } from "react-native";
 
-const postDetails = () => {
+const PostDetails = () => {
   const { postId } = useLocalSearchParams();
-
-  const [post, setPost] = useState<any>(null);
+  const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<any[]>([]);
   const { userData } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const toastRef = useRef<ToastHandles>(null);
 
-  const getPostDetails = async () => {
+  const loadData = async () => {
     try {
-      // Récupérer le post et ses likes
-      const { data: postData, error: postError } = await supabase
-        .from("posts")
-        .select(
-          "*, profiles(id, username, avatar_url), postLikes(*), comments(*)"
-        )
-        .eq("id", postId)
-        .single();
-
-      if (postError) throw postError;
-
-      // Récupérer les commentaires
-      const { data: commentsData, error: commentsError } = await supabase
-        .from("comments")
-        .select(
-          `
-          *,
-          profiles (
-            username,
-            avatar_url
-          )
-        `
-        )
-        .eq("postId", postId)
-        .order("created_at", { ascending: true });
-
-      if (commentsError) throw commentsError;
+      const [postData, commentsData] = await Promise.all([
+        fetchPostDetails(postId as string),
+        fetchComments(postId as string),
+      ]);
 
       setPost(postData);
-      setComments(commentsData || []);
-      setLoading(false);
+      setComments(commentsData);
     } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert("Erreur", error.message);
-      }
+      Alert.alert("Erreur", error as string);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  useEffect(() => {
-    getPostDetails();
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+  };
 
-    // Souscription aux changements des commentaires
+  useEffect(() => {
+    loadData();
+
     const commentsSubscription = supabase
       .channel(`comments-${postId}`)
       .on(
@@ -71,14 +64,15 @@ const postDetails = () => {
           event: "*",
           schema: "public",
           table: "comments",
-          filter: `post_id=eq.${postId}`,
+          // ... rest of the code ...
         },
         () => {
-          getPostDetails(); // Recharger les données quand il y a un changement
+          // ... rest of the code ...
         }
       )
       .subscribe();
 
+    // Don't forget to return a cleanup function to unsubscribe from the channel
     return () => {
       commentsSubscription.unsubscribe();
     };
@@ -93,33 +87,56 @@ const postDetails = () => {
   }
 
   return (
-    <View>
+    <SafeAreaView className="flex-1 bg-ghost-white">
+      <Toast ref={toastRef} />
       <StatusBar style="dark" backgroundColor="#F5F8FD" />
       <BackAppbar title="" />
+
       <ScrollView
-        className="h-full bg-ghost-white"
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 10 }}
+        contentContainerStyle={styles.scrollContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#9333EA"
+            colors={["#9333EA"]}
+          />
+        }
       >
-        <View className="py-6">
-          <PostsCard
-            item={post}
-            currentUser={userData}
-            router={router}
-            showMoreIcons={false}
-          />
-          <CommentSection
-            postId={postId as string}
-            currentUser={userData}
-            comments={comments}
-            onCommentAdded={getPostDetails}
-          />
-        </View>
+        <PostsCard
+          item={post}
+          currentUser={userData}
+          router={router}
+          showMoreIcons={false}
+        />
+
+        <CommentSection
+          postId={postId as string}
+          currentUser={userData}
+          comments={comments}
+          onCommentAdded={(success) => {
+            if (success) {
+              loadData();
+              toastRef.current?.show("Commentaire ajouté", "success", 1500);
+            } else {
+              toastRef.current?.show(
+                "Échec de l'ajout du commentaire",
+                "error",
+                2000
+              );
+            }
+          }}
+        />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
-export default postDetails;
+const styles = StyleSheet.create({
+  scrollContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 100,
+  },
+});
 
-const styles = StyleSheet.create({});
+export default PostDetails;

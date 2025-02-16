@@ -25,7 +25,7 @@ export default function Account() {
     bio: "",
   });
 
-  const { session, userData } = useAuth();
+  const { session, userData, user } = useAuth();
   const router = useRouter();
 
   if (!session) {
@@ -38,7 +38,7 @@ export default function Account() {
 
   useEffect(() => {
     const backAction = () => {
-      if (userData?.username === null) {
+      if (userData?.username || user?.user_metadata?.full_name === null) {
         Alert.alert(
           "Attention",
           "Vous devez ajouter un nom d'utilisateur avant de quitter.",
@@ -70,7 +70,7 @@ export default function Account() {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select(`username, website, avatar_url`)
+        .select(`username, website, avatar_url, id, full_name`)
         .eq("id", session?.user.id)
         .single();
 
@@ -177,8 +177,12 @@ export default function Account() {
           <TextInput
             mode="outlined"
             label="Nom d'utilisateur"
-            value={form.username || ""}
-            placeholder={userData?.username || "Choisissez un pseudonyme"}
+            value={form.username || user?.user_metadata?.full_name || ""}
+            placeholder={
+              userData?.username || user?.user_metadata?.full_name
+                ? ""
+                : "Nom d'utilisateur"
+            }
             onChangeText={(text) => {
               setForm({ ...form, username: text });
               setUsernameError("");
@@ -249,9 +253,9 @@ export default function Account() {
             mode="contained"
             onPress={updateProfile}
             loading={loading}
-            disabled={
-              loading || (form.username === "" && userData?.username === null)
-            }
+            // disabled={
+            //   loading || (form.username === "" && userData?.full_name === null)
+            // }
             style={styles.button}
             labelStyle={styles.buttonLabel}
             contentStyle={styles.buttonContent}
@@ -310,6 +314,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     backgroundColor: "#181F27",
+    color: "#F4F7FC",
   },
   buttonLabel: {
     fontSize: 16,

@@ -127,8 +127,6 @@ const EditProfil = () => {
   return (
     <View className="flex-1 bg-gray-100">
       <StatusBar style="light" backgroundColor="#181F27" />
-
-      {/* En-tête */}
       <View className="bg-slate-950 h-52 rounded-br-[80px] px-4">
         <View className="flex-row justify-between items-center pt-16">
           <Text className="text-white text-xl font-bold">Profil</Text>
@@ -164,58 +162,6 @@ const EditProfil = () => {
           <View className="mt-2 items-center">
             <Text className="text-gray-500 mt-1">{session?.user?.email}</Text>
           </View>
-
-          {/* Onglets */}
-          <View className="flex-row justify-around my-4">
-            <TouchableOpacity
-              className={`pb-2 px-4 ${
-                activeTab === "products" ? "border-b-2 border-blue-500" : ""
-              }`}
-              onPress={() => setActiveTab("products")}
-            >
-              <Text
-                className={`font-semibold ${
-                  activeTab === "products" ? "text-blue-500" : "text-gray-500"
-                }`}
-              >
-                Produits ({products.length})
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className={`pb-2 px-4 ${
-                activeTab === "posts" ? "border-b-2 border-blue-500" : ""
-              }`}
-              onPress={() => setActiveTab("posts")}
-            >
-              <Text
-                className={`font-semibold ${
-                  activeTab === "posts" ? "text-blue-500" : "text-gray-500"
-                }`}
-              >
-                Posts ({posts.length})
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Contenu */}
-          {activeTab === "products" ? (
-            <FlatList
-              scrollEnabled={false}
-              data={products}
-              renderItem={renderProductItem}
-              keyExtractor={(item) => item.id.toString()}
-              contentContainerStyle={{ paddingHorizontal: 16 }}
-            />
-          ) : (
-            <FlatList
-              scrollEnabled={false}
-              data={posts}
-              renderItem={renderPostItem}
-              keyExtractor={(item) => item.id.toString()}
-              contentContainerStyle={{ paddingHorizontal: 16 }}
-            />
-          )}
         </View>
 
         <View className="mb-8">
@@ -248,6 +194,20 @@ const EditProfil = () => {
                 <Text className="text-white text-xs">3</Text>
               </View>
             </TouchableOpacity>
+            <TouchableOpacity
+              className="items-center p-4 bg-white rounded-xl shadow-sm"
+              // onPress={() => router.push("/favorites")}
+            >
+              <MaterialCommunityIcons
+                name="post-outline"
+                size={24}
+                color="#0a7ea4"
+              />
+              <Text className="text-sm text-gray-700 mt-2">Mes Posts</Text>
+              <View className="absolute top-2 right-2 bg-red-500 w-5 h-5 rounded-full items-center justify-center">
+                <Text className="text-white text-xs">1</Text>
+              </View>
+            </TouchableOpacity>
 
             {/* Bouton Commandes */}
             <TouchableOpacity
@@ -258,43 +218,8 @@ const EditProfil = () => {
               <Text className="text-sm text-gray-700 mt-2">Commandes</Text>
             </TouchableOpacity>
           </View>
-
-          {/* Ligne de boutons secondaires */}
-          <View className="flex-row justify-between">
-            <TouchableOpacity
-              className="flex-row items-center bg-blue-50 px-4 py-2 rounded-full"
-              // onPress={() => router.push("/help")}
-            >
-              <Feather name="help-circle" size={18} color="#0a7ea4" />
-              <Text className="text-blue-600 ml-2">Aide</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="flex-row items-center bg-blue-50 px-4 py-2 rounded-full"
-              onPress={() => {
-                /* Partage du profil */
-              }}
-            >
-              <Feather name="share-2" size={18} color="#0a7ea4" />
-              <Text className="text-blue-600 ml-2">Partager</Text>
-            </TouchableOpacity>
-          </View>
         </View>
-        {/* Ajouter aussi dans la section d'édition du profil */}
-        <TouchableOpacity
-          className="flex-row items-center justify-center bg-blue-100 p-4 rounded-xl mb-4"
-          // onPress={() => router.push("/premium")}
-        >
-          <MaterialIcons name="workspace-premium" size={24} color="#0a7ea4" />
-          <View className="ml-3">
-            <Text className="text-blue-600 font-semibold">
-              Passer à Premium
-            </Text>
-            <Text className="text-blue-500 text-xs">
-              Débloquez des avantages exclusifs
-            </Text>
-          </View>
-        </TouchableOpacity>
+
         {/* Bouton de déconnexion */}
         <TouchableOpacity
           onPress={handleSignOut}
