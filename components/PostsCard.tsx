@@ -25,6 +25,10 @@ import { supabase } from "@/lib/supabase";
 import { Link } from "expo-router";
 
 import { Easing } from "react-native-reanimated";
+import { ModerationActions } from "./ModerationActions";
+import { Image } from "expo-image";
+import ImageSlider from "./ImageSlider";
+import { useAuth } from "@/app/provider/AuthProvider";
 
 const textStyles = {
   fontSize: 16,
@@ -48,6 +52,8 @@ const PostsCard = ({
   const dataTime = moment(item?.created_at).fromNow();
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  const { user } = useAuth();
 
   // Styles modernes
   const textStyles = {
@@ -230,34 +236,49 @@ const PostsCard = ({
           onPress={() => router.push("/(profile)")}
         >
           <View className="relative">
-            <RemoteImage
-              path={item?.profiles?.avatar_url}
-              fallback="profile image"
-              style={styles.avatar}
-            />
-            <View className="absolute -bottom-1 -right-1 bg-white rounded-full p-1">
-              <View className="w-3 h-3 bg-green-500 rounded-full" />
-            </View>
-          </View>
+            {item?.profiles?.avatar_url.startsWith("https://") ? (
+              <View className="flex-row items-center">
+                <Image
+                  source={{ uri: item?.profiles?.avatar_url }}
+                  style={{ width: 28, height: 28, borderRadius: 20 }}
+                />
 
-          <View>
-            <Text className="text-base font-semibold text-gray-900">
-              {item?.profiles?.username}
-            </Text>
-            <Text className="text-xs text-gray-500">
-              {moment(item?.created_at).fromNow()}
-            </Text>
+                <View className="ml-2 mt-2">
+                  <Text className="text-base font-semibold text-gray-900">
+                    {item?.profiles?.username || item?.profiles?.full_name}
+                  </Text>
+                  <Text className="text-xs text-gray-500">
+                    {moment(item?.created_at).fromNow()}
+                  </Text>
+                </View>
+              </View>
+            ) : (
+              <View className=" flex-row items-center">
+                <RemoteImage
+                  path={item?.profiles?.avatar_url}
+                  fallback="profile-placeholder"
+                  style={{ width: 28, height: 28, borderRadius: 20 }}
+                />
+
+                <View className="ml-2 mt-2">
+                  <Text className="text-base font-semibold text-gray-900">
+                    {item?.profiles?.username}
+                  </Text>
+                  <Text className="text-xs text-gray-500">
+                    {moment(item?.created_at).fromNow()}
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
         </TouchableOpacity>
 
         {showMoreIcons && (
-          <TouchableOpacity>
-            <Ionicons
-              name="ellipsis-horizontal"
-              size={20}
-              color={colors.text}
-            />
-          </TouchableOpacity>
+          <ModerationActions
+            postId={item.id}
+            userId={item?.profiles?.id}
+            currentUserId={user?.id as string}
+          />
         )}
       </View>
 
@@ -275,6 +296,11 @@ const PostsCard = ({
             }}
             baseStyle={{ paddingHorizontal: 8 }}
           />
+        )}
+        {item?.file && item.file?.length > 0 && (
+          <View className="overflow-hidden rounded-xl">
+            <ImageSlider images={item.file} />
+          </View>
         )}
       </View>
 
@@ -334,7 +360,7 @@ const PostsCard = ({
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    marginBottom: 2,
+    marginBottom: 6,
     backgroundColor: "#F5F8FD",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },

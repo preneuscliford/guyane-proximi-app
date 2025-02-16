@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,6 +8,7 @@ import {
   FlatList,
   ActivityIndicator,
   Pressable,
+  RefreshControl,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useAuth } from "@/app/provider/AuthProvider";
@@ -29,6 +30,7 @@ import RemoteImage from "@/components/RemoteImage";
 
 const Index = () => {
   const { userData, user, session } = useAuth();
+  const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState<
@@ -81,6 +83,19 @@ const Index = () => {
   const flattenedData =
     activeQuery.data?.pages.flatMap((page) => page.data) || [];
   const totalCount = activeQuery.data?.pages[0]?.totalCount || 0;
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        newPostsQuery.refetch(),
+        trendingPostsQuery.refetch(),
+        userPostsQuery.refetch(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const renderPostItem = ({ item, index }: { item: any; index: number }) => {
     if (index > 0 && index % 5 === 0) {
@@ -188,6 +203,14 @@ const Index = () => {
             }
           }}
           onEndReachedThreshold={0.5}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor="#9333EA"
+              colors={["#9333EA"]}
+            />
+          }
           ListFooterComponent={
             activeQuery.isFetchingNextPage ? (
               <View className="py-4">

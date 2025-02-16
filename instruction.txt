@@ -81,3 +81,16 @@ CREATE TABLE profiles (
 );
 
 
+create table reported_posts (
+  id uuid primary key default uuid_generate_v4(),
+  post_id uuid references posts(id) on delete cascade,
+  reporter_id uuid references auth.users(id),
+  reason text,
+  created_at timestamp with time zone default current_timestamp
+);
+
+alter table reported_posts enable row level security;
+
+create policy "Allow report" on reported_posts
+  for insert to authenticated 
+  with check (true);
