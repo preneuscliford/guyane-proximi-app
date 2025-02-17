@@ -1,6 +1,9 @@
+// CommentInput.tsx
 import React, { useState } from "react";
 import {
+  View,
   TouchableOpacity,
+  ActivityIndicator,
   Animated,
   StyleSheet,
   KeyboardAvoidingView,
@@ -8,15 +11,13 @@ import {
 } from "react-native";
 import { TextInput } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
-import { useQueryClient } from "@tanstack/react-query";
-
-const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 interface CommentInputProps {
   postId: string;
   currentUser: any;
-  onCommentAdded: () => void;
+  onCommentAdded: (success: boolean) => void;
 }
 
 const CommentInput: React.FC<CommentInputProps> = ({
@@ -27,7 +28,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputScale = new Animated.Value(1);
-  const queryClient = useQueryClient();
+  const router = useRouter();
 
   const animateInput = () => {
     Animated.sequence([
@@ -46,8 +47,8 @@ const CommentInput: React.FC<CommentInputProps> = ({
 
   const handleAddComment = async () => {
     if (!newComment.trim() || !currentUser?.id || isSubmitting) return;
-
     setIsSubmitting(true);
+    animateInput();
     try {
       const { error } = await supabase.from("comments").insert({
         text: newComment.trim(),
@@ -55,12 +56,12 @@ const CommentInput: React.FC<CommentInputProps> = ({
         userId: currentUser.id,
       });
       if (error) throw error;
-
       setNewComment("");
-      onCommentAdded();
-      queryClient.invalidateQueries({ queryKey: ["postDetails", postId] });
+      onCommentAdded(true);
+      // router.back();
     } catch (error) {
-      console.error("Erreur lors de l'ajout du commentaire:", error);
+      console.error("Erreur lors de l’ajout du commentaire:", error);
+      onCommentAdded(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -68,46 +69,50 @@ const CommentInput: React.FC<CommentInputProps> = ({
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.inputContainer}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <AnimatedTextInput
-        style={[styles.input, { transform: [{ scale: inputScale }] }]}
-        mode="outlined"
-        placeholder="Écrire un commentaire..."
-        value={newComment}
-        onChangeText={setNewComment}
-        multiline
-        outlineColor="transparent"
-        contentStyle={{ textAlignVertical: "center" }}
-        right={
-          <TextInput.Icon
-            icon={() => (
-              <TouchableOpacity
-                onPress={handleAddComment}
-                disabled={isSubmitting || !newComment.trim()}
-              >
-                <MaterialCommunityIcons
-                  name="send-circle"
-                  size={32}
-                  color={
-                    isSubmitting || !newComment.trim() ? "#181F27" : "#F5F8FD"
-                  }
-                />
-              </TouchableOpacity>
-            )}
-          />
-        }
-        theme={{
-          colors: { primary: "#1E293B", placeholder: "#F5F8FD" },
-          roundness: 12,
-        }}
-      />
+      <Animated.View style={{ transform: [{ scale: inputScale }] }}>
+        <TextInput
+          mode="flat"
+          placeholder="Écrire un commentaire..."
+          value={newComment}
+          onChangeText={setNewComment}
+          multiline
+          style={styles.input}
+          underlineColor="transparent"
+          theme={{
+            colors: {
+              primary: "#9333EA",
+              placeholder: "#94A3B8",
+            },
+            roundness: 12,
+          }}
+          right={
+            <TextInput.Icon
+              icon={() => (
+                <TouchableOpacity
+                  onPress={handleAddComment}
+                  disabled={isSubmitting || !newComment.trim()}
+                >
+                  {isSubmitting ? (
+                    <ActivityIndicator color="#9333EA" />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name="send-circle"
+                      size={32}
+                      color={newComment.trim() ? "#9333EA" : "#CBD5E1"}
+                    />
+                  )}
+                </TouchableOpacity>
+              )}
+            />
+          }
+        />
+      </Animated.View>
     </KeyboardAvoidingView>
   );
 };
-
-export default CommentInput;
 
 const styles = StyleSheet.create({
   inputContainer: {
@@ -115,12 +120,19 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 10,
-    backgroundColor: "#F5F8FD",
+    padding: 16,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderColor: "#F1F5F9",
   },
   input: {
-    borderRadius: 12,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 24,
     fontSize: 16,
     lineHeight: 24,
+    paddingHorizontal: 16,
+    maxHeight: 120,
   },
 });
+
+export default CommentInput;

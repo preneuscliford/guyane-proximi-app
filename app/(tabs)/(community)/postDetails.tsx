@@ -5,21 +5,25 @@ import {
   Text,
   View,
   RefreshControl,
+  Image,
+  TouchableOpacity,
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import PostsCard from "@/components/PostsCard";
-import CommentSection from "@/components/CommentSection";
 import { useAuth } from "@/app/provider/AuthProvider";
-import { ActivityIndicator, Appbar } from "react-native-paper";
+import { ActivityIndicator } from "react-native-paper";
 import { StatusBar } from "expo-status-bar";
 import BackAppbar from "@/components/AppBar";
 import { Post } from "@/types/postTypes";
 import { fetchComments, fetchPostDetails } from "@/lib/postServices";
 import Toast, { ToastHandles } from "@/components/Toast";
-import { Button } from "react-native";
+import moment from "moment";
+import RemoteImage from "@/components/RemoteImage";
+import Feather from "@expo/vector-icons/Feather";
+import CommentInput from "@/components/InputFueldComment";
 
 const PostDetails = () => {
   const { postId } = useLocalSearchParams();
@@ -37,7 +41,6 @@ const PostDetails = () => {
         fetchPostDetails(postId as string),
         fetchComments(postId as string),
       ]);
-
       setPost(postData);
       setComments(commentsData);
     } catch (error) {
@@ -64,15 +67,14 @@ const PostDetails = () => {
           event: "*",
           schema: "public",
           table: "comments",
-          // ... rest of the code ...
+          // ... (filtre ou autres options)
         },
         () => {
-          // ... rest of the code ...
+          loadData();
         }
       )
       .subscribe();
 
-    // Don't forget to return a cleanup function to unsubscribe from the channel
     return () => {
       commentsSubscription.unsubscribe();
     };
@@ -80,17 +82,17 @@ const PostDetails = () => {
 
   if (loading) {
     return (
-      <View className="h-full justify-center items-center">
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="small" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-ghost-white">
+    <View style={styles.safeArea}>
       <Toast ref={toastRef} />
-      <StatusBar style="dark" backgroundColor="#F5F8FD" />
       <BackAppbar title="" />
+      <StatusBar style="dark" backgroundColor="#F5F8FD" />
 
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
@@ -110,32 +112,135 @@ const PostDetails = () => {
           showMoreIcons={false}
         />
 
-        <CommentSection
-          postId={postId as string}
-          currentUser={userData}
-          comments={comments}
-          onCommentAdded={(success) => {
-            if (success) {
-              loadData();
-              toastRef.current?.show("Commentaire ajouté", "success", 1500);
-            } else {
-              toastRef.current?.show(
-                "Échec de l'ajout du commentaire",
-                "error",
-                2000
-              );
-            }
-          }}
-        />
+        {/* Zone scrollable pour la liste des commentaires */}
+        <View style={styles.commentsWrapper}>
+          <Text style={styles.commentsTitle}>Commentaire(s)</Text>
+          {comments.map((comment) => (
+            <View key={comment.id} style={styles.commentContainer}>
+              {comment.profiles.avatar_url.startsWith("https://") ? (
+                <Image
+                  source={{ uri: comment.profiles.avatar_url }}
+                  style={styles.avatar}
+                />
+              ) : (
+                <RemoteImage
+                  path={comment.profiles.avatar_url}
+                  fallback="profile image"
+                  style={styles.avatar}
+                />
+              )}
+              <View style={styles.commentContent}>
+                <View style={styles.commentHeader}>
+                  <Text style={styles.username}>
+                    {comment.profiles.username || comment.profiles.full_name}
+                  </Text>
+                  <Text style={styles.timestamp}>
+                    {moment(comment.created_at).fromNow()}
+                  </Text>
+                </View>
+                <Text style={styles.commentText}>{comment.text}</Text>
+                <View style={styles.actions}>
+                  <TouchableOpacity style={styles.actionButton}>
+                    <Feather name="heart" size={16} color="#64748B" />
+                    <Text style={styles.actionText}></Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.actionButton}>
+                    <Feather name="message-circle" size={16} color="#64748B" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
       </ScrollView>
-    </SafeAreaView>
+
+      {/* Zone d'input fixée en bas */}
+      <CommentInput
+        postId={postId as string}
+        currentUser={userData}
+        onCommentAdded={(success: any) => {
+          if (success) {
+            loadData();
+            toastRef.current?.show("Commentaire ajouté", "success", 1500);
+          } else {
+            toastRef.current?.show(
+              "Échec de l'ajout du commentaire",
+              "error",
+              2000
+            );
+          }
+        }}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#F5F8FD",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   scrollContainer: {
     paddingHorizontal: 16,
-    paddingBottom: 100,
+    paddingBottom: 100, // espace pour l'input
+  },
+  commentsWrapper: {
+    marginTop: 16,
+  },
+  commentsTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },
+  commentContainer: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  avatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginHorizontal: 5,
+  },
+  commentContent: {
+    flex: 1,
+  },
+  commentHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  username: {
+    fontWeight: "bold",
+    marginRight: 8,
+  },
+  timestamp: {
+    fontSize: 12,
+    color: "#64748B",
+  },
+  commentText: {
+    marginBottom: 8,
+  },
+  actions: {
+    flexDirection: "row",
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  actionText: {
+    fontSize: 12,
+    color: "#64748B",
+    marginLeft: 4,
   },
 });
 

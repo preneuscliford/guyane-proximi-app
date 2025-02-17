@@ -23,7 +23,7 @@ import {
   PAGE_SIZE,
 } from "@/lib/supabase";
 import Animated from "react-native-reanimated";
-import { Bell, Ratio, SquarePlus } from "lucide-react-native";
+import { Bell, ChartArea, Ratio, SquarePlus } from "lucide-react-native";
 import { Appbar } from "react-native-paper";
 import { Image } from "expo-image";
 import RemoteImage from "@/components/RemoteImage";
@@ -135,6 +135,7 @@ const Index = () => {
           icon={() => <Bell size={24} color="#9333EA" />}
           onPress={() => {}}
         />
+
         <Appbar.Action
           icon={() =>
             userData?.avatar_url.startsWith("https://") ? (
@@ -155,7 +156,7 @@ const Index = () => {
       </Appbar.Header>
 
       {/* Barre d'onglets */}
-      <View className="flex-row justify-between px-4 pt-4 border-b border-gray-100">
+      <View className="flex-row justify-between px-4 pt-4 border-b border-gray-100 mb-2">
         {(["nouveaux", "tendances", "mesPosts"] as const).map((tab) => (
           <TouchableOpacity
             key={tab}
