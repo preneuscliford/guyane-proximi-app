@@ -92,11 +92,6 @@ export default function HomeScreen() {
           </View>
           <Cathegory />
 
-          {/* Dernières publications */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Dernières activités</Text>
-            <Text style={styles.seeAll}>Voir tout</Text>
-          </View>
           <LastItems />
 
           {/* Événements à venir */}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,51 +6,111 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
+  ActivityIndicator,
 } from "react-native";
+import { supabase } from "../lib/supabase";
+import ProductsImage from "./ProductsImage";
 
-const items = [
-  {
-    id: "1",
-    title: "House Cleaning",
-    provider: "Jenny Wilson",
-    type: "Cleaning",
-    image:
-      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=200",
-  },
-  {
-    id: "2",
-    title: "Washing Clothes",
-    provider: "Emma Potter",
-    type: "Cleaning",
-    image:
-      "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?auto=format&fit=crop&q=80&w=200",
-  },
-];
+interface Service {
+  id: string;
+  titre: string;
+  prestataire: string;
+  type: string;
+  image: string;
+  prix: number;
+  avis: number;
+  profiles: {
+    id: string;
+    full_name: string;
+    username: string;
+  };
+}
 
-const LastItems = () => {
+const DerniersServices = () => {
+  const [services, setServices] = useState<Service[]>([]);
+  const [chargement, setChargement] = useState<boolean>(true);
+
+  useEffect(() => {
+    const recupererServices = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("services")
+          .select(
+            `
+            *, profiles(*), reviews(*), category_id(*)
+          `
+          )
+          .order("created_at", { ascending: false })
+          .limit(4);
+
+        if (error) throw error;
+
+        // console.log(data[0].category_id);
+
+        const donneesFormatees: Service[] = data.map((service: any) => ({
+          id: service.id,
+          titre: service?.title,
+          prestataire:
+            service?.profiles?.full_name || service.profiles.username,
+          type: service?.category_id?.name || "Général",
+          image: service?.gallery[0],
+          prix: service.price,
+          avis: service.reviews[0]?.count || 0,
+          profiles: service.profiles,
+        }));
+
+        setServices(donneesFormatees);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des services :", error);
+      } finally {
+        setChargement(false);
+      }
+    };
+
+    recupererServices();
+  }, []);
+
+  if (chargement) {
+    return <ActivityIndicator style={{ marginVertical: 20 }} />;
+  }
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Latest Business</Text>
+      <View style={styles.entete}>
+        <Text style={styles.titre}>Derniers services</Text>
         <TouchableOpacity>
-          <Text style={styles.viewAll}>View All</Text>
+          <Text style={styles.toutVoir}>Tout voir</Text>
         </TouchableOpacity>
       </View>
 
       <FlatList
-        data={items}
+        data={services}
         scrollEnabled={false}
         numColumns={2}
-        columnWrapperStyle={styles.row}
+        columnWrapperStyle={styles.rangee}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.card}>
+          <TouchableOpacity style={styles.carte}>
             <View style={styles.imageContainer}>
-              <Image source={{ uri: item.image }} style={styles.image} />
-              <TouchableOpacity style={styles.heartButton}></TouchableOpacity>
+              <ProductsImage
+                path={item.image}
+                fallback=" services Image"
+                style={styles.image}
+              />
+              <TouchableOpacity style={styles.boutonFavori}></TouchableOpacity>
             </View>
-            <View style={styles.content}>
-              <Text style={styles.itemTitle}>{item.title}</Text>
-              <Text style={styles.provider}>{item.provider}</Text>
+            <View style={styles.contenu}>
+              <Text numberOfLines={2} style={styles.titreItem}>
+                {item.titre}
+              </Text>
+              <Text style={styles.prestataire}>{item.prestataire}</Text>
+
+              <View style={styles.infoContainer}>
+                <Text style={styles.prix}>€{item.prix}</Text>
+                {item.avis > 0 && (
+                  <Text style={styles.avis}>({item.avis} avis)</Text>
+                )}
+              </View>
+
               <View style={styles.typeContainer}>
                 <Text style={styles.type}>{item.type}</Text>
               </View>
@@ -64,39 +124,54 @@ const LastItems = () => {
 };
 
 const styles = StyleSheet.create({
+  infoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  prix: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#10B981",
+    marginRight: 8,
+  },
+  avis: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
   container: {
     paddingVertical: 16,
   },
-  header: {
+  entete: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
     marginBottom: 12,
   },
-  title: {
+  titre: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#1F2937",
   },
-  viewAll: {
+  toutVoir: {
     color: "#9333EA",
     fontSize: 14,
   },
-  row: {
+  rangee: {
     justifyContent: "space-between",
     paddingHorizontal: 16,
   },
-  card: {
+  carte: {
     width: "48%",
     backgroundColor: "white",
     borderRadius: 12,
     overflow: "hidden",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 0.5,
   },
   imageContainer: {
     position: "relative",
@@ -105,7 +180,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 120,
   },
-  heartButton: {
+  boutonFavori: {
     position: "absolute",
     top: 8,
     right: 8,
@@ -113,16 +188,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 6,
   },
-  content: {
+  contenu: {
     padding: 12,
   },
-  itemTitle: {
+  titreItem: {
     fontSize: 14,
     fontWeight: "bold",
     color: "#1F2937",
     marginBottom: 4,
   },
-  provider: {
+  prestataire: {
     fontSize: 12,
     color: "#6B7280",
     marginBottom: 8,
@@ -140,4 +215,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LastItems;
+export default DerniersServices;

@@ -6,41 +6,46 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
-import { Wrench, Truck, PaintBucket, Ratio } from "lucide-react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const categories = [
-  { id: "1", name: "Cleaning", icon: Ratio },
-  { id: "2", name: "Repairing", icon: Wrench },
-  { id: "3", name: "Painting", icon: PaintBucket },
-  { id: "4", name: "Shifting", icon: Truck },
+  { id: "1", name: "Nettoyage", icon: "broom" },
+  { id: "2", name: "Réparation", icon: "wrench" },
+  { id: "3", name: "Peinture", icon: "format-paint" },
+  { id: "4", name: "Déménagement", icon: "truck" },
+  { id: "5", name: "Jardinage", icon: "tree" },
+  { id: "6", name: "Plomberie", icon: "water-pump" },
+  { id: "7", name: "Électricité", icon: "flash" },
+  { id: "8", name: "Décoration", icon: "palette" },
 ];
 
 const Categories = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Categories</Text>
+        <Text style={styles.title}>Catégories</Text>
         <TouchableOpacity>
-          <Text style={styles.viewAll}>View All</Text>
+          <Text style={styles.viewAll}>Voir tout</Text>
         </TouchableOpacity>
       </View>
 
       <FlatList
         data={categories}
         horizontal
-        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.list}
-        renderItem={({ item }) => {
-          const Icon = item.icon;
-          return (
-            <TouchableOpacity style={styles.category}>
-              <View style={styles.iconContainer}>
-                <Icon size={24} color="#9333EA" />
-              </View>
-              <Text style={styles.categoryName}>{item.name}</Text>
-            </TouchableOpacity>
-          );
-        }}
+        renderItem={({ item }) => (
+          <TouchableOpacity style={styles.category}>
+            <View style={styles.iconContainer}>
+              <MaterialCommunityIcons
+                name={item.icon as any}
+                size={24}
+                color="#9333EA"
+              />
+            </View>
+            <Text style={styles.categoryName}>{item.name}</Text>
+          </TouchableOpacity>
+        )}
         keyExtractor={(item) => item.id}
       />
     </View>

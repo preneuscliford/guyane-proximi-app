@@ -94,3 +94,17 @@ alter table reported_posts enable row level security;
 create policy "Allow report" on reported_posts
   for insert to authenticated 
   with check (true);
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
