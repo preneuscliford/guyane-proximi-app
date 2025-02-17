@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { supabase } from "../lib/supabase";
 import ProductsImage from "./ProductsImage";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
 interface Service {
   id: string;
@@ -29,6 +31,7 @@ interface Service {
 const DerniersServices = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [chargement, setChargement] = useState<boolean>(true);
+  const router = useRouter();
 
   useEffect(() => {
     const recupererServices = async () => {
@@ -89,7 +92,15 @@ const DerniersServices = () => {
         numColumns={2}
         columnWrapperStyle={styles.rangee}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.carte}>
+          <TouchableOpacity
+            style={styles.carte}
+            onPress={() => {
+              router.push({
+                pathname: "/services/details",
+                params: { id: item.id },
+              });
+            }}
+          >
             <View style={styles.imageContainer}>
               <ProductsImage
                 path={item.image}

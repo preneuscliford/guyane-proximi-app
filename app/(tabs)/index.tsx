@@ -62,8 +62,9 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" />
+      <View className="flex-1 justify-center items-center bg-ghost-white">
+        <StatusBar style="light" backgroundColor="#9333EA" />
+        <ActivityIndicator style={{ flex: 1 }} />
       </View>
     );
   }
