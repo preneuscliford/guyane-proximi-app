@@ -7,116 +7,147 @@ import {
   ActivityIndicator,
   useWindowDimensions,
   Platform,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from "react-native";
 import { useLocalSearchParams, useNavigation } from "expo-router";
-import { supabase } from "@/lib/supabase";
+
 import React, { useEffect, useState } from "react";
-import RemoteImage from "@/components/RemoteImage";
+
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import ProductsImage from "@/components/ProductsImage";
+import { getContrastType, getDominantColor } from "@/hooks/useImageColors";
+import { useQuery } from "@tanstack/react-query";
+import { fetchServices } from "@/lib/homeService";
+import { ServiceImages } from "@/components/Images";
 import { StatusBar } from "expo-status-bar";
+import { LinearGradient } from "expo-linear-gradient";
 
-interface Service {
+interface data {
   id: string;
   gallery: string[];
   // ... d'autres propriétés si besoin
 }
 
-interface ServiceDetailsProps {
-  service: Service;
+interface dataDetailsProps {
+  data: data;
 }
 
-const ServiceDetails: React.FC<ServiceDetailsProps> = () => {
+const dataDetails: React.FC<dataDetailsProps> = () => {
   const { id } = useLocalSearchParams();
-  const [service, setService] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const navigation = useNavigation();
-  const [dominantColor, setDominantColor] = useState("#fff");
+  const [dominantColors, setDominantColors] = useState<string[]>([]);
+  const [image, setImage] = useState<any>("");
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const { width, height } = useWindowDimensions();
 
+  const { data, isLoading } = useQuery({
+    queryKey: ["services", id],
+    queryFn: () => fetchServices(id as string),
+  });
+
+  console.log(data?.gallery[0]);
+
   useEffect(() => {
-    const fetchService = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("services")
-          .select(
-            `
-            *,
-            profiles(*),
-            categories(*),
-            reviews(*)
-          `
-          )
-          .eq("id", id)
-          .single();
+    if (!isLoading && data?.gallery) {
+      const extractColors = async () => {
+        const colorPromises = data.gallery.map(async (img: string) => {
+          try {
+            return await getDominantColor(img);
+          } catch (error) {
+            console.error("Error extracting color:", error);
+            return "#FFFFFF"; // Couleur de fallback
+          }
+        });
 
-        if (error) throw error;
-        setService(data);
-      } catch (error) {
-        console.error("Error fetching service:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+        const colors = await Promise.all(colorPromises);
+        setDominantColors(colors);
+      };
 
-    fetchService();
-  }, [id]);
+      extractColors();
+    }
+  }, [data, isLoading]);
 
-  if (loading) {
-    return <ActivityIndicator style={{ flex: 1 }} />;
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const contentOffsetX = event.nativeEvent.contentOffset.x;
+    setImage(contentOffsetX);
+
+    const newIndex = Math.round(contentOffsetX / width);
+    setCurrentImageIndex(newIndex);
+  };
+
+  if (isLoading) {
+    return (
+      <ActivityIndicator style={{ flex: 1, backgroundColor: "#F5F8FD" }} />
+    );
   }
 
-  if (!service) {
+  if (!data) {
     return (
       <View style={styles.container}>
-        <Text>Service non trouvé</Text>
+        <Text>data non trouvé</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" backgroundColor="#F5F8FD" />
+      <StatusBar
+        translucent
+        networkActivityIndicatorVisible
+        backgroundColor="transparent"
+        style={getContrastType(dominantColors[currentImageIndex] || "#FFFFFF")}
+      />
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Galerie d'images */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {service.gallery.map((image: string, index: number) => (
-            <ProductsImage
-              key={index}
-              path={image}
-              fallback=" services Image"
-              style={{ width, height: 200, objectFit: "cover" }}
-            />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          pagingEnabled
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+        >
+          {data?.gallery?.map((image: string, index: number) => (
+            <View key={index} style={{ width }}>
+              <LinearGradient
+                colors={["transparent", dominantColors[index] + "00"]}
+                style={styles.imageOverlay}
+              />
+              <ServiceImages
+                path={image}
+                fallback="service image"
+                style={{ width, height: 300, objectFit: "cover" }}
+              />
+            </View>
           ))}
         </ScrollView>
 
         {/* En-tête */}
         <View style={styles.header}>
-          <Text style={styles.title}>{service.title}</Text>
+          <Text style={styles.title}>{data?.title}</Text>
           <View style={styles.providerContainer}>
             {/* <RemoteImage
-              path={service.profiles.avatar_url}
+              path={data.profiles.avatar_url}
               style={styles.avatar}
               fallback="user-avatar"
             /> */}
             <Image
-              source={{ uri: service.profiles.avatar_url }}
+              source={{ uri: data?.profiles?.avatar_url }}
               style={styles.avatar}
               resizeMode="cover"
             />
             <View>
               <Text style={styles.providerName}>
-                {service.profiles.full_name}
+                {data?.profiles?.full_name}
               </Text>
-              <Text style={styles.category}>{service.categories.name}</Text>
+              <Text style={styles.category}>{data?.categories?.name}</Text>
             </View>
           </View>
 
           <View style={styles.location}>
             <Ionicons name="location-outline" size={16} color="#666" />
-            <Text style={styles.locationText}>{"service.location"}</Text>
+            <Text style={styles.locationText}>{"data.location"}</Text>
           </View>
         </View>
 
@@ -124,14 +155,14 @@ const ServiceDetails: React.FC<ServiceDetailsProps> = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>À propos</Text>
           <Text style={styles.description}>
-            {service.description || "Aucune description fournie"}
+            {data?.description || "Aucune description fournie"}
           </Text>
         </View>
 
         {/* Avis */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            Avis ({service.reviews.length})
+            Avis ({data?.reviews?.length})
           </Text>
           {/* Composant d'avis à implémenter */}
         </View>
@@ -154,9 +185,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F8FD",
+    paddingTop: Platform.OS === "android" ? 0 : 0,
   },
   scrollContent: {
     paddingBottom: 100,
+  },
+  imageOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 100,
+    zIndex: 2,
   },
 
   header: {
@@ -247,4 +287,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ServiceDetails;
+export default dataDetails;

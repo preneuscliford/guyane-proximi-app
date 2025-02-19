@@ -1,122 +1,111 @@
+import { useState, useRef } from "react";
 import {
-  ScrollView,
   View,
+  TextInput,
   TouchableOpacity,
   Image,
-  Alert,
+  ScrollView,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
   Text,
 } from "react-native";
-import React, { useRef, useState } from "react";
 import { useAuth } from "@/app/provider/AuthProvider";
-import { Button, ActivityIndicator } from "react-native-paper";
-import { useRouter } from "expo-router";
-import RemoteImage from "@/components/RemoteImage";
-import RichTextEditor from "@/components/RichTextEditor";
 import { supabase } from "@/lib/supabase";
 import { MaterialIcons } from "@expo/vector-icons";
-import BackAppbar from "@/components/AppBar";
-import { StatusBar } from "expo-status-bar";
-import Toast, { ToastHandles } from "@/components/Toast";
-import { uploadImages } from "@/lib/postServices";
+// import Button from "@/components/Button";
 import { useImagePicker } from "@/hooks/useImagePicker";
+import { useRouter } from "expo-router";
+import { uploadImages } from "@/lib/postServices";
+import { Button } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+const MAX_CHARACTERS = 280;
 
 const CreatePost = () => {
-  const { userData, user } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
-  const editorRef = useRef<any>(null);
-  const toastRef = useRef<ToastHandles>(null);
   const { images, pickImages, removeImage } = useImagePicker();
-  const [loading, setLoading] = useState(false);
   const [content, setContent] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const inputRef = useRef<TextInput>(null);
 
-  const isValidPost = () => {
-    return content.trim().length > 0 || images.length > 0;
-  };
-
-  const handleCreatePost = async () => {
-    if (!isValidPost()) {
-      toastRef.current?.show("Le post ne peut pas être vide", "info", 1500);
-      return;
-    }
+  const handleSubmit = async () => {
+    if (!content.trim() && images.length === 0) return;
 
     try {
-      setLoading(true);
+      setIsSubmitting(true);
+
+      // Upload des médias
       const mediaUrls = await uploadImages(images);
 
-      const { error } = await supabase.from("posts").upsert({
-        body: content,
-        userId: user?.id,
+      // Création du post
+      const { error } = await supabase.from("posts").insert({
+        body: content.trim(),
         file: mediaUrls,
+        userId: user?.id,
       });
 
       if (error) throw error;
 
-      toastRef.current?.show("Post publié avec succès", "success", 1500);
       router.back();
     } catch (error) {
-      console.error("Erreur:", error);
-      toastRef.current?.show("Échec de la publication", "error", 2000);
+      console.error("Post error:", error);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <View className="flex-1 bg-ghost-white">
-      <StatusBar style="dark" backgroundColor="#F5F8FD" />
-      <Toast ref={toastRef} />
-      <BackAppbar title="Créer un post" />
-
-      <ScrollView
-        className="flex-1 px-4"
-        contentContainerStyle={{ paddingBottom: 100 }}
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        {/* En-tête utilisateur */}
-        <View className="flex-row items-center my-6 space-x-3">
-          <View className="w-9 h-9 rounded-full overflow-hidden bg-gray-100">
-            {userData?.avatar_url?.startsWith("https://") ? (
-              <Image
-                source={{ uri: userData.avatar_url }}
-                className="w-full h-full"
-              />
-            ) : (
-              <RemoteImage
-                path={userData?.avatar_url}
-                fallback="profile-placeholder"
-                className="w-full h-full"
-              />
-            )}
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* En-tête */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={router.back}>
+              <MaterialIcons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+            <Button
+              onPress={handleSubmit}
+              disabled={isSubmitting || (!content && images.length === 0)}
+              loading={isSubmitting}
+              style={styles.postButton}
+            >
+              Publier
+            </Button>
           </View>
-          <View>
-            <Text className="text-lg font-semibold text-gray-900">
-              {userData?.username || user?.user_metadata?.full_name}
-            </Text>
-            <Text className="text-sm text-gray-500">Post public</Text>
-          </View>
-        </View>
 
-        {/* Éditeur de texte enrichi */}
-        <RichTextEditor
-          editorRef={editorRef}
-          onchange={(body: string) => setContent(body)}
-        />
+          {/* Zone de texte */}
+          <View style={styles.contentContainer}>
+            <TextInput
+              ref={inputRef}
+              placeholder="Quoi de neuf ?"
+              placeholderTextColor="#666"
+              multiline
+              maxLength={MAX_CHARACTERS}
+              value={content}
+              onChangeText={setContent}
+              style={styles.input}
+              autoFocus
+            />
 
-        {/* Galerie d'images */}
-        <View className="my-4">
-          {images.length > 0 ? (
-            <>
-              <Text className="text-gray-600 mb-2 px-4">
-                {images.length} photo(s)
-              </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {images.map((uri, index) => (
-                  <View key={index} className="relative mr-2 ml-4">
-                    <Image
-                      source={{ uri: uri.uri }}
-                      className="w-28 h-28 rounded-xl"
-                    />
+            {/* Galerie de médias */}
+            {images.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.mediaContainer}
+              >
+                {images.map((image, index) => (
+                  <View key={index} style={styles.mediaItem}>
+                    <Image source={{ uri: image.uri }} style={styles.media} />
                     <TouchableOpacity
-                      className="absolute top-1 right-1 bg-black/50 rounded-full p-1"
+                      style={styles.removeMediaButton}
                       onPress={() => removeImage(index)}
                     >
                       <MaterialIcons name="close" size={16} color="white" />
@@ -124,51 +113,86 @@ const CreatePost = () => {
                   </View>
                 ))}
               </ScrollView>
-            </>
-          ) : (
-            <TouchableOpacity
-              onPress={pickImages}
-              className="mx-4 w-14 h-14 bg-gray-100 rounded-xl items-center justify-center border-2 border-dashed border-gray-300"
-            >
-              <MaterialIcons name="add-a-photo" size={28} color="#64748B" />
+            )}
+          </View>
+
+          {/* Actions */}
+          <View style={styles.footer}>
+            <TouchableOpacity onPress={pickImages}>
+              <MaterialIcons name="image" size={24} color="#9333EA" />
             </TouchableOpacity>
-          )}
-        </View>
-      </ScrollView>
 
-      {/* Bouton de publication */}
-      <View className="p-4 bg-white border-t border-gray-100 shadow-md">
-        <Button
-          mode="contained"
-          loading={loading}
-          disabled={!isValidPost() || loading}
-          onPress={handleCreatePost}
-          className="rounded-full py-2 shadow-sm"
-          labelStyle={{ fontSize: 16, fontWeight: "600" }}
-          contentStyle={{ height: 48 }}
-          theme={{
-            colors: {
-              primary: isValidPost() ? "#9333EA" : "#CBD5E1",
-            },
-          }}
-        >
-          {loading ? "Publication..." : "Publier"}
-        </Button>
-      </View>
-
-      {/* Overlay de chargement */}
-      {loading && (
-        <View className="absolute inset-0 bg-black/50 justify-center items-center">
-          <ActivityIndicator size="large" color="#fff" />
-          <Text className="text-white mt-2 text-center">
-            {images.length > 0
-              ? "Téléversement des images..."
-              : "Publication en cours..."}
-          </Text>
-        </View>
-      )}
-    </View>
+            <Text style={styles.counter}>
+              {MAX_CHARACTERS - content.length}
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  scrollContainer: {
+    padding: 16,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  postButton: {
+    borderRadius: 20,
+    paddingHorizontal: 24,
+  },
+  contentContainer: {
+    flex: 1,
+    marginBottom: 16,
+  },
+  input: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: "#000",
+    maxHeight: 200,
+  },
+  mediaContainer: {
+    gap: 8,
+    marginTop: 16,
+  },
+  mediaItem: {
+    position: "relative",
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  media: {
+    width: 100,
+    height: 100,
+  },
+  removeMediaButton: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 12,
+    padding: 4,
+  },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    paddingTop: 16,
+  },
+  counter: {
+    color: "#666",
+    fontSize: 14,
+  },
+});
 
 export default CreatePost;

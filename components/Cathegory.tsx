@@ -24,9 +24,9 @@ const Categories = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Catégories</Text>
-        <TouchableOpacity>
+        {/* <TouchableOpacity>
           <Text style={styles.viewAll}>Voir tout</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       <FlatList

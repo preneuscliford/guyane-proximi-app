@@ -98,6 +98,11 @@ create policy "Allow report" on reported_posts
 
 
 
+  kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.25'
+  distributionUrl=https\://services.gradle.org/distributions/gradle-8.10.2-all.zip
+
+
+
 
 
 

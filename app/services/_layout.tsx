@@ -15,7 +15,7 @@ const servicesLayout = () => {
       <Stack.Screen
         name="details"
         options={{
-          headerShown: true,
+          headerShown: false,
           title: "",
           headerStyle: { backgroundColor: "#F5F8FD" },
           headerShadowVisible: false,

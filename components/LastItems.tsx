@@ -9,9 +9,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { supabase } from "../lib/supabase";
-import ProductsImage from "./ProductsImage";
+
 import { useRouter } from "expo-router";
-import { StatusBar } from "expo-status-bar";
+
+import { ServiceImages } from "./Images";
 
 interface Service {
   id: string;
@@ -102,7 +103,7 @@ const DerniersServices = () => {
             }}
           >
             <View style={styles.imageContainer}>
-              <ProductsImage
+              <ServiceImages
                 path={item.image}
                 fallback=" services Image"
                 style={styles.image}

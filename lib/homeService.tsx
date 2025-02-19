@@ -1,38 +1,37 @@
-import { Post } from "@/types/postTypes";
 import { supabase } from "./supabase";
-
-// Créer un fichier imageService.ts
 import * as ImagePicker from "expo-image-picker";
 import { Buffer } from "buffer";
 import * as FileSystem from "expo-file-system";
-
-export const fetchPostDetails = async (postId: string) => {
-  const { data, error } = await supabase
-    .from("posts")
-    .select("*, profiles(*), post_likes(*), comments(*)")
-    .eq("id", postId)
-    .single();
-
-  if (error) throw error;
-  return data as Post;
-};
-
-export const fetchComments = async (postId: string) => {
-  const { data, error } = await supabase
-    .from("comments")
-    .select("*, profiles(*)")
-    .eq("postId", postId)
-    .order("created_at", { ascending: true });
-
-  if (error) throw error;
-  return data as Comment[];
-};
 
 export interface ImageAsset extends ImagePicker.ImagePickerAsset {
   id?: string;
 }
 
-export const uploadImages = async (images: ImageAsset[]) => {
+export const fetchServices = async (id: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("services")
+      .select(
+        `
+            *,
+            profiles(*),
+            categories(*),
+            reviews(*)
+          `
+      )
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+
+    return data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  } finally {
+  }
+};
+
+export const uploadServicesImages = async (images: ImageAsset[]) => {
   if (!images?.length) return [];
 
   try {
@@ -51,7 +50,7 @@ export const uploadImages = async (images: ImageAsset[]) => {
           .substring(7)}.${fileExt}`;
 
         const { data, error } = await supabase.storage
-          .from("post-images")
+          .from("services")
           .upload(path, arraybuffer, {
             contentType: image.mimeType || "image/jpeg",
           });
