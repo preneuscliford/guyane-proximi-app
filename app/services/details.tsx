@@ -10,11 +10,11 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from "react-native";
-import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import React, { useEffect, useState } from "react";
 
-import { Ionicons } from "@expo/vector-icons";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { getContrastType, getDominantColor } from "@/hooks/useImageColors";
 import { useQuery } from "@tanstack/react-query";
@@ -22,6 +22,7 @@ import { fetchServices } from "@/lib/homeService";
 import { ServiceImages } from "@/components/Images";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
+import { CircleArrowLeft, MoveLeft } from "lucide-react-native";
 
 interface data {
   id: string;
@@ -36,10 +37,9 @@ interface dataDetailsProps {
 const dataDetails: React.FC<dataDetailsProps> = () => {
   const { id } = useLocalSearchParams();
   const [dominantColors, setDominantColors] = useState<string[]>([]);
-  const [image, setImage] = useState<any>("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
   const { width, height } = useWindowDimensions();
+  const router = useRouter();
 
   const { data, isLoading } = useQuery({
     queryKey: ["services", id],
@@ -70,8 +70,6 @@ const dataDetails: React.FC<dataDetailsProps> = () => {
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
-    setImage(contentOffsetX);
-
     const newIndex = Math.round(contentOffsetX / width);
     setCurrentImageIndex(newIndex);
   };
@@ -98,6 +96,26 @@ const dataDetails: React.FC<dataDetailsProps> = () => {
         backgroundColor="transparent"
         style={getContrastType(dominantColors[currentImageIndex] || "#FFFFFF")}
       />
+
+      <TouchableOpacity
+        onPress={() => {
+          router.back();
+        }}
+        style={{
+          position: "absolute",
+          top: "5.5%",
+          left: 16,
+          zIndex: 100,
+        }}
+      >
+        <AntDesign
+          name="back"
+          size={28}
+          color={dominantColors[currentImageIndex]}
+        />
+
+        {/* <CircleArrowLeft size={28} color={dominantColors[currentImageIndex]} /> */}
+      </TouchableOpacity>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Galerie d'images */}
@@ -203,7 +221,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   title: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: "bold",
     marginBottom: 16,
   },

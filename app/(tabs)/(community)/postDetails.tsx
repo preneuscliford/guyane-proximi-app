@@ -88,6 +88,8 @@ const PostDetails = () => {
     );
   }
 
+  console.log(comments);
+
   return (
     <View style={styles.safeArea}>
       <Toast ref={toastRef} />

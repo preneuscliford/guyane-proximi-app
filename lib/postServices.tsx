@@ -1,6 +1,8 @@
 import { Post } from "@/types/postTypes";
 import { supabase } from "./supabase";
 
+import { useQuery } from "@tanstack/react-query";
+
 // Créer un fichier imageService.ts
 import * as ImagePicker from "expo-image-picker";
 import { Buffer } from "buffer";
@@ -66,5 +68,99 @@ export const uploadImages = async (images: ImageAsset[]) => {
         error instanceof Error ? error.message : String(error)
       }`
     );
+  }
+};
+
+export interface NotificationPayload {
+  type: "like" | "comment" | "share";
+  receiverId: string;
+  senderId: string;
+  postId: number;
+  commentId?: number;
+  content: string;
+  metadata?: Record<string, unknown>;
+}
+
+export const createNotification = async (payload: NotificationPayload) => {
+  try {
+    const { data, error } = await supabase
+      .from("posts_notifications")
+      .insert({
+        receiver_id: payload.receiverId,
+        sender_id: payload.senderId,
+        post_id: payload.postId,
+        type: payload.type,
+        data: {
+          comment_id: payload.commentId,
+          preview: payload.content.substring(0, 100),
+          full_content: payload.content,
+          post_id: payload.postId,
+          ...payload.metadata,
+        },
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Erreur création notification:", error);
+    throw error;
+  }
+};
+
+export const useUnreadNotifications = (userId: string) => {
+  return useQuery({
+    queryKey: ["unread-notifications", userId],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("posts_notifications")
+        .select("*", { count: "exact" })
+        .eq("receiver_id", userId)
+        .eq("is_read", false);
+
+      return count || 0;
+    },
+  });
+};
+
+// Exemple d'utilisation pour un commentaire
+export const createCommentNotification = async (
+  currentUser: { id: string; username: string; full_name: string },
+  postOwnerId: string,
+  postId: number,
+  commentId: number,
+  commentText: string
+) => {
+  return createNotification({
+    type: "comment",
+    receiverId: postOwnerId,
+    senderId: currentUser.id,
+    postId: postId,
+    commentId: commentId,
+    content: `${
+      currentUser.username || currentUser.full_name
+    } a commenté : ${commentText}`,
+    metadata: {
+      interaction_type: "comment",
+      timestamp: new Date().toISOString(),
+    },
+  });
+};
+
+export const fetchNotifications = async (user_id: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("posts_notifications")
+      .select(`*, sender_id(*)`)
+      .eq("receiver_id", user_id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  } finally {
   }
 };

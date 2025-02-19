@@ -54,7 +54,7 @@ export const PostImages = ({
     (async () => {
       setImage("");
       const { data, error } = await supabase.storage
-        .from("products/listings")
+        .from("post-images")
         .download(path);
 
       if (error) {

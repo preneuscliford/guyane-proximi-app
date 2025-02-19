@@ -29,6 +29,7 @@ import { ModerationActions } from "./ModerationActions";
 import { Image } from "expo-image";
 import ImageSlider from "./ImageSlider";
 import { useAuth } from "@/app/provider/AuthProvider";
+import { createNotification } from "@/lib/postServices";
 
 const textStyles = {
   fontSize: 16,
@@ -110,6 +111,31 @@ const PostsCard = ({
           })
           .select()
           .single();
+
+        if (!error) {
+          // Créer la notification
+          const { data: postOwner } = await supabase
+            .from("posts")
+            .select("userId")
+            .eq("id", item.id)
+            .single();
+
+          if (postOwner?.userId && postOwner.userId !== currentUser.id) {
+            await createNotification({
+              type: "like",
+              receiverId: postOwner.userId,
+              senderId: currentUser.id,
+              postId: parseInt(item.id, 10),
+              content: `${
+                currentUser.username || currentUser.full_name
+              } a aimé votre publication`,
+              metadata: {
+                interaction_type: "like",
+                post_thumbnail: item.media?.[0], // Exemple de métadonnée supplémentaire
+              },
+            });
+          }
+        }
 
         if (error) {
           setLikes(likes);

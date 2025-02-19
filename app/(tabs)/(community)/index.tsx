@@ -24,9 +24,10 @@ import {
 } from "@/lib/supabase";
 import Animated from "react-native-reanimated";
 import { Bell, ChartArea, Ratio, SquarePlus } from "lucide-react-native";
-import { Appbar } from "react-native-paper";
+import { Appbar, Badge } from "react-native-paper";
 import { Image } from "expo-image";
 import RemoteImage from "@/components/RemoteImage";
+import { useUnreadNotifications } from "@/lib/postServices";
 
 const Index = () => {
   const { userData, user, session } = useAuth();
@@ -36,6 +37,8 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<
     "nouveaux" | "tendances" | "mesPosts"
   >("nouveaux");
+
+  const { data: unreadCount } = useUnreadNotifications(user?.id || "");
 
   // Requête pour les nouveaux posts
   const newPostsQuery = useInfiniteQuery({
@@ -82,7 +85,6 @@ const Index = () => {
 
   const flattenedData =
     activeQuery.data?.pages.flatMap((page) => page.data) || [];
-  const totalCount = activeQuery.data?.pages[0]?.totalCount || 0;
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -132,13 +134,25 @@ const Index = () => {
           onPress={() => router.push("/(tabs)/(community)/create")}
         />
         <Appbar.Action
-          icon={() => <Bell size={24} color="#9333EA" />}
-          onPress={() => {}}
+          icon={() => (
+            <View className="relative">
+              <Bell size={24} color="#9333EA" />
+              {unreadCount !== undefined && unreadCount > 0 && (
+                <Badge
+                  style={{ backgroundColor: "#EF4444" }}
+                  className="absolute top-[-5] right-[-5] z-30"
+                >
+                  3
+                </Badge>
+              )}
+            </View>
+          )}
+          onPress={() => router.push("/(tabs)/(community)/notifications")}
         />
 
         <Appbar.Action
           icon={() =>
-            userData?.avatar_url.startsWith("https://") ? (
+            userData?.avatar_url?.startsWith("https://") ? (
               <Image
                 source={{ uri: userData?.avatar_url }}
                 style={{ width: 28, height: 28, borderRadius: 20 }}
@@ -183,7 +197,7 @@ const Index = () => {
               {activeTab === tab && (
                 <View className="h-5 w-5 bg-purple-100 rounded-full items-center justify-center">
                   <Text className="text-purple-600 text-xs font-bold">
-                    {flattenedData.length}
+                    {flattenedData?.length}
                   </Text>
                 </View>
               )}

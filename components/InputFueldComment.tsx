@@ -13,6 +13,10 @@ import { TextInput } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
+import {
+  createCommentNotification,
+  createNotification,
+} from "@/lib/postServices";
 
 interface CommentInputProps {
   postId: string;
@@ -50,15 +54,36 @@ const CommentInput: React.FC<CommentInputProps> = ({
     setIsSubmitting(true);
     animateInput();
     try {
-      const { error } = await supabase.from("comments").insert({
-        text: newComment.trim(),
-        postId: parseInt(postId, 10),
-        userId: currentUser.id,
-      });
+      const { data, error } = await supabase
+        .from("comments")
+        .insert({
+          text: newComment.trim(),
+          postId: parseInt(postId, 10),
+          userId: currentUser.id,
+        })
+        .select() // Ajouter .select() pour récupérer le commentaire créé
+        .single(); // .single() car on insère un seul enregistrement
+
       if (error) throw error;
+
       setNewComment("");
       onCommentAdded(true);
-      // router.back();
+
+      const { data: postOwner } = await supabase
+        .from("posts")
+        .select("userId")
+        .eq("id", parseInt(postId, 10))
+        .single();
+
+      if (postOwner?.userId && postOwner.userId !== currentUser.id) {
+        await createCommentNotification(
+          currentUser,
+          postOwner.userId, // Utiliser la valeur récupérée
+          parseInt(postId, 10),
+          data.id, // ID du commentaire créé
+          newComment.trim()
+        );
+      }
     } catch (error) {
       console.error("Erreur lors de l’ajout du commentaire:", error);
       onCommentAdded(false);

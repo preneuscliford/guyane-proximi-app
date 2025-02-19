@@ -7,8 +7,12 @@ import {
   Modal,
   StyleSheet,
 } from "react-native";
-import ProductsImage from "./ProductsImage";
+
 import { useTheme } from "@react-navigation/native"; // Si vous utilisez react-navigation
+import { PostImages } from "./Images";
+import { StatusBar } from "expo-status-bar";
+import { Ionicons } from "@expo/vector-icons";
+import { X } from "lucide-react-native";
 
 interface ImageSliderProps {
   images: string[];
@@ -43,7 +47,7 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images }) => {
         renderItem={({ item }) => (
           <TouchableWithoutFeedback onPress={() => setSelectedImage(item)}>
             <View className="mr-2  pt-4">
-              <ProductsImage
+              <PostImages
                 path={item}
                 fallback="product-placeholder"
                 style={[styles.image, { borderColor: colors.border }]}
@@ -54,26 +58,41 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images }) => {
       />
 
       {/* Indicateurs de position */}
-      <View style={styles.indicatorContainer}>
-        {images.map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.indicator,
-              {
-                backgroundColor:
-                  index === currentIndex ? colors.primary : colors.border,
-              },
-            ]}
-          />
-        ))}
-      </View>
+      {images.length > 1 && (
+        <View style={styles.indicatorContainer}>
+          {images.map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.indicator,
+                {
+                  backgroundColor:
+                    index === currentIndex ? colors.primary : colors.border,
+                },
+              ]}
+            />
+          ))}
+        </View>
+      )}
 
       {/* Modal plein écran */}
       <Modal visible={!!selectedImage} transparent={true}>
         <TouchableWithoutFeedback onPress={() => setSelectedImage(null)}>
           <View style={styles.modalContainer}>
-            <ProductsImage
+            <X
+              size={28}
+              color="rgb(245,35,0.1)"
+              style={{
+                position: "absolute",
+                top: 20,
+                left: 20,
+                zIndex: 100,
+                backgroundColor: "rgba(0,0,0,0.3)",
+                borderRadius: 20,
+                padding: 4,
+              }}
+            />
+            <PostImages
               path={selectedImage || ""}
               fallback="product-placeholder"
               style={styles.fullScreenImage}
@@ -111,6 +130,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
+    position: "relative",
     backgroundColor: "rgba(0,0,0,0.9)",
     justifyContent: "center",
     alignItems: "center",

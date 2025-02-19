@@ -141,7 +141,7 @@ const EditProfil = () => {
         {/* Carte profil */}
         <View className="bg-white rounded-3xl shadow-lg p-6 mb-6">
           <View className=" items-center">
-            {userData?.avatar_url.startsWith("https://") ? (
+            {userData?.avatar_url?.startsWith("https://") ? (
               <View className="flex-col items-center">
                 <Image
                   source={{ uri: userData?.avatar_url }}

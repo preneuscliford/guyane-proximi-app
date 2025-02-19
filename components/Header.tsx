@@ -12,23 +12,34 @@ const Header = () => {
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
-        <View style={styles.logoContainer}>
-          {session &&
-          userData?.avatar_url.startsWith("https://") && (
+        <View style={{ flexDirection: "row" }}>
+          {userData?.avatar_url?.startsWith("https://") ? (
             <Image
               source={{ uri: userData?.avatar_url }}
               style={{ width: 28, height: 28, borderRadius: 20 }}
             />
-          ) ? (
+          ) : (
             <RemoteImage
               path={userData?.avatar_url}
               fallback="profile-placeholder"
               style={{ width: 28, height: 28, borderRadius: 20 }}
             />
-          ) : (
-            <CircleUserRound size={28} color="white" />
           )}
-          <Text style={styles.appName}>Game Play</Text>
+          <View className="flex-col ">
+            <Text
+              style={{
+                color: "white",
+                fontSize: 15,
+                fontWeight: "300",
+                marginLeft: 4,
+              }}
+            >
+              Bienvenue
+            </Text>
+            <Text style={styles.appName}>
+              {userData?.full_name || userData?.username}
+            </Text>
+          </View>
         </View>
         <TouchableOpacity>
           <Bookmark color="white" size={24} />
@@ -72,8 +83,9 @@ const styles = StyleSheet.create({
   },
   appName: {
     color: "white",
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "500",
+    // marginLeft: 4,
   },
 });
 
