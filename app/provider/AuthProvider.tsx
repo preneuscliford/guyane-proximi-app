@@ -55,10 +55,12 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
   const { data } = useQuery({
     queryKey: ["getProfile", session?.user?.id],
-    queryFn: () =>
-      session?.user?.id
-        ? getProfile(session.user.id)
-        : Promise.reject("No user ID"),
+    queryFn: () => {
+      if (!session?.user?.id) {
+        return Promise.reject(new Error("ID utilisateur non trouvé"));
+      }
+      return getProfile(session.user.id);
+    },
     enabled: !!session?.user?.id,
   });
 

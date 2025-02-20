@@ -11,6 +11,7 @@ import Cathegory from "@/components/Cathegory";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import DisplayEvents from "@/components/DisplayEvent";
+import EventItem from "@/components/EventItem";
 
 interface Product {
   id: number;
@@ -100,7 +101,9 @@ export default function HomeScreen() {
             <Text style={styles.sectionTitle}>Événements</Text>
             <Text style={styles.seeAll}>Voir tout</Text>
           </View>
-          {/* <EventItem /> */}
+          <View style={{ marginHorizontal: 8 }}>
+            <DisplayEvents />
+          </View>
         </ScrollView>
       </View>
     </SafeAreaView>

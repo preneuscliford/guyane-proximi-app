@@ -33,10 +33,22 @@ const Notifications = () => {
     },
   });
 
-  if (isLoading) return <ActivityIndicator style={{ flex: 1 }} />;
+  if (isLoading)
+    return (
+      <ActivityIndicator style={{ flex: 1, backgroundColor: "#F5F8FD" }} />
+    );
+
+  if (notifications?.length === 0)
+    return (
+      <SafeAreaView className="flex-1 bg-[#F5F8FD]">
+        <Text className="text-center text-gray-500 mt-40">
+          Aucune notification
+        </Text>
+      </SafeAreaView>
+    );
 
   return (
-    <SafeAreaView className="flex-1 bg-[#f3f4f6]">
+    <SafeAreaView className="flex-1 bg-[#F5F8FD]">
       <ScrollView className="p-4 flex-1">
         {notifications?.map((notification: any) => (
           <View

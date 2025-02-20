@@ -1,57 +1,164 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
-import { format } from "date-fns";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import ProductsImage from "./ProductsImage";
+import dayjs from "dayjs";
+import "dayjs/locale/fr";
+import { LinearGradient } from "expo-linear-gradient";
+
+import { ServiceImages } from "./Images";
+
+dayjs.locale("fr"); // Configuration globale
 
 const EventItem = ({ event, onPress }: any) => {
+  // Formatage de la date de début et fin
+  const formattedDate = `${dayjs(event.start_date).format(
+    "dddd DD MMM  HH:mm"
+  )} → ${dayjs(event.end_date).format("HH:mm")}`;
+
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      className="bg-white mb-4  rounded-lg shadow-sm"
-    >
-      <View
-        className=" rounded-full overflow-hidden"
-        style={{ width: "100%", height: 200 }}
-      >
-        <ProductsImage
-          path={event.file[0]}
-          fallback={"product image"}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+    <TouchableOpacity style={styles.card} onPress={onPress}>
+      {/* Image & Catégorie */}
+      <View style={styles.imageContainer}>
+        <ServiceImages
+          path={event.file?.[0]}
+          style={{ width: "100%", height: "100%", resizeMode: "cover" }}
+          fallback="event-image"
         />
+        <LinearGradient
+          colors={["transparent", "rgba(0,0,0,0.7)"]}
+          style={styles.gradient}
+        >
+          <View style={styles.categoryTag}>
+            <Text style={styles.categoryText}>
+              {event.category || "Événement"}
+            </Text>
+          </View>
+        </LinearGradient>
       </View>
 
-      <View className="p-4">
-        <Text className="text-lg font-bold text-gray-900 mb-2">
+      {/* Contenu */}
+      <View style={styles.content}>
+        <Text style={styles.title} numberOfLines={2}>
           {event.title}
         </Text>
-
-        <View className=" mb-2">
-          <View className="flex-row items-center">
-            <MaterialIcons name="date-range" size={16} color="#666" />
-            <Text className="text-gray-600 ml-2">
-              Début: {format(new Date(event.start_date), "dd/MM/yyyy HH:mm")}
-            </Text>
-          </View>
-          <View className="flex-row items-center">
-            <Text className="text-gray-600 ml-2">
-              Fin:
-              {format(new Date(event.end_date), " dd/MM/yyyy HH:mm")}
-            </Text>
-          </View>
-        </View>
-
-        <View className="flex-row items-center mb-2">
-          <MaterialIcons name="location-on" size={16} color="#666" />
-          <Text className="text-gray-600 ml-2">{event.location}</Text>
-        </View>
-
-        <Text className="text-gray-700" numberOfLines={2}>
-          {event.description}
+        <Text style={styles.subTitle} numberOfLines={1}>
+          {event.description || "Aucune description"}
         </Text>
+
+        {/* Localisation & Date */}
+        <View style={styles.metaContainer}>
+          <View style={styles.infoGroup}>
+            <MaterialIcons name="location-on" size={16} color="#666" />
+            <Text style={styles.location}>
+              {event.location || "Lieu inconnu"}
+            </Text>
+          </View>
+
+          <View style={styles.infoGroup}>
+            <MaterialIcons name="calendar-today" size={16} color="#666" />
+            <Text style={styles.date} numberOfLines={1}>
+              {formattedDate}
+            </Text>
+          </View>
+        </View>
+
+        {/* Prix */}
+        {/* <View style={styles.priceContainer}>
+          <Text style={styles.price}>
+            {event.price ? `€${event.price}` : "Gratuit"}
+          </Text>
+          {event.price && <Text style={styles.priceLabel}>/personne</Text>}
+        </View> */}
       </View>
     </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    width: 250,
+    marginHorizontal: 8,
+  },
+  imageContainer: {
+    height: 150,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    overflow: "hidden",
+    position: "relative",
+  },
+  gradient: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: "40%",
+    padding: 16,
+    justifyContent: "flex-end",
+  },
+  categoryTag: {
+    backgroundColor: "#9333EA",
+    alignSelf: "flex-start",
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  categoryText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  content: {
+    padding: 16,
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1F2937",
+    marginBottom: 2,
+  },
+  subTitle: {
+    fontSize: 14,
+    color: "#64748B",
+    marginBottom: 2,
+  },
+  metaContainer: {
+    gap: 8,
+  },
+  infoGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  location: {
+    color: "#64748B",
+    fontSize: 14,
+  },
+  date: {
+    color: "#64748B",
+    fontSize: 14,
+  },
+  priceContainer: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 4,
+  },
+  price: {
+    color: "#9333EA",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  priceLabel: {
+    color: "#64748B",
+    fontSize: 12,
+  },
+});
 
 export default EventItem;

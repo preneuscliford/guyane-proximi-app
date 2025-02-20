@@ -32,7 +32,7 @@ const Slider = () => {
       <FlatList
         data={images}
         horizontal
-        showsVerticalScrollIndicator={true}
+        showsVerticalScrollIndicator={false}
         pagingEnabled
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (

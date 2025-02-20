@@ -26,7 +26,7 @@ const AnimationScreen = ({
         style={{
           width: "100%",
           height: "100%",
-          backgroundColor: "#F5F8FD",
+          backgroundColor: "#181F27",
         }}
         // Find more Lottie files at https://lottiefiles.com/featured
         source={require("../assets/lottie/splash-anime1.json")}

@@ -120,7 +120,7 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
           />
         </View>
       )) ||
-      (userData && userData.avatar_url?.startsWith("https://")) ? (
+      userData ? (
         <View className=" justify-center items-center">
           <Entypo
             style={{ position: "absolute", alignSelf: "center", zIndex: 100 }}
@@ -128,10 +128,18 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
             size={50}
             color="#E5E5E5"
           />
-          <Image
-            source={{ uri: userData?.avatar_url }}
-            style={[avatarSize, styles.avatar, styles.image]}
-          />
+          {userData?.avatar_url?.startsWith("https://") ? (
+            <Image
+              source={{ uri: userData?.avatar_url }}
+              style={[avatarSize, styles.avatar, styles.image]}
+            />
+          ) : (
+            <RemoteImage
+              path={userData?.avatar_url}
+              fallback={"product image"}
+              style={[avatarSize, styles.avatar, styles.image]}
+            />
+          )}
         </View>
       ) : (
         <View style={[avatarSize, styles.avatar, styles.noImage]}>

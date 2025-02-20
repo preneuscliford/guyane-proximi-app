@@ -164,7 +164,7 @@ export default function Account() {
         <View style={styles.avatarContainer}>
           <Avatar
             size={140}
-            url={form.avatarUrl ? form.avatarUrl : userData?.avatar_url || null}
+            url={form.avatarUrl ? form.avatarUrl : userData?.avatar_url || ""}
             onUpload={(url: string) => {
               setForm({ ...form, avatarUrl: url });
             }}

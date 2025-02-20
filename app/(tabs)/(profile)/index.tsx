@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import RenderHTML from "react-native-render-html";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Image } from "expo-image";
+import { CircleUserRound } from "lucide-react-native";
 
 type Post = {
   id: string;
@@ -148,18 +149,28 @@ const EditProfil = () => {
                   style={{ width: 34, height: 34, borderRadius: 20 }}
                 />
                 <Text className="text-2xl font-bold text-gray-900">
-                  {session?.user?.user_metadata?.full_name}
+                  {userData?.full_name || userData?.username}
                 </Text>
               </View>
             ) : (
-              <RemoteImage
-                path={userData?.avatar_url}
-                fallback="profile-placeholder"
-                style={{ width: 28, height: 28, borderRadius: 20 }}
-              />
+              <View className="flex-col items-center">
+                {userData?.avatar_url ? (
+                  <RemoteImage
+                    path={userData?.avatar_url}
+                    fallback="profile-placeholder"
+                    style={{ width: 80, height: 80, borderRadius: 40 }}
+                  />
+                ) : (
+                  <CircleUserRound color="black" size={34} />
+                )}
+
+                <Text className="text-2xl font-bold text-gray-900">
+                  {userData?.full_name || userData?.username}
+                </Text>
+              </View>
             )}
           </View>
-          <View className="mt-2 items-center">
+          <View className=" items-center">
             <Text className="text-gray-500 mt-1">{session?.user?.email}</Text>
           </View>
         </View>

@@ -33,6 +33,7 @@
     "buffer": "^6.0.3",
     "burnt": "^0.12.2",
     "date-fns": "^4.1.0",
+    "dayjs": "^1.11.13",
     "expo": "^52.0.0",
     "expo-auth-session": "~6.0.3",
     "expo-build-properties": "~0.13.2",

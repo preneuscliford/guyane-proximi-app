@@ -5,45 +5,90 @@ import SearchInput from "./SearchInput";
 import RemoteImage from "./RemoteImage";
 import { Image } from "expo-image";
 import { useAuth } from "@/app/provider/AuthProvider";
+import { StatusBar } from "expo-status-bar";
+import { useRouter } from "expo-router";
 
 const Header = () => {
   const { userData, session } = useAuth();
+  const router = useRouter();
 
   return (
     <View style={styles.container}>
+      <StatusBar style="light" backgroundColor="#9333EA" />
+
       <View style={styles.topRow}>
         <View style={{ flexDirection: "row" }}>
-          {userData?.avatar_url?.startsWith("https://") ? (
-            <Image
-              source={{ uri: userData?.avatar_url }}
-              style={{ width: 28, height: 28, borderRadius: 20 }}
-            />
-          ) : (
-            <RemoteImage
-              path={userData?.avatar_url}
-              fallback="profile-placeholder"
-              style={{ width: 28, height: 28, borderRadius: 20 }}
-            />
+          {(session && userData?.avatar_url?.startsWith("https://") && (
+            <View className="flex-row items-center">
+              <Image
+                source={{ uri: userData?.avatar_url }}
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 20,
+                }}
+              />
+
+              <View className="flex-col   " style={{ marginLeft: 4 }}>
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 15,
+                    fontWeight: "300",
+                  }}
+                >
+                  Bienvenue
+                </Text>
+                <Text style={styles.appName}>
+                  {userData?.full_name || userData?.username}
+                </Text>
+              </View>
+            </View>
+          )) ||
+            (session && (
+              <View className="flex-row items-center">
+                {userData?.avatar_url ? (
+                  <RemoteImage
+                    path={userData?.avatar_url}
+                    fallback="profile-placeholder"
+                    style={{ width: 34, height: 34, borderRadius: 20 }}
+                  />
+                ) : (
+                  <CircleUserRound color="white" size={34} />
+                )}
+                <View className="flex-col  " style={{ marginLeft: 4 }}>
+                  <Text
+                    style={{
+                      color: "white",
+                      fontSize: 15,
+                      fontWeight: "300",
+                    }}
+                  >
+                    Bienvenue
+                  </Text>
+                  <Text style={styles.appName}>
+                    {userData?.full_name || userData?.username}
+                  </Text>
+                </View>
+              </View>
+            ))}
+
+          {!session && (
+            <View className="flex-row items-center">
+              <CircleUserRound color="white" size={34} />
+              <View className="flex-col  " style={{ marginLeft: 4 }}>
+                <TouchableOpacity onPress={() => router.push("/(auth)/signIn")}>
+                  <Text style={styles.appName}>Se connecter</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           )}
-          <View className="flex-col ">
-            <Text
-              style={{
-                color: "white",
-                fontSize: 15,
-                fontWeight: "300",
-                marginLeft: 4,
-              }}
-            >
-              Bienvenue
-            </Text>
-            <Text style={styles.appName}>
-              {userData?.full_name || userData?.username}
-            </Text>
-          </View>
         </View>
-        <TouchableOpacity>
-          <Bookmark color="white" size={24} />
-        </TouchableOpacity>
+        {session && (
+          <TouchableOpacity>
+            <Bookmark color="white" size={24} />
+          </TouchableOpacity>
+        )}
       </View>
       <SearchInput />
     </View>

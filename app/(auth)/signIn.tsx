@@ -68,7 +68,7 @@ const signIn = () => {
     if (error) {
       if (error.message === "Invalid login credentials") {
         setPasswordError("Email ou mot de passe incorrect.");
-        setEmailError(" Email ou mot de passe incorrect.");
+        setEmailError("...");
       } else {
         Burnt.toast({
           title: "Erreur inconnue",

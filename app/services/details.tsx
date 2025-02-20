@@ -43,10 +43,14 @@ const dataDetails: React.FC<dataDetailsProps> = () => {
 
   const { data, isLoading } = useQuery({
     queryKey: ["services", id],
-    queryFn: () => fetchServices(id as string),
+    queryFn: () => {
+      if (!id) {
+        return Promise.reject(new Error("ID utilisateur non trouvé"));
+      }
+      return fetchServices(id as string);
+    },
+    enabled: !!id,
   });
-
-  console.log(data?.gallery[0]);
 
   useEffect(() => {
     if (!isLoading && data?.gallery) {
@@ -56,12 +60,11 @@ const dataDetails: React.FC<dataDetailsProps> = () => {
             return await getDominantColor(img);
           } catch (error) {
             console.error("Error extracting color:", error);
-            return "#FFFFFF"; // Couleur de fallback
+            return "#F5F8FD"; // Couleur de fallback
           }
         });
 
         const colors = await Promise.all(colorPromises);
-        setDominantColors(colors);
       };
 
       extractColors();
@@ -94,7 +97,7 @@ const dataDetails: React.FC<dataDetailsProps> = () => {
         translucent
         networkActivityIndicatorVisible
         backgroundColor="transparent"
-        style={getContrastType(dominantColors[currentImageIndex] || "#FFFFFF")}
+        style={getContrastType(dominantColors[currentImageIndex] || "#F5F8FD")}
       />
 
       <TouchableOpacity
@@ -129,7 +132,10 @@ const dataDetails: React.FC<dataDetailsProps> = () => {
           {data?.gallery?.map((image: string, index: number) => (
             <View key={index} style={{ width }}>
               <LinearGradient
-                colors={["transparent", dominantColors[index] + "00"]}
+                colors={[
+                  "transparent",
+                  dominantColors[index] + "rgba(0,0,0,0.8)",
+                ]}
                 style={styles.imageOverlay}
               />
               <ServiceImages
