@@ -45,7 +45,7 @@ const DerniersServices = () => {
           `
           )
           .order("created_at", { ascending: false })
-          .limit(4);
+          .limit(2);
 
         if (error) throw error;
 
@@ -184,6 +184,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 0.5,
+    marginVertical: 4,
   },
   imageContainer: {
     position: "relative",

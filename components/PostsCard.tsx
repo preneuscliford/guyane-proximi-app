@@ -19,7 +19,7 @@ import {
 
 import RemoteImage from "./RemoteImage";
 import moment from "moment";
-import RenderHTML from "react-native-render-html";
+
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { supabase } from "@/lib/supabase";
 import { Link } from "expo-router";
@@ -30,6 +30,7 @@ import { Image } from "expo-image";
 import ImageSlider from "./ImageSlider";
 import { useAuth } from "@/app/provider/AuthProvider";
 import { createNotification } from "@/lib/postServices";
+import { CircleUserRound } from "lucide-react-native";
 
 const textStyles = {
   fontSize: 16,
@@ -216,10 +217,6 @@ const PostsCard = ({
     Share.share(content);
   };
 
-  const removeExcessSpaces = (html: string) => {
-    return html.replace(/<br\s*\/?>/g, "");
-  };
-
   const colors = {
     primary: "#6366F1",
     secondary: "#4F46E5",
@@ -262,7 +259,7 @@ const PostsCard = ({
           onPress={() => router.push("/(profile)")}
         >
           <View className="relative">
-            {item?.profiles?.avatar_url.startsWith("https://") ? (
+            {item?.profiles?.avatar_url?.startsWith("https://") ? (
               <View className="flex-row items-center">
                 <Image
                   source={{ uri: item?.profiles?.avatar_url }}
@@ -280,11 +277,15 @@ const PostsCard = ({
               </View>
             ) : (
               <View className=" flex-row items-center">
-                <RemoteImage
-                  path={item?.profiles?.avatar_url}
-                  fallback="profile-placeholder"
-                  style={{ width: 28, height: 28, borderRadius: 20 }}
-                />
+                {!item?.profiles?.avatar_url ? (
+                  <CircleUserRound color="#333" size={28} />
+                ) : (
+                  <RemoteImage
+                    path={item?.profiles?.avatar_url}
+                    fallback="profile-placeholder"
+                    style={{ width: 28, height: 28, borderRadius: 20 }}
+                  />
+                )}
 
                 <View className="ml-2 mt-2">
                   <Text className="text-base font-semibold text-gray-900">
@@ -301,7 +302,7 @@ const PostsCard = ({
 
         {showMoreIcons && (
           <ModerationActions
-            postId={item.id}
+            postId={item?.id}
             userId={item?.profiles?.id}
             currentUserId={user?.id as string}
           />
@@ -310,22 +311,11 @@ const PostsCard = ({
 
       {/* Contenu */}
       <View className="mb-5">
-        {item?.body && (
-          <RenderHTML
-            contentWidth={width - 40}
-            source={{ html: item.body }}
-            tagsStyles={tagsStyles}
-            renderersProps={{
-              a: {
-                onPress: (_, href) => router.push(href),
-              },
-            }}
-            baseStyle={{ paddingHorizontal: 8 }}
-          />
-        )}
-        {item?.file && item.file?.length > 0 && (
+        <Text>{item?.body}</Text>
+
+        {item?.file && item?.file?.length > 0 && (
           <View className="overflow-hidden rounded-xl">
-            <ImageSlider images={item.file} />
+            <ImageSlider images={item?.file} />
           </View>
         )}
       </View>

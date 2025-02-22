@@ -142,7 +142,7 @@ const Index = () => {
                   style={{ backgroundColor: "#EF4444" }}
                   className="absolute top-[-5] right-[-5] z-30"
                 >
-                  3
+                  {unreadCount}
                 </Badge>
               )}
             </View>
