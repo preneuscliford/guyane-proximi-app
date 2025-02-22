@@ -27,6 +27,16 @@ interface UserData {
   avatar_url: string;
   full_name: string;
   provider: string;
+  phone: string;
+  address: string;
+  bio: string;
+  website: string;
+  business_info: {};
+  innovation_badges: string;
+  social_links: {
+    instagram: string;
+    twitter: string;
+  };
 }
 
 export async function getProfile(user_id: string) {

@@ -1,4 +1,10 @@
-import { ScrollView, View, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  ScrollView,
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  RefreshControl,
+} from "react-native";
 import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "@/lib/supabase";
@@ -28,53 +34,62 @@ export default function HomeScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  // Fonction de rafraîchissement
 
-  const fetchProducts = async () => {
+  const fetchData = async () => {
     try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      setProducts(data || []);
-      const uniqueCategories = [
-        ...new Set(data?.map((product) => product.category)),
-      ];
-      setCategories(uniqueCategories.filter(Boolean));
-      setLoading(false);
+      // Implémentez votre logique de chargement ici
+      const { data: products } = await supabase.from("products").select("*");
+      const { data: categories } = await supabase
+        .from("categories")
+        .select("*");
     } catch (error) {
-      console.error("Erreur lors du chargement des produits:", error);
-      setLoading(false);
+      console.error(error);
     }
   };
 
-  const handleProductPress = (productId: number) => {
-    router.push({
-      pathname: "/product/details",
-      params: { id: productId },
-    });
+  useEffect(() => {
+    fetchData().finally(() => setLoading(false));
+  }, []);
+
+  const onRefresh = async () => {
+    try {
+      setRefreshing(true);
+      // Recharger toutes les données ici
+      await fetchData();
+    } finally {
+      setRefreshing(false);
+    }
   };
 
-  if (loading) {
-    return (
-      <View className="flex-1 justify-center items-center bg-ghost-white">
-        <StatusBar style="light" backgroundColor="#9333EA" />
-        <ActivityIndicator style={{ flex: 1 }} />
-      </View>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <View className="flex-1 justify-center items-center bg-ghost-white">
+  //       <StatusBar style="light" backgroundColor="#9333EA" />
+  //       <ActivityIndicator style={{ flex: 1 }} />
+  //     </View>
+  //   );
+  // }
 
   return (
     <SafeAreaView style={styles.container}>
       <View>
         <StatusBar style="light" backgroundColor="#9333EA" />
-        <ScrollView horizontal={false} scrollEnabled={true}>
+        <ScrollView
+          horizontal={false}
+          scrollEnabled={true}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#9333EA"
+              colors={["#9333EA"]}
+              progressBackgroundColor="#F5F8FD"
+            />
+          }
+        >
           {/* En-tête avec recherche et profil */}
           <Header />
 

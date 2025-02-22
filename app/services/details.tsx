@@ -23,6 +23,8 @@ import { ServiceImages } from "@/components/Images";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { CircleArrowLeft, MoveLeft } from "lucide-react-native";
+import UserInfoCard from "@/components/UserInfoCard";
+import { useAuth } from "../provider/AuthProvider";
 
 interface data {
   id: string;
@@ -40,6 +42,7 @@ const dataDetails: React.FC<dataDetailsProps> = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { width, height } = useWindowDimensions();
   const router = useRouter();
+  const { userData } = useAuth();
 
   const { data, isLoading } = useQuery({
     queryKey: ["services", id],
@@ -50,6 +53,12 @@ const dataDetails: React.FC<dataDetailsProps> = () => {
       return fetchServices(id as string);
     },
     enabled: !!id,
+    retry(failureCount, error) {
+      if (failureCount < 3) {
+        return true;
+      }
+      return false;
+    },
   });
 
   useEffect(() => {
@@ -150,29 +159,18 @@ const dataDetails: React.FC<dataDetailsProps> = () => {
         {/* En-tête */}
         <View style={styles.header}>
           <Text style={styles.title}>{data?.title}</Text>
-          <View style={styles.providerContainer}>
-            {/* <RemoteImage
-              path={data.profiles.avatar_url}
-              style={styles.avatar}
-              fallback="user-avatar"
-            /> */}
-            <Image
-              source={{ uri: data?.profiles?.avatar_url }}
-              style={styles.avatar}
-              resizeMode="cover"
-            />
-            <View>
+
+          <UserInfoCard
+            user={data?.profiles}
+            isOwner={userData?.id === data?.profiles?.id}
+          />
+          {/* <UserInfoCard user={data?.profiles} /> */}
+          {/* <View>
               <Text style={styles.providerName}>
                 {data?.profiles?.full_name}
               </Text>
               <Text style={styles.category}>{data?.categories?.name}</Text>
-            </View>
-          </View>
-
-          <View style={styles.location}>
-            <Ionicons name="location-outline" size={16} color="#666" />
-            <Text style={styles.locationText}>{"data.location"}</Text>
-          </View>
+            </View> */}
         </View>
 
         {/* Description */}

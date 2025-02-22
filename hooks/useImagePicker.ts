@@ -32,5 +32,5 @@ export const useImagePicker = () => {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  return { images, pickImages, removeImage };
+  return { images, pickImages, removeImage, setImages };
 };

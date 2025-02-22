@@ -29,7 +29,7 @@ const AnimationScreen = ({
           backgroundColor: "#181F27",
         }}
         // Find more Lottie files at https://lottiefiles.com/featured
-        source={require("../assets/lottie/splash-anime1.json")}
+        source={require("../assets/lottie/splash-anime.json")}
       />
     </View>
   );

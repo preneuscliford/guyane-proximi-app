@@ -20,6 +20,7 @@ export const fetchServices = async (id: string) => {
           `
       )
       .eq("id", id)
+      .limit(4)
       .single();
 
     if (error) throw error;

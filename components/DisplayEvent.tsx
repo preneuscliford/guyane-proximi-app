@@ -12,18 +12,22 @@ interface Event {
   end_date: string;
   description: string;
   location: string;
+  organizer_id: any;
 
   // other properties...
 }
+
 const DisplayEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const router = useRouter();
+
+  // console.log(events);
 
   useEffect(() => {
     const fetchEvents = async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("*")
+        .select("*, organizer_id(*)")
         .order("start_date", { ascending: false });
 
       if (!error) setEvents(data as any);
@@ -55,6 +59,7 @@ const DisplayEvents = () => {
                 end_date: item?.end_date,
                 desc: item?.description,
                 location: item?.location,
+                organizer_id: item?.organizer_id,
               },
             })
           }

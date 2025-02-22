@@ -31,6 +31,39 @@ export type Comments = {
   };
 };
 
+
+
+export interface Profile {
+  id: string;
+  username: string;
+  avatar_url?: string;
+  phone?: string;
+  address?: string;
+  bio?: string;
+  website?: string;
+  social_links?: {
+    instagram?: string;
+    twitter?: string;
+  };
+  business_info?: Record<string, any>;
+  innovation_badges?: string;
+  updated_at?: string;
+}
+
+export interface ProfileForm {
+  username: string;
+  phone: string;
+  address: string;
+  bio: string;
+  website: string;
+  socials: {
+    instagram: string;
+    twitter: string;
+  };
+  businessInfo: Record<string, any>;
+  innovationBadges: string;
+}
+
 // interface Comment {
 
 // }

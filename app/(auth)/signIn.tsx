@@ -7,6 +7,7 @@ import {
   View,
   AppState,
   Alert,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -29,6 +30,18 @@ const signIn = () => {
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        router.push("/(tabs)");
+        return true;
+      }
+    );
+
+    return () => backHandler.remove();
+  }, []);
 
   // Valider les champs avant de soumettre
   const validateFields = () => {

@@ -9,12 +9,20 @@ const profileLayout = () => {
 
   useEffect(() => {
     if (!session) router.push("/(auth)/signUp");
-  }, [session]);
+  }, [session, router]);
 
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="editProfile" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="editProfile"
+        options={{
+          headerShown: true,
+          title: "",
+          headerStyle: { backgroundColor: "#F5F8FD" },
+          headerShadowVisible: false,
+        }}
+      />
     </Stack>
   );
 };

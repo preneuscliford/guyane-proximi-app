@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from "@react-native-picker/picker";
 import { supabase } from "@/lib/supabase";
@@ -19,6 +19,8 @@ import { ActivityIndicator } from "react-native-paper";
 import { EventForm } from "@/components/EventPicker";
 import { uploadServicesImages } from "@/lib/homeService";
 import { useImagePicker } from "@/hooks/useImagePicker";
+import Toast, { ToastHandles } from "@/components/Toast";
+import { useRouter } from "expo-router";
 
 // Pour simplifier, nous limitons ici les types à "service" et "event"
 type ListingType = "service" | "event";
@@ -37,7 +39,7 @@ const serviceCategories = [
 
 const Create = () => {
   const [uploading, setUploading] = useState(false);
-  const { images, pickImages, removeImage } = useImagePicker();
+  const { images, pickImages, removeImage, setImages } = useImagePicker();
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -50,7 +52,14 @@ const Create = () => {
     // Vous pouvez ajouter "duration" ici si nécessaire (ex: "01:00:00" pour 1 heure)
   });
 
+  const toastRef = useRef<ToastHandles>(null);
+
+  const router = useRouter();
   const { session } = useAuth();
+
+  useEffect(() => {
+    if (!session) router.push("/(auth)/signUp");
+  }, [session, router]);
 
   const validateForm = () => {
     if (!session?.user?.id) {
@@ -128,13 +137,23 @@ const Create = () => {
         });
         error = serviceError;
         if (error) throw error;
-        Alert.alert("Succès", "Votre service a été ajouté avec succès");
+
+        toastRef.current?.show(
+          "Votre service a été ajouté avec succès",
+          "success",
+          1500
+        );
+
         resetForm();
       }
     } catch (error) {
       console.error("Erreur lors de la soumission:", error);
       if (error instanceof Error) {
-        Alert.alert("Erreur", error.message);
+        toastRef.current?.show(
+          "Une erreur est survenue lors de la soumission de l'annonce",
+          "error",
+          1500
+        );
       }
     } finally {
       setUploading(false);
@@ -152,10 +171,12 @@ const Create = () => {
       startDate: new Date(),
       endDate: new Date(),
     });
+    setImages([]);
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <Toast ref={toastRef} />
       <ScrollView>
         <View style={styles.headerContainer}>
           <Text style={styles.headerTitle}>Créer une nouvelle annonce</Text>
@@ -343,11 +364,14 @@ const styles = StyleSheet.create({
   },
   removeImageButton: {
     position: "absolute",
+    width: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
     top: 5,
     right: 5,
     backgroundColor: "red",
-    borderRadius: 10,
-    padding: 2,
+    borderRadius: 5,
   },
   removeImageText: {
     color: "white",

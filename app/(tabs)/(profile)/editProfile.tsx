@@ -1,54 +1,129 @@
 import { useState, useEffect } from "react";
-import { StyleSheet, View, Alert, ScrollView, BackHandler } from "react-native";
-import { Session } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import {
+  View,
+  ScrollView,
+  BackHandler,
+  Alert,
+  StyleSheet,
+  Pressable,
+} from "react-native";
 import { useAuth } from "@/app/provider/AuthProvider";
-import { Redirect } from "expo-router";
-import Avatar from "@/components/Avatar";
+import { supabase } from "@/lib/supabase";
 import { Button, TextInput, Text, useTheme } from "react-native-paper";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { StatusBar } from "expo-status-bar";
+import Avatar from "@/components/Avatar";
+import * as Burnt from "burnt";
 
-export default function Account() {
+import { StatusBar } from "expo-status-bar";
+import { FontAwesome6, MaterialIcons } from "@expo/vector-icons";
+import { Redirect } from "expo-router";
+import Animated, { FadeInUp, FadeOutDown } from "react-native-reanimated";
+import { Profile, ProfileForm } from "@/types/postTypes";
+// import type { Profile, ProfileForm } from "../types/profile";
+
+const INITIAL_FORM: ProfileForm = {
+  username: "",
+  phone: "",
+  address: "",
+  bio: "",
+  website: "",
+  socials: { instagram: "", twitter: "" },
+  businessInfo: {},
+  innovationBadges: "",
+};
+
+export default function AccountScreen() {
+  const { session, userData } = useAuth();
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
-  const [userInfo, setUserInfo] = useState([]);
+  const [saving, setSaving] = useState(false);
   const [usernameError, setUsernameError] = useState("");
+  const [form, setForm] = useState<ProfileForm>(INITIAL_FORM);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  const [form, setForm] = useState({
-    username: "",
-    website: "",
-    avatarUrl: "",
-    phone: "",
-    address: "",
-    bio: "",
-  });
+  const handleUpdate = async () => {
+    if (!form.username.trim() && !userData?.full_name && !userData?.username) {
+      setUsernameError("Le nom d'utilisateur est requis");
+      return;
+    }
+    // Vérification si aucune modification n'a été effectuée
+    if (
+      form.username === userData?.username &&
+      form.phone === userData?.phone &&
+      form.address === userData?.address &&
+      form.bio === userData?.bio &&
+      form.website === userData?.website &&
+      JSON.stringify(form?.socials) ===
+        JSON.stringify(userData?.social_links) &&
+      JSON.stringify(form?.businessInfo) ===
+        JSON.stringify(userData?.business_info) &&
+      form.innovationBadges === userData?.innovation_badges
+    ) {
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
+      return;
+    }
 
-  const { session, userData, user } = useAuth();
-  const router = useRouter();
+    const { data: existingUsers, error: checkError } = await supabase
+      .from("profiles") // Remplacez "profiles" par le nom de votre table
+      .select("id")
+      .eq("username", form.username)
+      .single();
 
-  if (!session) {
-    return <Redirect href={"/"} />;
-  }
+    if (checkError && checkError.code !== "PGRST116") {
+      // Code 116 = pas de résultats (OK)
+      Burnt.toast({
+        title: "Erreur",
+        preset: "error",
+        message: "Erreur lors de la vérification du nom d'utilisateur.",
+      });
+      setLoading(false);
+      return;
+    }
 
-  useEffect(() => {
-    if (session) getProfile();
-  }, [session]);
+    if (existingUsers && userData?.username !== form.username) {
+      setLoading(false);
+      setUsernameError("Ce nom d'utilisateur est déjà pris.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const updates: Partial<Profile> = {
+        id: session?.user?.id,
+        username: form.username || userData?.username,
+        phone: form.phone || userData?.phone,
+        address: form.address || userData?.address,
+        bio: form.bio || userData?.bio,
+        website: form.website || userData?.website,
+        social_links: form.socials || userData?.social_links,
+        business_info: form.businessInfo || userData?.business_info,
+        innovation_badges: form.innovationBadges || userData?.innovation_badges,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from("profiles")
+        .upsert(updates)
+        .eq("id", session?.user?.id);
+
+      if (error) throw error;
+
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
+    } catch (error: any) {
+      Alert.alert("Erreur", error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     const backAction = () => {
-      if (userData?.username || user?.user_metadata?.full_name === null) {
+      if (!form.username && !userData?.full_name && !userData?.username) {
         Alert.alert(
           "Attention",
           "Vous devez ajouter un nom d'utilisateur avant de quitter.",
-          [
-            {
-              text: "OK",
-              onPress: () => null,
-              style: "cancel",
-            },
-          ]
+          [{ text: "OK", style: "cancel" }]
         );
         return true;
       }
@@ -59,275 +134,306 @@ export default function Account() {
       "hardwareBackPress",
       backAction
     );
-
     return () => backHandler.remove();
   }, [form.username]);
 
-  async function getProfile() {
-    try {
-      setLoading(true);
-      if (!session?.user) throw new Error("No user on the session!");
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(`username, website, avatar_url, id, full_name`)
-        .eq("id", session?.user.id)
-        .single();
-
-      if (error) throw error;
-      setUserInfo(data as any);
-
-      if (data) {
-        setForm({
-          username: data.username || "",
-          website: data.website || "",
-          avatarUrl: data.avatar_url || "",
-          phone: "",
-          address: "",
-          bio: "",
-        });
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert(error.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function checkUsernameAvailability(username: string) {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("username")
-      .eq("username", username)
-      .neq("id", session?.user.id)
-      .single();
-
-    if (error) throw error;
-    return !data;
-  }
-
-  async function updateProfile() {
-    try {
-      setLoading(true);
-      if (!session?.user) throw new Error("No user on the session!");
-
-      if (form.username === "" && userData?.username === null) {
-        Alert.alert("Erreur", "Le nom d'utilisateur est requis.");
-        return null;
-      }
-
-      // const isUsernameAvailable = await checkUsernameAvailability(
-      //   form.username
-      // );
-      // if (!isUsernameAvailable) {
-      //   setUsernameError("Ce nom d'utilisateur est déjà pris.");
-      //   return;
-      // }
-
-      const updates = {
-        id: session?.user.id,
-        username: form.username,
-        website: form.website,
-        avatar_url: form.avatarUrl,
-        // phone: form.phone,
-        // address: form.address,
-        // bio: form.bio,
-        updated_at: new Date(),
-      };
-
-      const { error } = await supabase.from("profiles").upsert(updates);
-
-      if (error) throw error;
-      Alert.alert("Succès", "Profil mis à jour avec succès");
-      router.back();
-    } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert("Erreur", error.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
+  if (!session) return <Redirect href="/" />;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#F5F8FD" }}>
-      <StatusBar style="dark" backgroundColor="#F5F8FD" />
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
-          <Text variant="headlineMedium" style={styles.title}>
-            Modifier le profil
-          </Text>
-        </View>
+    <View style={styles.container}>
+      <StatusBar style="dark" />
 
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.avatarContainer}>
-          <Avatar
-            size={140}
-            url={form.avatarUrl ? form.avatarUrl : userData?.avatar_url || ""}
-            onUpload={(url: string) => {
-              setForm({ ...form, avatarUrl: url });
-            }}
-          />
+          <Pressable
+            style={({ pressed }) => [
+              styles.avatarWrapper,
+              { opacity: pressed ? 0.8 : 1 },
+            ]}
+          >
+            <Avatar
+              size={120}
+              url={userData?.avatar_url || ""}
+              onUpload={(url) => {
+                supabase
+                  .from("profiles")
+                  .update({
+                    avatar_url: url,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq("id", session.user.id);
+              }}
+            />
+          </Pressable>
         </View>
 
         <View style={styles.formContainer}>
-          <Text style={styles.sectionTitle}>Informations Publiques</Text>
+          <Section title="Informations de base">
+            <TextInput
+              mode="outlined"
+              label="Nom d'utilisateur"
+              value={
+                form.username || userData?.username || userData?.full_name || ""
+              }
+              onChangeText={(text) => {
+                setForm({ ...form, username: text });
+                setUsernameError("");
+              }}
+              left={<TextInput.Icon icon="account" />}
+              error={!!usernameError}
+              style={styles.input}
+            />
+            {usernameError && (
+              <Text style={styles.errorText}>{usernameError}</Text>
+            )}
 
-          <TextInput
-            mode="outlined"
-            label="Nom d'utilisateur"
-            value={form.username || user?.user_metadata?.full_name || ""}
-            placeholder={
-              userData?.username || user?.user_metadata?.full_name
-                ? ""
-                : "Nom d'utilisateur"
-            }
-            onChangeText={(text) => {
-              setForm({ ...form, username: text });
-              setUsernameError("");
-            }}
-            left={<TextInput.Icon icon="account-circle" />}
-            error={!!usernameError}
-            style={styles.input}
-            autoCapitalize="none"
-          />
-          {usernameError && (
-            <Text style={styles.errorText}>{usernameError}</Text>
-          )}
+            <TextInput
+              mode="outlined"
+              label="Email"
+              value={session.user.email}
+              disabled
+              left={<TextInput.Icon icon="email" />}
+              style={styles.input}
+            />
+          </Section>
 
-          <TextInput
-            mode="outlined"
-            label="Email"
-            value={session?.user?.email}
-            editable={false}
-            left={<TextInput.Icon icon="email" />}
-            style={styles.input}
-          />
-
-          <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
-            Informations de Contact
-          </Text>
-
-          <View style={styles.row}>
+          <Section title="Coordonnées">
             <TextInput
               mode="outlined"
               label="Téléphone"
               value={form.phone}
-              keyboardType="phone-pad"
               onChangeText={(text) => setForm({ ...form, phone: text })}
               left={<TextInput.Icon icon="phone" />}
-              style={[styles.input, { flex: 1 }]}
+              keyboardType="phone-pad"
+              style={styles.input}
             />
+
             <TextInput
               mode="outlined"
-              label="Site web"
+              label="Adresse"
+              value={form.address}
+              onChangeText={(text) => setForm({ ...form, address: text })}
+              left={<TextInput.Icon icon="map-marker" />}
+              style={styles.input}
+            />
+          </Section>
+
+          <Section title="À propos">
+            <TextInput
+              mode="outlined"
+              label="Bio"
+              value={form.bio}
+              onChangeText={(text) => setForm({ ...form, bio: text })}
+              multiline
+              numberOfLines={3}
+              style={styles.input}
+            />
+          </Section>
+
+          <Section title="Informations professionnelles">
+            <TextInput
+              mode="outlined"
+              label="Site Web"
               value={form.website}
               onChangeText={(text) => setForm({ ...form, website: text })}
               left={<TextInput.Icon icon="web" />}
-              style={[styles.input, { flex: 1, marginLeft: 10 }]}
+              style={styles.input}
             />
-          </View>
+            <TextInput
+              mode="outlined"
+              label="Badge d'innovation"
+              placeholder="ex: Créativité, Excellence, Innovation"
+              value={form.innovationBadges}
+              onChangeText={(text) =>
+                setForm({ ...form, innovationBadges: text })
+              }
+              left={<TextInput.Icon icon="star" />}
+              style={styles.input}
+            />
+          </Section>
 
-          <TextInput
-            mode="outlined"
-            label="Adresse"
-            value={form.address}
-            onChangeText={(text) => setForm({ ...form, address: text })}
-            left={<TextInput.Icon icon="map-marker" />}
-            style={styles.input}
-          />
-
-          <TextInput
-            mode="outlined"
-            label="Bio"
-            value={form.bio}
-            onChangeText={(text) => setForm({ ...form, bio: text })}
-            multiline
-            numberOfLines={4}
-            style={[styles.input, { height: 120 }]}
-            left={<TextInput.Icon icon="text-box" />}
-          />
+          <Section title="Réseaux sociaux">
+            <SocialInput
+              icon="square-instagram"
+              value={form.socials.instagram}
+              onChange={(val) =>
+                setForm({
+                  ...form,
+                  socials: { ...form.socials, instagram: val },
+                })
+              }
+            />
+            <SocialInput
+              icon="square-x-twitter"
+              value={form.socials.twitter}
+              onChange={(val) =>
+                setForm({
+                  ...form,
+                  socials: { ...form.socials, twitter: val },
+                })
+              }
+            />
+          </Section>
 
           <Button
             mode="contained"
-            onPress={updateProfile}
-            loading={loading}
-            // disabled={
-            //   loading || (form.username === "" && userData?.full_name === null)
-            // }
-            style={styles.button}
-            labelStyle={styles.buttonLabel}
-            contentStyle={styles.buttonContent}
+            loading={saving}
+            onPress={handleUpdate}
+            style={styles.saveButton}
+            contentStyle={styles.saveButtonContent}
           >
-            {loading ? "Sauvegarde..." : "Enregistrer les modifications"}
+            Sauvegarder
           </Button>
         </View>
       </ScrollView>
-    </SafeAreaView>
+
+      {showSuccessMessage && (
+        <Animated.View
+          entering={FadeInUp}
+          exiting={FadeOutDown}
+          style={styles.successMessage}
+        >
+          <MaterialIcons name="check-circle" size={24} color="#fff" />
+          <Text style={styles.successText}>Profil mis à jour avec succès</Text>
+        </Animated.View>
+      )}
+    </View>
   );
 }
 
+const Section: React.FC<{
+  title: string;
+  children: React.ReactNode;
+}> = ({ title, children }) => (
+  <View style={styles.section}>
+    <Text style={styles.sectionTitle}>{title}</Text>
+    <View style={styles.sectionContent}>{children}</View>
+  </View>
+);
+
+const SocialInput: React.FC<{
+  icon: string;
+  value: string;
+  onChange: (value: string) => void;
+}> = ({ icon, value, onChange }) => (
+  <View style={styles.socialInputContainer}>
+    <FontAwesome6 name={icon as any} size={20} color="#64748b" />
+    <TextInput
+      value={value}
+      onChangeText={onChange}
+      placeholder={`@nom_utilisateur`}
+      style={styles.socialInput}
+      underlineColor="transparent"
+      activeUnderlineColor="transparent"
+    />
+  </View>
+);
+
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
-    paddingTop: 16,
+    flex: 1,
+    backgroundColor: "#f8fafc",
   },
-  header: {
-    alignItems: "center",
-    marginBottom: 16,
+  scrollView: {
+    flex: 1,
+    paddingHorizontal: 16,
   },
-  title: {
-    fontWeight: "600",
-    letterSpacing: 0.5,
-  },
+
   avatarContainer: {
     alignItems: "center",
     marginBottom: 32,
   },
-  avatarButton: {
-    marginTop: 12,
-  },
-  formContainer: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 16,
-    color: "#666",
-  },
-  input: {
-    marginBottom: 16,
-    backgroundColor: "#FCFDFE",
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  button: {
-    borderRadius: 12,
-    marginTop: 24,
-    elevation: 2,
+  avatarWrapper: {
+    borderRadius: 60,
+    padding: 4,
+    backgroundColor: "#fff",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    backgroundColor: "#181F27",
-    color: "#F4F7FC",
+    elevation: 3,
   },
-  buttonLabel: {
-    fontSize: 16,
+  formContainer: {
+    gap: 24,
+    marginBottom: 100,
+  },
+  section: {
+    marginBottom: 6,
+  },
+  sectionTitle: {
+    fontSize: 20,
     fontWeight: "600",
-    paddingVertical: 4,
+    color: "#334155",
+    marginBottom: 16,
   },
-  buttonContent: {
-    height: 48,
+  sectionContent: {
+    gap: 12,
+  },
+  input: {
+    backgroundColor: "#fff",
   },
   errorText: {
-    color: "#ff4444",
-    marginTop: -8,
-    marginBottom: 12,
-    fontSize: 13,
+    color: "#ef4444",
+    fontSize: 12,
+    marginTop: 4,
+  },
+  socialInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  socialInput: {
+    flex: 1,
+    marginLeft: 8,
+    backgroundColor: "transparent",
+  },
+  saveButton: {
+    borderRadius: 12,
+    marginTop: 8,
+    backgroundColor: "#4f46e5",
+  },
+  saveButtonContent: {
+    paddingVertical: 8,
+  },
+  successMessage: {
+    position: "absolute",
+    bottom: 24,
+    left: 24,
+    right: 24,
+    backgroundColor: "#10b981",
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  successText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
   },
 });

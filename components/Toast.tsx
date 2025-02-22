@@ -57,8 +57,8 @@ const Toast = React.forwardRef<ToastHandles, {}>(
 
     const colorMap = useMemo(
       () => ({
-        success: "#1f8503",
-        error: "#f00a1d",
+        success: "#10b981",
+        error: "#ef4444",
         info: "#0077ed",
       }),
       []
