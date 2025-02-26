@@ -104,6 +104,7 @@ create policy "Allow report" on reported_posts
 
    adb uninstall com.cliford.voisinage 
    eas build --platform android --profile preview  
+   
 
 
 

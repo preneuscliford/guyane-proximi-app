@@ -117,16 +117,16 @@ const PostDetails = () => {
         {/* Zone scrollable pour la liste des commentaires */}
         <View style={styles.commentsWrapper}>
           <Text style={styles.commentsTitle}>Commentaire(s)</Text>
-          {comments.map((comment) => (
+          {comments?.map((comment) => (
             <View key={comment.id} style={styles.commentContainer}>
-              {comment.profiles.avatar_url.startsWith("https://") ? (
+              {comment?.profiles?.avatar_url?.startsWith("https://") ? (
                 <Image
-                  source={{ uri: comment.profiles.avatar_url }}
+                  source={{ uri: comment.profiles?.avatar_url }}
                   style={styles.avatar}
                 />
               ) : (
                 <RemoteImage
-                  path={comment.profiles.avatar_url}
+                  path={comment?.profiles?.avatar_url}
                   fallback="profile image"
                   style={styles.avatar}
                 />
@@ -134,10 +134,11 @@ const PostDetails = () => {
               <View style={styles.commentContent}>
                 <View style={styles.commentHeader}>
                   <Text style={styles.username}>
-                    {comment.profiles.username || comment.profiles.full_name}
+                    {comment?.profiles?.username ||
+                      comment?.profiles?.full_name}
                   </Text>
                   <Text style={styles.timestamp}>
-                    {moment(comment.created_at).fromNow()}
+                    {moment(comment?.created_at).fromNow()}
                   </Text>
                 </View>
                 <Text style={styles.commentText}>{comment.text}</Text>
