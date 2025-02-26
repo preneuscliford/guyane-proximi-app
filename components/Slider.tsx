@@ -2,6 +2,10 @@ import { Image, StyleSheet, View, FlatList } from "react-native";
 import React from "react";
 import { Text, useTheme } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 const images = [
   {
@@ -84,13 +88,15 @@ const styles = StyleSheet.create({
   },
   title: {
     color: "white",
-    fontSize: 22,
+    fontSize: hp("2.3%"),
     fontWeight: "bold",
+    letterSpacing: 1,
     marginBottom: 4,
   },
   subtitle: {
     color: "rgba(255,255,255,0.9)",
-    fontSize: 16,
+    fontSize: hp("1.7%"),
+    letterSpacing: 1,
   },
 });
 

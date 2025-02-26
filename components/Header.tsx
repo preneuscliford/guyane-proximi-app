@@ -7,6 +7,10 @@ import { Image } from "expo-image";
 import { useAuth } from "@/app/provider/AuthProvider";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 const Header = () => {
   const { userData, session } = useAuth();
@@ -23,9 +27,9 @@ const Header = () => {
               <Image
                 source={{ uri: userData?.avatar_url }}
                 style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 20,
+                  width: wp("8%"),
+                  height: hp("4%"),
+                  borderRadius: 50,
                 }}
               />
 
@@ -33,7 +37,7 @@ const Header = () => {
                 <Text
                   style={{
                     color: "white",
-                    fontSize: 15,
+                    fontSize: hp("1.5%"),
                     fontWeight: "300",
                   }}
                 >
@@ -128,7 +132,8 @@ const styles = StyleSheet.create({
   },
   appName: {
     color: "white",
-    fontSize: 15,
+    fontSize: hp("1.7%"),
+
     fontWeight: "500",
     // marginLeft: 4,
   },

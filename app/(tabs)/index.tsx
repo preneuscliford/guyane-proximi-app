@@ -18,6 +18,10 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import DisplayEvents from "@/components/DisplayEvent";
 import EventItem from "@/components/EventItem";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 interface Product {
   id: number;
@@ -98,8 +102,9 @@ export default function HomeScreen() {
             <Text
               style={{
                 paddingHorizontal: 15,
-                fontSize: 20,
+                fontSize: hp("2.5%"),
                 fontWeight: "bold",
+                letterSpacing: 1,
                 color: "#1A1A1A",
               }}
             >
