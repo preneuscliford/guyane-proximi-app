@@ -4,6 +4,10 @@ import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
 import { LinearGradient } from "expo-linear-gradient";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 import { ServiceImages } from "./Images";
 
@@ -84,11 +88,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
-    width: 250,
+    width: wp("50%"),
     marginHorizontal: 8,
   },
   imageContainer: {
-    height: 150,
+    height: hp("20%"),
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     overflow: "hidden",
@@ -112,20 +116,22 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: hp("1%"),
     fontWeight: "600",
   },
   content: {
     padding: 16,
   },
   title: {
-    fontSize: 15,
+    fontSize: hp("1.5%"),
     fontWeight: "700",
     color: "#1F2937",
     marginBottom: 2,
+    letterSpacing: 0.5,
   },
   subTitle: {
-    fontSize: 14,
+    fontSize: hp("1.2%"),
+    letterSpacing: 0.5,
     color: "#64748B",
     marginBottom: 2,
   },
@@ -139,11 +145,13 @@ const styles = StyleSheet.create({
   },
   location: {
     color: "#64748B",
-    fontSize: 14,
+    fontSize: hp("1.1%"),
+    letterSpacing: 0.5,
   },
   date: {
     color: "#64748B",
-    fontSize: 14,
+    fontSize: hp("1.1"),
+    letterSpacing: 0.5,
   },
   priceContainer: {
     flexDirection: "row",

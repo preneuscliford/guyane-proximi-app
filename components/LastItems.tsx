@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
+import {
   View,
   Text,
   StyleSheet,
@@ -8,6 +12,7 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
+
 import { supabase } from "../lib/supabase";
 
 import { useRouter } from "expo-router";
@@ -142,7 +147,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   prix: {
-    fontSize: 14,
+    fontSize: hp("1.3%"),
     fontWeight: "bold",
     color: "#10B981",
     marginRight: 8,
@@ -162,20 +167,22 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   titre: {
-    fontSize: 18,
+    fontSize: hp("2%"),
     fontWeight: "bold",
     color: "#1F2937",
+    letterSpacing: 1,
   },
   toutVoir: {
     color: "#9333EA",
-    fontSize: 14,
+    fontSize: hp("1.3%"),
+    letterSpacing: 0.5,
   },
   rangee: {
     justifyContent: "space-between",
     paddingHorizontal: 16,
   },
   carte: {
-    width: "48%",
+    width: wp("45%"),
     backgroundColor: "white",
     borderRadius: 12,
     overflow: "hidden",
@@ -205,15 +212,17 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   titreItem: {
-    fontSize: 14,
+    fontSize: hp("1.5%"),
     fontWeight: "bold",
     color: "#1F2937",
     marginBottom: 4,
+    letterSpacing: 0.5,
   },
   prestataire: {
-    fontSize: 12,
+    fontSize: hp("1.2%"),
     color: "#6B7280",
     marginBottom: 8,
+    letterSpacing: 0.5,
   },
   typeContainer: {
     backgroundColor: "#F3E8FF",
@@ -224,7 +233,8 @@ const styles = StyleSheet.create({
   },
   type: {
     color: "#9333EA",
-    fontSize: 12,
+    fontSize: hp("1.2%"),
+    letterSpacing: 0.5,
   },
 });
 

@@ -37,10 +37,10 @@ export const getContrastType = (hexColor: string): "light" | "dark" | "inverted"
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 
   if (luminance > 0.5) {
-    return "inverted"; // Très clair, on inverse les couleurs
+    return "dark"; // Très clair, on inverse les couleurs
   } else if (luminance > 0.6) {
-    return "auto"; // Moyen, laisser automatique
+    return "light"; // Moyen, laisser automatique
   } else {
-    return "dark"; // Couleur foncée, texte clair recommandé
+    return "inverted"; // Couleur foncée, texte clair recommandé
   }
 };

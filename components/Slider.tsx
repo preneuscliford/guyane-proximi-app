@@ -88,14 +88,14 @@ const styles = StyleSheet.create({
   },
   title: {
     color: "white",
-    fontSize: hp("2.3%"),
+    fontSize: hp("2%"),
     fontWeight: "bold",
     letterSpacing: 1,
     marginBottom: 4,
   },
   subtitle: {
     color: "rgba(255,255,255,0.9)",
-    fontSize: hp("1.7%"),
+    fontSize: hp("1.5%"),
     letterSpacing: 1,
   },
 });

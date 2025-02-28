@@ -133,6 +133,7 @@ const styles = StyleSheet.create({
   appName: {
     color: "white",
     fontSize: hp("1.7%"),
+    letterSpacing: 0.5,
 
     fontWeight: "500",
     // marginLeft: 4,

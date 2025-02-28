@@ -7,6 +7,10 @@ import {
   FlatList,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 const categories = [
   { id: "1", name: "Nettoyage", icon: "broom" },
@@ -64,13 +68,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   title: {
-    fontSize: 18,
+    fontSize: hp("2%"),
+    letterSpacing: 1,
     fontWeight: "bold",
     color: "#1F2937",
   },
   viewAll: {
     color: "#9333EA",
-    fontSize: 14,
+    fontSize: hp("1.2%"),
+    letterSpacing: 0.5,
   },
   list: {
     paddingHorizontal: 16,
@@ -89,7 +95,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   categoryName: {
-    fontSize: 12,
+    fontSize: hp("1.2%"),
     color: "#4B5563",
   },
 });

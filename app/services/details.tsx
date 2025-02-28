@@ -25,6 +25,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { CircleArrowLeft, MoveLeft } from "lucide-react-native";
 import UserInfoCard from "@/components/UserInfoCard";
 import { useAuth } from "../provider/AuthProvider";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 interface data {
   id: string;
@@ -105,29 +109,9 @@ const dataDetails: React.FC<dataDetailsProps> = () => {
       <StatusBar
         translucent
         networkActivityIndicatorVisible
-        backgroundColor="transparent"
+        backgroundColor={dominantColors[currentImageIndex] || "#F5F8FD"}
         style={getContrastType(dominantColors[currentImageIndex] || "#F5F8FD")}
       />
-
-      <TouchableOpacity
-        onPress={() => {
-          router.back();
-        }}
-        style={{
-          position: "absolute",
-          top: "5.5%",
-          left: 16,
-          zIndex: 100,
-        }}
-      >
-        <AntDesign
-          name="back"
-          size={28}
-          color={dominantColors[currentImageIndex]}
-        />
-
-        {/* <CircleArrowLeft size={28} color={dominantColors[currentImageIndex]} /> */}
-      </TouchableOpacity>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Galerie d'images */}
@@ -150,7 +134,7 @@ const dataDetails: React.FC<dataDetailsProps> = () => {
               <ServiceImages
                 path={image}
                 fallback="service image"
-                style={{ width, height: 300, objectFit: "cover" }}
+                style={{ width, height: hp("30%"), objectFit: "cover" }}
               />
             </View>
           ))}
@@ -192,12 +176,12 @@ const dataDetails: React.FC<dataDetailsProps> = () => {
 
       {/* Actions fixes en bas */}
       <View style={styles.actionBar}>
-        <TouchableOpacity style={styles.messageButton}>
+        {/* <TouchableOpacity style={styles.messageButton}>
           <Text style={styles.messageButtonText}>Message</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.bookButton}>
           <Text style={styles.bookButtonText}>Réserver maintenant</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </View>
   );
@@ -225,14 +209,15 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   title: {
-    fontSize: 18,
+    fontSize: hp("1.8%"),
+    letterSpacing: 1,
     fontWeight: "bold",
-    marginBottom: 16,
+    marginBottom: 10,
   },
   providerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   avatar: {
     width: 50,
@@ -241,17 +226,18 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   providerName: {
-    fontSize: 16,
+    fontSize: hp("1.8%"),
+    letterSpacing: 0.5,
     fontWeight: "600",
   },
   category: {
     color: "#666",
-    fontSize: 14,
+    fontSize: hp("1.5%"),
   },
   location: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 0,
   },
   locationText: {
     marginLeft: 4,
@@ -263,12 +249,15 @@ const styles = StyleSheet.create({
     borderTopColor: "#eee",
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: hp("1.8%"),
+    letterSpacing: 0.5,
     fontWeight: "600",
     marginBottom: 12,
   },
   description: {
-    lineHeight: 22,
+    fontSize: hp("1.2%"),
+    letterSpacing: 0.5,
+
     color: "#444",
   },
   actionBar: {
@@ -286,15 +275,15 @@ const styles = StyleSheet.create({
   messageButton: {
     flex: 1,
     backgroundColor: "#f0f0f0",
-    padding: 16,
+
     borderRadius: 8,
-    marginRight: 8,
+
     alignItems: "center",
   },
   bookButton: {
     flex: 1,
     backgroundColor: "#9333ea",
-    padding: 16,
+
     borderRadius: 8,
     marginLeft: 8,
     alignItems: "center",

@@ -5,6 +5,10 @@ import { MaterialIcons } from "@expo/vector-icons";
 import RemoteImage from "./RemoteImage";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 interface UserInfoCardProps {
   user: any;
@@ -67,7 +71,7 @@ const UserInfoCard = ({ user, isOwner }: UserInfoCardProps) => {
                 width: 34,
                 height: 34,
                 borderRadius: 32,
-                marginRight: 8,
+                marginRight: 4,
               }}
             />
           )) ||
@@ -76,12 +80,16 @@ const UserInfoCard = ({ user, isOwner }: UserInfoCardProps) => {
                 name="account-circle"
                 size={34}
                 color={theme.colors.outline}
-                style={{ marginRight: 8 }}
+                style={{ marginRight: 4 }}
               />
             ))}
 
           <View>
-            <Text variant="titleMedium" className="font-bold text-slate-800">
+            <Text
+              variant="titleMedium"
+              className="font-bold text-slate-800 "
+              style={{ fontSize: hp("1.8%"), letterSpacing: 1 }}
+            >
               {user.full_name || user.username}
             </Text>
             {/* {user.username && (
@@ -93,7 +101,7 @@ const UserInfoCard = ({ user, isOwner }: UserInfoCardProps) => {
         </View>
 
         <View style={{ paddingHorizontal: 8 }}>
-          {essentialInfo.map((info, index) => (
+          {/* {essentialInfo.map((info, index) => (
             <View
               key={index}
               className="flex-row items-center gap-2 mb-1 mx-16 "
@@ -104,12 +112,16 @@ const UserInfoCard = ({ user, isOwner }: UserInfoCardProps) => {
                 size={20}
                 color={theme.colors.primary}
               />
-              <Text variant="bodyMedium" className="text-slate-600">
+              <Text
+                variant="bodyMedium"
+                className="text-slate-600"
+                style={{ fontSize: hp("1.3%"), letterSpacing: 0.5 }}
+              >
                 {info.value}
               </Text>
             </View>
-          ))}
-
+          ))} */}
+          {/* 
           {isExpanded &&
             additionalInfo.map((info, index) => (
               <View
@@ -133,19 +145,19 @@ const UserInfoCard = ({ user, isOwner }: UserInfoCardProps) => {
                   info.value
                 )}
               </View>
-            ))}
+            ))} */}
 
-          <View className="flex-row justify-between mt-2">
-            <Button
+          <View className="flex-row justify-between ">
+            {/* <Button
               mode="text"
               onPress={() => setIsExpanded(!isExpanded)}
               className="self-start -ml-3"
-              labelStyle={{ color: theme.colors.primary }}
+              labelStyle={{ color: theme.colors.primary, fontSize: hp("1.2%") }}
             >
               {isExpanded ? "Voir moins" : "Voir plus"}
-            </Button>
+            </Button> */}
 
-            {isOwner && (
+            {/* {isOwner && (
               <Button
                 mode="contained"
                 className="rounded-full"
@@ -154,7 +166,7 @@ const UserInfoCard = ({ user, isOwner }: UserInfoCardProps) => {
               >
                 Modifier
               </Button>
-            )}
+            )} */}
           </View>
         </View>
       </View>

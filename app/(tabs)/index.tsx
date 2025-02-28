@@ -102,7 +102,7 @@ export default function HomeScreen() {
             <Text
               style={{
                 paddingHorizontal: 15,
-                fontSize: hp("2.5%"),
+                fontSize: hp("2%"),
                 fontWeight: "bold",
                 letterSpacing: 1,
                 color: "#1A1A1A",
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   },
   promoText: {
     color: "white",
-    fontSize: 20,
+    fontSize: hp("2%"),
     fontWeight: "bold",
   },
   sectionHeader: {
@@ -158,13 +158,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: hp("2%"),
     fontWeight: "bold",
     color: "#1A1A1A",
+    letterSpacing: 1,
   },
   seeAll: {
     color: "#007AFF",
-    fontSize: 14,
+    fontSize: hp("1.2%"),
     fontWeight: "500",
+    letterSpacing: 1,
   },
 });
