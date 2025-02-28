@@ -68,3 +68,20 @@ export const uploadServicesImages = async (images: ImageAsset[]) => {
     );
   }
 };
+
+export const fetchEvents = async () => {
+  const { data, error } = await supabase
+    .from("events")
+    .select("*, organizer_id(*)")
+    .order("start_date", { ascending: false });
+
+  return data;
+};
+export const fetchEventsById = async (id: string) => {
+  const { data, error } = await supabase
+    .from("events")
+    .select("*, organizer_id(*)")
+    .eq("id", id);
+
+  if (!error) return data as any;
+};

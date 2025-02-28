@@ -41,7 +41,7 @@ interface dataDetailsProps {
 }
 
 const dataDetails: React.FC<dataDetailsProps> = () => {
-  const { id } = useLocalSearchParams();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const [dominantColors, setDominantColors] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { width, height } = useWindowDimensions();
@@ -50,19 +50,7 @@ const dataDetails: React.FC<dataDetailsProps> = () => {
 
   const { data, isLoading } = useQuery({
     queryKey: ["services", id],
-    queryFn: () => {
-      if (!id) {
-        return Promise.reject(new Error("ID utilisateur non trouvé"));
-      }
-      return fetchServices(id as string);
-    },
-    enabled: !!id,
-    retry(failureCount, error) {
-      if (failureCount < 3) {
-        return true;
-      }
-      return false;
-    },
+    queryFn: () => fetchServices(id),
   });
 
   useEffect(() => {

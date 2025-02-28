@@ -8,6 +8,10 @@ import {
   Animated,
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import { shadow } from "react-native-paper";
 import Entypo from "@expo/vector-icons/Entypo";
 import {
@@ -31,6 +35,7 @@ import ImageSlider from "./ImageSlider";
 import { useAuth } from "@/app/provider/AuthProvider";
 import { createNotification } from "@/lib/postServices";
 import { CircleUserRound } from "lucide-react-native";
+import { timeAgo } from "@/utils/date";
 
 const textStyles = {
   fontSize: 16,
@@ -253,7 +258,7 @@ const PostsCard = ({
       ]}
     >
       {/* En-tête */}
-      <View className="flex-row justify-between items-center mb-4">
+      <View className="flex-row justify-between items-center mb-2">
         <TouchableOpacity
           className="flex-row items-center gap-3"
           onPress={() => router.push("/(profile)")}
@@ -263,36 +268,45 @@ const PostsCard = ({
               <View className="flex-row items-center">
                 <Image
                   source={{ uri: item?.profiles?.avatar_url }}
-                  style={{ width: 28, height: 28, borderRadius: 20 }}
+                  style={{ width: 34, height: 34, borderRadius: 20 }}
                 />
 
-                <View className="ml-2 mt-2">
+                <View className=" mt-2 ">
                   <Text className="text-base font-semibold text-gray-900">
                     {item?.profiles?.username || item?.profiles?.full_name}
                   </Text>
-                  <Text className="text-xs text-gray-500">
-                    {moment(item?.created_at).fromNow()}
+                  <Text
+                    className="text-xs text-gray-500"
+                    style={{ fontSize: hp("1.2%") }}
+                  >
+                    {timeAgo(item?.created_at)}
                   </Text>
                 </View>
               </View>
             ) : (
               <View className=" flex-row items-center">
                 {!item?.profiles?.avatar_url ? (
-                  <CircleUserRound color="#333" size={28} />
+                  <CircleUserRound color="#333" size={34} />
                 ) : (
                   <RemoteImage
                     path={item?.profiles?.avatar_url}
                     fallback="profile-placeholder"
-                    style={{ width: 28, height: 28, borderRadius: 20 }}
+                    style={{ width: 34, height: 34, borderRadius: 20 }}
                   />
                 )}
 
-                <View className="ml-2 mt-2">
-                  <Text className="text-base font-semibold text-gray-900">
+                <View style={{ marginLeft: 3 }}>
+                  <Text
+                    className="text-base font-semibold text-gray-900"
+                    style={{ fontSize: hp("1.8%"), letterSpacing: 1 }}
+                  >
                     {item?.profiles?.username}
                   </Text>
-                  <Text className="text-xs text-gray-500">
-                    {moment(item?.created_at).fromNow()}
+                  <Text
+                    className="text-xs text-gray-500"
+                    style={{ fontSize: hp("1.2%"), marginTop: -2 }}
+                  >
+                    {timeAgo(item?.created_at)}
                   </Text>
                 </View>
               </View>
@@ -311,7 +325,9 @@ const PostsCard = ({
 
       {/* Contenu */}
       <View className="mb-5">
-        <Text>{item?.body}</Text>
+        <Text style={{ fontSize: hp("1.5%"), letterSpacing: 0.5 }}>
+          {item?.body}
+        </Text>
 
         {item?.file && item?.file?.length > 0 && (
           <View className="overflow-hidden rounded-xl">
@@ -322,7 +338,7 @@ const PostsCard = ({
 
       {/* Actions */}
       <View className="flex-row justify-between items-center px-2">
-        <View className="flex-row items-center gap-4">
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <TouchableOpacity
             onPress={() => {
               handleLike();
@@ -332,10 +348,13 @@ const PostsCard = ({
           >
             <AntDesign
               name={liked ? "heart" : "hearto"}
-              size={22}
+              size={24}
               color={liked ? colors.accent : colors.text}
             />
-            <Text className="text-gray-600 font-medium">
+            <Text
+              className="text-gray-600 font-medium"
+              style={{ fontSize: hp("1.8%") }}
+            >
               {likes?.length || 0}
             </Text>
           </TouchableOpacity>
@@ -345,13 +364,14 @@ const PostsCard = ({
               pathname: "/(tabs)/(community)/postDetails",
               params: { postId: item?.id },
             }}
+            asChild
           >
-            <View className="flex-row items-center gap-2">
+            <TouchableOpacity className="flex-row items-center gap-2">
               <Feather name="message-circle" size={22} color={colors.text} />
               <Text className="text-gray-600 font-medium">
                 {item?.comments?.length}
               </Text>
-            </View>
+            </TouchableOpacity>
           </Link>
         </View>
 

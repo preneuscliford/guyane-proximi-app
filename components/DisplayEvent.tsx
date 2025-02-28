@@ -3,6 +3,8 @@ import EventItem from "../components/EventItem";
 import { supabase } from "@/lib/supabase";
 import { FlatList, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
+import { fetchEvents } from "@/lib/homeService";
+import { useQuery } from "@tanstack/react-query";
 
 interface Event {
   id: string;
@@ -18,29 +20,20 @@ interface Event {
 }
 
 const DisplayEvents = () => {
-  const [events, setEvents] = useState<Event[]>([]);
   const router = useRouter();
 
-  // console.log(events);
-
-  useEffect(() => {
-    const fetchEvents = async () => {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*, organizer_id(*)")
-        .order("start_date", { ascending: false });
-
-      if (!error) setEvents(data as any);
-    };
-
-    fetchEvents();
-  }, []);
-
-  // console.log(events[0].location);
+  const {
+    data: event,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["events"],
+    queryFn: () => fetchEvents(),
+  });
 
   return (
     <FlatList
-      data={events}
+      data={event as Event[]}
       horizontal
       showsHorizontalScrollIndicator={false}
       pagingEnabled
@@ -53,13 +46,6 @@ const DisplayEvents = () => {
               pathname: "/events/details",
               params: {
                 id: item?.id,
-                title: item?.title,
-                file: item?.file,
-                start_date: item?.start_date,
-                end_date: item?.end_date,
-                desc: item?.description,
-                location: item?.location,
-                organizer_id: item?.organizer_id,
               },
             })
           }
