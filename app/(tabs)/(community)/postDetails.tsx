@@ -24,6 +24,11 @@ import moment from "moment";
 import RemoteImage from "@/components/RemoteImage";
 import Feather from "@expo/vector-icons/Feather";
 import CommentInput from "@/components/InputFueldComment";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
+import { timeAgo } from "@/utils/date";
 
 const PostDetails = () => {
   const { postId } = useLocalSearchParams();
@@ -138,7 +143,7 @@ const PostDetails = () => {
                       comment?.profiles?.full_name}
                   </Text>
                   <Text style={styles.timestamp}>
-                    {moment(comment?.created_at).fromNow()}
+                    {timeAgo(comment?.created_at)}
                   </Text>
                 </View>
                 <Text style={styles.commentText}>{comment.text}</Text>
@@ -196,7 +201,8 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   commentsTitle: {
-    fontSize: 18,
+    fontSize: hp("2%"),
+    letterSpacing: 0.5,
     fontWeight: "bold",
     marginBottom: 12,
   },
@@ -222,14 +228,18 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   username: {
+    fontSize: hp("1.5%"),
+    letterSpacing: 0.5,
     fontWeight: "bold",
     marginRight: 8,
   },
   timestamp: {
-    fontSize: 12,
+    fontSize: hp("1.2%"),
     color: "#64748B",
   },
   commentText: {
+    fontSize: hp("1.4%"),
+    letterSpacing: 0.5,
     marginBottom: 8,
   },
   actions: {
@@ -241,7 +251,8 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   actionText: {
-    fontSize: 12,
+    fontSize: hp("1.2%"),
+    letterSpacing: 0.5,
     color: "#64748B",
     marginLeft: 4,
   },

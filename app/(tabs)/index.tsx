@@ -79,8 +79,8 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style="light" backgroundColor="#9333EA" />
       <View>
-        <StatusBar style="light" backgroundColor="#9333EA" />
         <ScrollView
           horizontal={false}
           scrollEnabled={true}

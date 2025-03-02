@@ -1,4 +1,8 @@
 import { AntDesign, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -9,6 +13,7 @@ import {
   TextStyle,
   ImageStyle,
   TouchableOpacity,
+  Dimensions,
 } from "react-native";
 import {
   NativeAd,
@@ -18,6 +23,7 @@ import {
   NativeAssetType,
   TestIds,
 } from "react-native-google-mobile-ads";
+import { ActivityIndicator } from "react-native";
 
 const NativeAdComponent: React.FC = () => {
   const [nativeAd, setNativeAd] = useState<NativeAd | null>(null);
@@ -45,10 +51,10 @@ const NativeAdComponent: React.FC = () => {
   }, []);
 
   if (!nativeAd) {
-    return (
-      <Text style={styles.loadingText}>Chargement de la publicité...</Text>
-    );
+    return <ActivityIndicator size="small" color="#9333EA" />;
   }
+
+  const { width } = Dimensions.get("window");
 
   return (
     <NativeAdView nativeAd={nativeAd}>
@@ -81,9 +87,22 @@ const NativeAdComponent: React.FC = () => {
 
         {/* Mention d'attribution */}
         <Text style={styles.adAttribution}>Sponsorisé</Text>
-        <View className="flex-row justify-between items-center px-2">
+        <View
+          className="flex-row justify-between items-center px-2"
+          style={{
+            paddingVertical: 5,
+            borderStyle: "solid",
+            borderBottomWidth: 0,
+            borderTopWidth: 1,
+            borderColor: "rgba(0, 0, 0, 0.1)",
+            shadowColor: "#000",
+            shadowOffset: { width: 1, height: 2 },
+            shadowOpacity: 0.05,
+            shadowRadius: 5,
+          }}
+        >
           <View className="flex-row items-center gap-4">
-            <TouchableOpacity className="flex-row items-center gap-2">
+            <TouchableOpacity className="flex-row items-center gap-2 mt-2">
               <AntDesign
                 style={{ opacity: 0.5 }}
                 name="hearto"
@@ -155,39 +174,42 @@ const styles = StyleSheet.create<Styles>({
   loadingText: {
     textAlign: "center",
     margin: 20,
-    fontSize: 14,
+    fontSize: hp("1%"),
     color: "#666",
   },
   icon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 34,
+    height: 34,
+    borderRadius: 25,
     marginRight: 4,
   },
   headline: {
-    fontSize: 16,
+    fontSize: hp("2%"),
+    letterSpacing: 0.5,
     fontWeight: "bold",
     color: "#333",
   },
   media: {
     width: "100%",
-    height: 150,
+    height: 200,
     marginVertical: 8,
     backgroundColor: "#eaeaea",
   },
   cta: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#7D5FFF",
     color: "#FFF",
     paddingVertical: 8,
+    fontSize: hp("1.5%"),
     paddingHorizontal: 12,
     borderRadius: 8,
     textAlign: "center",
     fontWeight: "600",
   },
   adAttribution: {
-    fontSize: 10,
+    fontSize: hp("1.2%"),
     color: "#888",
     marginTop: 8,
+    marginBottom: 2,
   },
 });
 

@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   title: {
-    fontSize: hp("1.8%"),
+    fontSize: hp("2%"),
     letterSpacing: 1,
     fontWeight: "bold",
     marginBottom: 10,
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   description: {
-    fontSize: hp("1.2%"),
+    fontSize: hp("1.5%"),
     letterSpacing: 0.5,
 
     color: "#444",

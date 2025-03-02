@@ -9,6 +9,7 @@ import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useAuth } from "../provider/AuthProvider";
 import { LogBox } from "react-native";
+import { heightPercentageToDP } from "react-native-responsive-screen";
 
 LogBox.ignoreLogs([
   "Warning: TNodeChildrenRenderer",
@@ -23,8 +24,12 @@ export default function TabLayout() {
 
         tabBarStyle: {
           backgroundColor: "#181F27",
+          height: heightPercentageToDP("6%"),
         },
         tabBarActiveTintColor: "#F4F7FC",
+        tabBarLabelStyle: {
+          fontSize: heightPercentageToDP("1%"),
+        },
       }}
       initialRouteName="index"
     >
@@ -46,6 +51,7 @@ export default function TabLayout() {
         name="explore"
         options={{
           title: "Explore",
+
           tabBarIcon: ({ color, focused }) => (
             <AntDesign
               name="search1"
@@ -71,7 +77,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="(community)"
         options={{
-          title: "Communauté",
+          title: " Discussion",
           tabBarIcon: ({ color, focused }) => (
             <FontAwesome6
               name="users"
@@ -86,6 +92,7 @@ export default function TabLayout() {
         name="(profile)"
         options={{
           title: "Profil",
+
           tabBarIcon: ({ color, focused }) => (
             <AntDesign
               name="profile"

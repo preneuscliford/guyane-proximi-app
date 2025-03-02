@@ -22,6 +22,10 @@ import { Image } from "expo-image";
 import Burnt from "burnt"; // Assurez-vous d'installer la librairie
 import Toast, { ToastHandles } from "./Toast";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 interface Comment {
   id: number;
@@ -212,7 +216,8 @@ const styles = StyleSheet.create({
     marginBottom: 80, // espace pour laisser la zone input visible
   },
   title: {
-    fontSize: 18,
+    fontSize: hp("2%"),
+    letterSpacing: 0.5,
     fontWeight: "bold",
     marginBottom: 12,
   },
@@ -248,7 +253,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   timestamp: {
-    fontSize: 12,
+    fontSize: hp("1.2%"),
     color: "#64748B",
   },
   commentText: {

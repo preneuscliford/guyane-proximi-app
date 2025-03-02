@@ -123,14 +123,14 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   title: {
-    fontSize: hp("1.5%"),
+    fontSize: hp("1.8%"),
     fontWeight: "700",
     color: "#1F2937",
     marginBottom: 2,
     letterSpacing: 0.5,
   },
   subTitle: {
-    fontSize: hp("1.2%"),
+    fontSize: hp("1.5%"),
     letterSpacing: 0.5,
     color: "#64748B",
     marginBottom: 2,
@@ -145,12 +145,12 @@ const styles = StyleSheet.create({
   },
   location: {
     color: "#64748B",
-    fontSize: hp("1.1%"),
+    fontSize: hp("1.3%"),
     letterSpacing: 0.5,
   },
   date: {
     color: "#64748B",
-    fontSize: hp("1.1"),
+    fontSize: hp("1.3"),
     letterSpacing: 0.5,
   },
   priceContainer: {

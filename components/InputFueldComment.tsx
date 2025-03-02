@@ -17,6 +17,7 @@ import {
   createCommentNotification,
   createNotification,
 } from "@/lib/postServices";
+import { heightPercentageToDP } from "react-native-responsive-screen";
 
 interface CommentInputProps {
   postId: string;
@@ -153,7 +154,8 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: "#F8FAFC",
     borderRadius: 24,
-    fontSize: 16,
+    fontSize: heightPercentageToDP("1.5%"),
+    letterSpacing: 0.5,
     lineHeight: 24,
     paddingHorizontal: 16,
     maxHeight: 120,

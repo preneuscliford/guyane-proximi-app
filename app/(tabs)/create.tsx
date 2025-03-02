@@ -14,6 +14,10 @@ import { Picker } from "@react-native-picker/picker";
 import { supabase } from "@/lib/supabase";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../provider/AuthProvider";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 import { ActivityIndicator } from "react-native-paper";
 import { EventForm } from "@/components/EventPicker";
@@ -21,6 +25,7 @@ import { uploadServicesImages } from "@/lib/homeService";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import Toast, { ToastHandles } from "@/components/Toast";
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
 // Pour simplifier, nous limitons ici les types à "service" et "event"
 type ListingType = "service" | "event";
@@ -176,6 +181,7 @@ const Create = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" backgroundColor="#F5F8FD" />
       <Toast ref={toastRef} />
       <ScrollView>
         <View style={styles.headerContainer}>
@@ -257,6 +263,7 @@ const Create = () => {
                 : "Titre de l'événement"
             }
             maxLength={100}
+            multiline
             style={styles.input}
           />
 
@@ -301,7 +308,7 @@ const Create = () => {
             style={[
               styles.submitButton,
               {
-                backgroundColor: !session || uploading ? "#1F2937" : "#003366",
+                backgroundColor: !session || uploading ? "#1F2937" : "#7D5FFF",
               },
             ]}
           >
@@ -326,12 +333,15 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   headerTitle: {
-    fontSize: 27,
+    fontSize: hp("2.5%"),
+    letterSpacing: 0.5,
     fontWeight: "bold",
     color: "#111827",
   },
   headerSubtitle: {
     color: "#111827",
+    fontSize: hp("1.5%"),
+    letterSpacing: 0.5,
   },
   contentContainer: {
     paddingHorizontal: 20,
@@ -344,7 +354,10 @@ const styles = StyleSheet.create({
   },
   imagePickerText: {
     textAlign: "center",
-    color: "#1E40AF",
+    fontSize: hp("1.5%"),
+    letterSpacing: 0.5,
+    color: "#7D5FFF",
+
     fontWeight: "bold",
   },
   imageScroll: {
@@ -387,11 +400,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginBottom: 10,
-    fontSize: 16,
+    fontSize: hp("2%"),
+    letterSpacing: 0.5,
     color: "#374151",
   },
   textArea: {
     height: 120,
+    fontSize: hp("2%"),
+    letterSpacing: 0.5,
   },
   submitButton: {
     paddingVertical: 15,
@@ -401,7 +417,9 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     color: "#ffffff",
-    fontSize: 16,
+
+    fontSize: hp("2%"),
+    letterSpacing: 0.5,
     fontWeight: "bold",
   },
 });

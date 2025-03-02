@@ -298,7 +298,7 @@ const PostsCard = ({
                 <View style={{ marginLeft: 3 }}>
                   <Text
                     className="text-base font-semibold text-gray-900"
-                    style={{ fontSize: hp("1.8%"), letterSpacing: 1 }}
+                    style={{ fontSize: hp("2%"), letterSpacing: 1 }}
                   >
                     {item?.profiles?.username}
                   </Text>
@@ -325,7 +325,9 @@ const PostsCard = ({
 
       {/* Contenu */}
       <View className="mb-5">
-        <Text style={{ fontSize: hp("1.5%"), letterSpacing: 0.5 }}>
+        <Text
+          style={{ fontSize: hp("1.8%"), letterSpacing: 0.5, marginBottom: 5 }}
+        >
           {item?.body}
         </Text>
 
@@ -337,7 +339,20 @@ const PostsCard = ({
       </View>
 
       {/* Actions */}
-      <View className="flex-row justify-between items-center px-2">
+      <View
+        className="flex-row justify-between items-center px-2"
+        style={{
+          paddingVertical: 5,
+          borderStyle: "solid",
+          borderBottomWidth: 0,
+          borderTopWidth: 1,
+          borderColor: "rgba(0, 0, 0, 0.1)",
+          shadowColor: "#000",
+          shadowOffset: { width: 1, height: 2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 5,
+        }}
+      >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <TouchableOpacity
             onPress={() => {
@@ -407,8 +422,8 @@ const styles = StyleSheet.create({
     borderColor: "#F1F5F9",
   },
   avatar: {
-    width: 42,
-    height: 42,
+    width: 34,
+    height: 34,
     borderRadius: 21,
     borderWidth: 2,
     borderColor: "#E0E7FF",

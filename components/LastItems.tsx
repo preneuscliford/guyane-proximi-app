@@ -212,14 +212,14 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   titreItem: {
-    fontSize: hp("1.5%"),
+    fontSize: hp("1.8%"),
     fontWeight: "bold",
     color: "#1F2937",
     marginBottom: 4,
     letterSpacing: 0.5,
   },
   prestataire: {
-    fontSize: hp("1.2%"),
+    fontSize: hp("1.5%"),
     color: "#6B7280",
     marginBottom: 8,
     letterSpacing: 0.5,
