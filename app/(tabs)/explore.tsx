@@ -1,11 +1,19 @@
 import React from "react";
-import { StyleSheet, View, ScrollView, RefreshControl } from "react-native";
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+} from "react-native";
 import { Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 
 import SearchInput from "@/components/SearchInput";
@@ -13,58 +21,58 @@ import Categories from "@/components/Cathegory";
 import DisplayEvents from "@/components/DisplayEvent";
 import LastItems from "@/components/LastItems";
 import { fetchEvents } from "@/lib/homeService";
+import { StatusBar } from "expo-status-bar";
 
 const Explore = () => {
-  const [refreshing, setRefreshing] = React.useState(false);
+  const router = useRouter();
+  const [selectedCategory, setSelectedCategory] = React.useState<string | null>(
+    null
+  );
 
-  const { data: events, refetch: refetchEvents } = useQuery({
+  const { data: events } = useQuery({
     queryKey: ["events"],
     queryFn: fetchEvents,
   });
 
-  const onRefresh = React.useCallback(async () => {
-    setRefreshing(true);
-    await Promise.all([
-      refetchEvents(),
-      // Ajoutez d'autres refetch si nécessaire
-    ]);
-    setRefreshing(false);
-  }, []);
-
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" backgroundColor="#F5F8FD" />
+      <View style={styles.header}>
+        <Text style={styles.title}>Explore</Text>
+        <TouchableOpacity style={styles.filterButton}>
+          <MaterialCommunityIcons
+            name="filter-variant"
+            size={24}
+            color="#333"
+          />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.searchContainer}>
+        <SearchInput />
+      </View>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        contentContainerStyle={styles.scrollContent}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Explorer</Text>
-        </View>
-
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <SearchInput />
-        </View>
-
-        {/* Categories */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Catégories</Text>
+        <View style={styles.section}>
           <Categories />
         </View>
 
-        {/* Events Section */}
         {events && events.length > 0 && (
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Événements à venir</Text>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Événements à venir</Text>
+              <TouchableOpacity onPress={() => {}}>
+                <Text style={styles.viewAll}>Voir tout</Text>
+              </TouchableOpacity>
+            </View>
             <DisplayEvents />
           </View>
         )}
 
-        {/* Latest Services */}
-        <View style={styles.sectionContainer}>
+        <View style={[styles.section, styles.lastSection]}>
           <LastItems />
         </View>
       </ScrollView>
@@ -78,28 +86,120 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F8FD",
   },
   header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: wp("4%"),
-    paddingTop: hp("2%"),
+    paddingTop: hp("1%"),
     paddingBottom: hp("1%"),
   },
   title: {
-    fontSize: hp("3%"),
+    fontSize: hp("2.5%"),
     fontWeight: "700",
-    color: "#1F2937",
+    color: "#333",
+  },
+  filterButton: {
+    padding: wp("2%"),
+    backgroundColor: "#F3F4F6",
+    borderRadius: wp("2%"),
   },
   searchContainer: {
     paddingHorizontal: wp("4%"),
+    marginVertical: hp("1%"),
     zIndex: 1000,
   },
-  sectionContainer: {
+  scrollContent: {
+    paddingBottom: hp("2%"),
+  },
+  section: {
     marginTop: hp("2%"),
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: wp("4%"),
+    marginBottom: hp("1%"),
   },
   sectionTitle: {
-    fontSize: hp("2.2%"),
+    fontSize: hp("2%"),
     fontWeight: "600",
     color: "#1F2937",
+  },
+  viewAll: {
+    fontSize: hp("1.6%"),
+    color: "#9333EA",
+    fontWeight: "500",
+  },
+  lastSection: {
+    marginBottom: hp("2%"),
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#E5E7EB",
+    marginVertical: hp("2%"),
+  },
+  serviceCard: {
+    backgroundColor: "#fff",
+    borderRadius: wp("3%"),
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  imageContainer: {
+    height: hp("15%"),
+    width: "100%",
+  },
+  serviceImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  serviceInfo: {
+    padding: wp("3%"),
+  },
+  serviceHeader: {
     marginBottom: hp("1%"),
+  },
+  serviceName: {
+    fontSize: hp("2%"),
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: hp("0.5%"),
+  },
+  serviceLocation: {
+    fontSize: hp("1.6%"),
+    color: "#666",
+  },
+  serviceFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: hp("1%"),
+  },
+  ratingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: wp("1%"),
+  },
+  rating: {
+    fontSize: hp("1.6%"),
+    color: "#333",
+    fontWeight: "500",
+  },
+  callButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#2563EB",
+    paddingVertical: hp("0.8%"),
+    paddingHorizontal: wp("4%"),
+    borderRadius: wp("1.5%"),
+    gap: wp("2%"),
+  },
+  callText: {
+    color: "#fff",
+    fontSize: hp("1.6%"),
+    fontWeight: "500",
   },
 });
 

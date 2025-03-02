@@ -16,6 +16,11 @@ const Header = () => {
   const { userData, session } = useAuth();
   const router = useRouter();
 
+  // Fonction pour gérer le clic sur la barre de recherche
+  const handleSearchPress = () => {
+    router.push("/(tabs)/explore");
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" backgroundColor="#9333EA" />
@@ -94,7 +99,17 @@ const Header = () => {
           </TouchableOpacity>
         )}
       </View>
-      <SearchInput />
+
+      {/* Rendre SearchInput cliquable et rediriger vers explore */}
+      <TouchableOpacity
+        style={styles.searchWrapper}
+        onPress={handleSearchPress}
+        activeOpacity={0.7}
+      >
+        <View pointerEvents="none">
+          <SearchInput />
+        </View>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -111,6 +126,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
+  },
+  searchWrapper: {
+    width: "100%",
   },
   logoContainer: {
     flexDirection: "row",

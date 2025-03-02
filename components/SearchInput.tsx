@@ -125,12 +125,13 @@ const styles = StyleSheet.create({
   searchBar: {
     backgroundColor: "#FFFFFF",
     borderRadius: wp("4%"),
-    height: hp("6%"),
+    height: hp("7%"),
     elevation: 2,
   },
   input: {
     fontSize: hp("1.8%"),
     textAlignVertical: "center",
+    justifyContent: "center",
     includeFontPadding: false,
     paddingBottom: 0,
     paddingTop: 0,

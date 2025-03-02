@@ -40,7 +40,7 @@ const EventDetails = () => {
   return (
     <View style={styles.container}>
       <StatusBar style="dark" backgroundColor="#F5F8FD" />
-      {event.map((item: any) => (
+      {event?.map((item: any) => (
         <View className="flex-1" key={item.id}>
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <LinearGradient colors={["transparent", "rgba(0,0,0,0.8)"]}>
