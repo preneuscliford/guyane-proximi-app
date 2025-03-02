@@ -22,6 +22,11 @@ import RenderHTML from "react-native-render-html";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Image } from "expo-image";
 import { CircleUserRound } from "lucide-react-native";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
+import DeleteAccountButton from "@/components/account/deleteAccount";
 
 type Post = {
   id: string;
@@ -219,15 +224,6 @@ const EditProfil = () => {
                 <Text className="text-white text-xs">1</Text>
               </View>
             </TouchableOpacity>
-
-            {/* Bouton Commandes */}
-            <TouchableOpacity
-              className="items-center p-4 bg-white rounded-xl shadow-sm"
-              // onPress={() => router.push("/orders")}
-            >
-              <MaterialIcons name="local-shipping" size={24} color="#0a7ea4" />
-              <Text className="text-sm text-gray-700 mt-2">Commandes</Text>
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -240,6 +236,7 @@ const EditProfil = () => {
             Se déconnecter
           </Text>
         </TouchableOpacity>
+        <DeleteAccountButton />
       </ScrollView>
     </View>
   );
