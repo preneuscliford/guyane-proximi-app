@@ -133,27 +133,46 @@ const EditProfil = () => {
   return (
     <View className="flex-1 bg-gray-100">
       <StatusBar style="light" backgroundColor="#181F27" />
-      <View className="bg-slate-950 h-52 rounded-br-[80px] px-4">
-        <View className="flex-row justify-between items-center pt-16">
-          <Text className="text-white text-xl font-bold">Profil</Text>
+      <View
+        style={{ height: hp("25%") }}
+        className="bg-slate-950 rounded-br-[80px] px-4"
+      >
+        <View
+          style={{ paddingTop: hp("8%") }}
+          className="flex-row justify-between items-center"
+        >
+          <Text style={{ fontSize: wp("5%") }} className="text-white font-bold">
+            Profil
+          </Text>
           <Link href={"/(tabs)/(profile)/editProfile"}>
-            <AntDesign name="edit" size={24} color="white" />
+            <AntDesign name="edit" size={wp("6%")} color="white" />
           </Link>
         </View>
       </View>
 
       {/* Contenu principal */}
-      <ScrollView scrollEnabled={true} className="flex-1 px-4 -mt-20">
+      <ScrollView
+        scrollEnabled={true}
+        className="flex-1 px-4"
+        style={{ marginTop: -hp("10%") }}
+      >
         {/* Carte profil */}
         <View className="bg-white rounded-3xl shadow-lg p-6 mb-6">
-          <View className=" items-center">
+          <View className="items-center">
             {userData?.avatar_url?.startsWith("https://") ? (
               <View className="flex-col items-center">
                 <Image
                   source={{ uri: userData?.avatar_url }}
-                  style={{ width: 34, height: 34, borderRadius: 20 }}
+                  style={{
+                    width: wp("10%"),
+                    height: wp("10%"),
+                    borderRadius: wp("5%"),
+                  }}
                 />
-                <Text className="text-2xl font-bold text-gray-900">
+                <Text
+                  style={{ fontSize: wp("6%") }}
+                  className="font-bold text-gray-900"
+                >
                   {userData?.full_name || userData?.username}
                 </Text>
               </View>
@@ -163,36 +182,50 @@ const EditProfil = () => {
                   <RemoteImage
                     path={userData?.avatar_url}
                     fallback="profile-placeholder"
-                    style={{ width: 80, height: 80, borderRadius: 40 }}
+                    style={{
+                      width: wp("20%"),
+                      height: wp("20%"),
+                      borderRadius: wp("10%"),
+                    }}
                   />
                 ) : (
-                  <CircleUserRound color="black" size={34} />
+                  <CircleUserRound color="black" size={wp("8%")} />
                 )}
-
-                <Text className="text-2xl font-bold text-gray-900">
+                <Text
+                  style={{ fontSize: wp("6%") }}
+                  className="font-bold text-gray-900"
+                >
                   {userData?.full_name || userData?.username}
                 </Text>
               </View>
             )}
           </View>
-          <View className=" items-center">
+          <View className="items-center">
             <Text className="text-gray-500 mt-1">{session?.user?.email}</Text>
           </View>
         </View>
 
         <View className="mb-8">
-          <Text className="text-lg font-bold text-gray-900 mb-4">
+          <Text
+            style={{ fontSize: wp("4.5%") }}
+            className="font-bold text-gray-900 mb-4"
+          >
             Mon compte
           </Text>
 
           <View className="grid grid-cols-3 gap-4 mb-6">
             {/* Bouton Paramètres */}
             <TouchableOpacity
-              className="items-center p-4 bg-white rounded-xl shadow-sm"
-              // onPress={() => router.push("/settings")}
+              style={{ padding: wp("4%") }}
+              className="items-center bg-white rounded-xl shadow-sm"
             >
-              <Feather name="settings" size={24} color="#0a7ea4" />
-              <Text className="text-sm text-gray-700 mt-2">Paramètres</Text>
+              <Feather name="settings" size={wp("6%")} color="#0a7ea4" />
+              <Text
+                style={{ fontSize: wp("3.5%") }}
+                className="text-gray-700 mt-2"
+              >
+                Paramètres
+              </Text>
             </TouchableOpacity>
 
             {/* Bouton Favoris */}

@@ -14,6 +14,7 @@ import * as Burnt from "burnt";
 
 import SignInWithGoogleBotton from "@/components/SignInWithGoogleBotton";
 import { supabase } from "@/lib/supabase";
+import { StatusBar } from "expo-status-bar";
 
 const signUp = () => {
   const router = useRouter();
@@ -157,91 +158,106 @@ const signUp = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white px-6 justify-center">
-      <View className="mb-8">
-        <Text className="text-3xl font-bold text-gray-900">
-          Créer un compte
-        </Text>
-        <Text className="text-gray-500 mt-2">Rejoignez notre communauté</Text>
-      </View>
-      <View className="space-y-4">
-        <View>
-          <Text className="text-gray-700 mb-1">Nom d'utilisateur</Text>
-          <TextInput
-            value={username}
-            placeholder="Votre pseudo"
-            onChangeText={(text) => setUsername(text)}
-            className={`h-12 border ${
-              usernameError ? "border-red-500" : "border-gray-200"
-            } rounded-lg px-4`}
-            autoCapitalize="none"
-          />
-          {usernameError ? (
-            <Text className="text-red-500 text-sm mt-1">{usernameError}</Text>
-          ) : null}
-        </View>
-        <View>
-          <Text className="text-gray-700 mb-1">Email</Text>
-          <TextInput
-            autoCapitalize="none"
-            value={emailAddress}
-            placeholder="exemple@email.com"
-            onChangeText={(text) => setEmailAddress(text)}
-            className={`h-12 border ${
-              emailError ? "border-red-500" : "border-gray-200"
-            } rounded-lg px-4`}
-            keyboardType="email-address"
-          />
-          {emailError ? (
-            <Text className="text-red-500 text-sm mt-1">{emailError}</Text>
-          ) : null}
-        </View>
-        <View>
-          <Text className="text-gray-700 mb-1">Mot de passe</Text>
-          <TextInput
-            value={password}
-            placeholder="••••••••"
-            secureTextEntry
-            onChangeText={(text) => setPassword(text)}
-            className={`h-12 border ${
-              passwordError ? "border-red-500" : "border-gray-200"
-            } rounded-lg px-4`}
-          />
-          {passwordError ? (
-            <Text className="text-red-500 text-sm mt-1">{passwordError}</Text>
-          ) : null}
-        </View>
-      </View>
-      <TouchableOpacity
-        onPress={signUpWithEmail}
-        disabled={loading}
-        className="h-12 bg-blue-500 rounded-lg justify-center items-center mt-8"
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text className="text-white font-medium">Créer mon compte</Text>
-        )}
-      </TouchableOpacity>
-      <View className="flex-row items-center my-6">
-        <View className="flex-1 h-px bg-gray-200" />
-        <Text className="mx-4 text-gray-400">Ou</Text>
-        <View className="flex-1 h-px bg-gray-200" />
-      </View>
-      <SignInWithGoogleBotton />
-      <TouchableOpacity
-        onPress={() => router.push("/(auth)/signIn")}
-        className="mt-6"
-      >
-        <Text className="text-center text-gray-600 text-base">
-          Déjà un compte ?{" "}
-          <Text className="text-blue-500 font-bold underline">
-            Se connecter
+    <SafeAreaView className="flex-1 bg-ghost-white px-4 sm:px-6 justify-between">
+      <StatusBar style="dark" backgroundColor="#F5F8FD" />
+      <View className="flex-1 justify-center">
+        <View className="mb-6 sm:mb-8">
+          <Text className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Créer un compte
           </Text>
-        </Text>
-      </TouchableOpacity>
-      <View className="flex items-center mt-8">
-        <Text onPress={() => {}} className="text-center text-gray-500 text-xs">
+          <Text className="text-sm sm:text-base text-gray-500 mt-2">
+            Rejoignez notre communauté
+          </Text>
+        </View>
+
+        <View className="space-y-4">
+          <View>
+            <Text className="text-sm sm:text-base text-gray-700 mb-1">
+              Nom d'utilisateur
+            </Text>
+            <TextInput
+              value={username}
+              placeholder="Votre pseudo"
+              onChangeText={(text) => setUsername(text)}
+              className={`h-11 sm:h-12 text-base border ${
+                usernameError ? "border-red-500" : "border-gray-200"
+              } rounded-lg px-3 sm:px-4`}
+              autoCapitalize="none"
+            />
+            {usernameError ? (
+              <Text className="text-red-500 text-sm mt-1">{usernameError}</Text>
+            ) : null}
+          </View>
+          <View>
+            <Text className="text-sm sm:text-base text-gray-700 mb-1">
+              Email
+            </Text>
+            <TextInput
+              autoCapitalize="none"
+              value={emailAddress}
+              placeholder="exemple@email.com"
+              onChangeText={(text) => setEmailAddress(text)}
+              className={`h-11 sm:h-12 text-base border ${
+                emailError ? "border-red-500" : "border-gray-200"
+              } rounded-lg px-3 sm:px-4`}
+              keyboardType="email-address"
+            />
+            {emailError ? (
+              <Text className="text-red-500 text-sm mt-1">{emailError}</Text>
+            ) : null}
+          </View>
+          <View>
+            <Text className="text-sm sm:text-base text-gray-700 mb-1">
+              Mot de passe
+            </Text>
+            <TextInput
+              value={password}
+              placeholder="••••••••"
+              secureTextEntry
+              onChangeText={(text) => setPassword(text)}
+              className={`h-11 sm:h-12 text-base border ${
+                passwordError ? "border-red-500" : "border-gray-200"
+              } rounded-lg px-3 sm:px-4`}
+            />
+            {passwordError ? (
+              <Text className="text-red-500 text-sm mt-1">{passwordError}</Text>
+            ) : null}
+          </View>
+        </View>
+
+        <TouchableOpacity
+          onPress={signUpWithEmail}
+          disabled={loading}
+          className="h-11 sm:h-12 bg-blue-500 rounded-lg justify-center items-center mt-6 sm:mt-8"
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text className="text-white font-medium">Créer mon compte</Text>
+          )}
+        </TouchableOpacity>
+
+        <View className="flex-row items-center my-6">
+          <View className="flex-1 h-px bg-gray-200" />
+          <Text className="mx-4 text-gray-400">Ou</Text>
+          <View className="flex-1 h-px bg-gray-200" />
+        </View>
+        <SignInWithGoogleBotton />
+        <TouchableOpacity
+          onPress={() => router.push("/(auth)/signIn")}
+          className="mt-6"
+        >
+          <Text className="text-center text-gray-600 text-base">
+            Déjà un compte ?{" "}
+            <Text className="text-blue-500 font-bold underline">
+              Se connecter
+            </Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <View className="mt-auto pb-4 sm:pb-6">
+        <Text className="text-xs sm:text-sm text-center text-gray-500">
           En continuant, vous acceptez nos{" "}
           <Text className="text-blue-500 underline">
             Conditions d'utilisation
