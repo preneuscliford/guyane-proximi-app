@@ -64,7 +64,7 @@ const Explore = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Événements à venir</Text>
-              <TouchableOpacity onPress={() => {}}>
+              <TouchableOpacity onPress={() => router.push("/events/all")}>
                 <Text style={styles.viewAll}>Voir tout</Text>
               </TouchableOpacity>
             </View>

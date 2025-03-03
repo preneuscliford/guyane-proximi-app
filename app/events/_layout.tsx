@@ -21,6 +21,15 @@ const eventsLayout = () => {
           headerShadowVisible: false,
         }}
       />
+      <Stack.Screen
+        name="all"
+        options={{
+          //   headerShown: false,
+          title: "",
+          headerStyle: { backgroundColor: "#F5F8FD" },
+          headerShadowVisible: false,
+        }}
+      />
     </Stack>
   );
 };

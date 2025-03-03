@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 import React, { useEffect } from "react";
 import { Stack, useNavigation } from "expo-router";
 
@@ -9,11 +9,30 @@ const servicesLayout = () => {
       headerShown: false,
     });
   }, []);
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen
-        name="details"
+        name="all"
+        options={{
+          headerShown: true,
+          title: "",
+          headerStyle: { backgroundColor: "#F5F8FD" },
+          headerShadowVisible: false,
+        }}
+      />
+      <Stack.Screen
+        name="details/[id]"
+        options={{
+          headerShown: true,
+          title: "",
+          headerStyle: { backgroundColor: "#F5F8FD" },
+          headerShadowVisible: false,
+        }}
+      />
+      <Stack.Screen
+        name="category/[id]"
         options={{
           headerShown: true,
           title: "",

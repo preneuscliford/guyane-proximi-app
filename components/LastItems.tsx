@@ -18,6 +18,8 @@ import { supabase } from "../lib/supabase";
 import { useRouter } from "expo-router";
 
 import { ServiceImages } from "./Images";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import RemoteImage from "@/components/RemoteImage";
 
 interface Service {
   id: string;
@@ -27,11 +29,16 @@ interface Service {
   image: string;
   prix: number;
   avis: number;
+  location: string;
   profiles: {
     id: string;
     full_name: string;
     username: string;
+    avatar_url: string;
   };
+  reviews: {
+    rating: number;
+  }[];
 }
 
 const DerniersServices = () => {
@@ -65,7 +72,9 @@ const DerniersServices = () => {
           image: service?.gallery[0],
           prix: service.price,
           avis: service.reviews[0]?.count || 0,
+          location: service.location,
           profiles: service.profiles,
+          reviews: service.reviews,
         }));
 
         setServices(donneesFormatees);
@@ -87,7 +96,7 @@ const DerniersServices = () => {
     <View style={styles.container}>
       <View style={styles.entete}>
         <Text style={styles.titre}>Derniers services</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/services/all")}>
           <Text style={styles.toutVoir}>Tout voir</Text>
         </TouchableOpacity>
       </View>
@@ -102,7 +111,7 @@ const DerniersServices = () => {
             style={styles.carte}
             onPress={() => {
               router.push({
-                pathname: "/services/details",
+                pathname: "/services/details/[id]",
                 params: { id: item.id },
               });
             }}
@@ -110,22 +119,69 @@ const DerniersServices = () => {
             <View style={styles.imageContainer}>
               <ServiceImages
                 path={item.image}
-                fallback=" services Image"
+                fallback="services Image"
                 style={styles.image}
               />
-              <TouchableOpacity style={styles.boutonFavori}></TouchableOpacity>
+              <View style={styles.authorOverlay}>
+                <View style={styles.authorInfo}>
+                  {item.profiles?.avatar_url?.startsWith("https://") ? (
+                    <Image
+                      source={{ uri: item.profiles.avatar_url }}
+                      style={styles.authorImage}
+                    />
+                  ) : (
+                    <RemoteImage
+                      path={item.profiles?.avatar_url}
+                      fallback="profile-placeholder"
+                      style={styles.authorImage}
+                    />
+                  )}
+                  <View>
+                    <Text style={styles.authorName}>
+                      {item.profiles?.full_name || item.profiles?.username}
+                    </Text>
+                    <View style={styles.ratingContainer}>
+                      <MaterialCommunityIcons
+                        name="star"
+                        size={12}
+                        color="#FFC107"
+                      />
+                      <Text style={styles.rating}>
+                        {item.reviews?.length > 0
+                          ? (
+                              item.reviews.reduce(
+                                (acc: number, curr: any) => acc + curr.rating,
+                                0
+                              ) / item.reviews.length
+                            ).toFixed(1)
+                          : "Nouveau"}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
             </View>
+
             <View style={styles.contenu}>
               <Text numberOfLines={2} style={styles.titreItem}>
                 {item.titre}
               </Text>
-              <Text style={styles.prestataire}>{item.prestataire}</Text>
+
+              {item.location && (
+                <View style={styles.locationContainer}>
+                  <MaterialCommunityIcons
+                    name="map-marker"
+                    size={14}
+                    color="#666"
+                  />
+                  <Text numberOfLines={1} style={styles.location}>
+                    {item.location}
+                  </Text>
+                </View>
+              )}
 
               <View style={styles.infoContainer}>
                 <Text style={styles.prix}>€{item.prix}</Text>
-                {item.avis > 0 && (
-                  <Text style={styles.avis}>({item.avis} avis)</Text>
-                )}
               </View>
 
               <View style={styles.typeContainer}>
@@ -235,6 +291,52 @@ const styles = StyleSheet.create({
     color: "#9333EA",
     fontSize: hp("1.2%"),
     letterSpacing: 0.5,
+  },
+  locationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  location: {
+    fontSize: hp("1.3%"),
+    color: "#666666",
+    marginLeft: 4,
+    flex: 1,
+  },
+  authorOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: wp("2%"),
+    backgroundColor: "rgba(0,0,0,0.3)",
+  },
+  authorInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: wp("2%"),
+  },
+  authorImage: {
+    width: wp("8%"),
+    height: wp("8%"),
+    borderRadius: wp("4%"),
+    borderWidth: 1,
+    borderColor: "#FFFFFF",
+  },
+  authorName: {
+    color: "#FFFFFF",
+    fontSize: hp("1.4%"),
+    fontWeight: "600",
+  },
+  ratingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: wp("1%"),
+  },
+  rating: {
+    color: "#FFFFFF",
+    fontSize: hp("1.2%"),
+    fontWeight: "500",
   },
 });
 

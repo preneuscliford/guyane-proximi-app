@@ -28,10 +28,10 @@ const Categories = () => {
   const router = useRouter();
 
   const handleCategoryPress = (categoryId: string) => {
-    // router.push({
-    //   pathname: "/services/category",
-    //   params: { id: categoryId },
-    // });
+    router.push({
+      pathname: "/services/category/[id]",
+      params: { id: categoryId },
+    });
   };
 
   return (
