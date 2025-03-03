@@ -246,6 +246,13 @@ const PostsCard = ({
     ]).start();
   };
 
+  const handleProfilePress = () => {
+    router.push({
+      pathname: "/(tabs)/(community)/profile/[id]",
+      params: { id: item?.profiles?.id },
+    });
+  };
+
   return (
     <Animated.View
       style={[
@@ -261,7 +268,7 @@ const PostsCard = ({
       <View className="flex-row justify-between items-center mb-2">
         <TouchableOpacity
           className="flex-row items-center gap-3"
-          onPress={() => router.push("/(profile)")}
+          onPress={handleProfilePress}
         >
           <View className="relative">
             {item?.profiles?.avatar_url?.startsWith("https://") ? (
@@ -271,8 +278,11 @@ const PostsCard = ({
                   style={{ width: 34, height: 34, borderRadius: 20 }}
                 />
 
-                <View className=" mt-2 ">
-                  <Text className="text-base font-semibold text-gray-900">
+                <View className="mt-2">
+                  <Text
+                    className="text-base font-semibold text-gray-900"
+                    onPress={handleProfilePress}
+                  >
                     {item?.profiles?.username || item?.profiles?.full_name}
                   </Text>
                   <Text
@@ -284,21 +294,24 @@ const PostsCard = ({
                 </View>
               </View>
             ) : (
-              <View className=" flex-row items-center">
-                {!item?.profiles?.avatar_url ? (
-                  <CircleUserRound color="#333" size={34} />
-                ) : (
-                  <RemoteImage
-                    path={item?.profiles?.avatar_url}
-                    fallback="profile-placeholder"
-                    style={{ width: 34, height: 34, borderRadius: 20 }}
-                  />
-                )}
+              <View className="flex-row items-center">
+                <TouchableOpacity onPress={handleProfilePress}>
+                  {!item?.profiles?.avatar_url ? (
+                    <CircleUserRound color="#333" size={34} />
+                  ) : (
+                    <RemoteImage
+                      path={item?.profiles?.avatar_url}
+                      fallback="profile-placeholder"
+                      style={{ width: 34, height: 34, borderRadius: 20 }}
+                    />
+                  )}
+                </TouchableOpacity>
 
                 <View style={{ marginLeft: 3 }}>
                   <Text
                     className="text-base font-semibold text-gray-900"
                     style={{ fontSize: hp("2%"), letterSpacing: 1 }}
+                    onPress={handleProfilePress}
                   >
                     {item?.profiles?.username}
                   </Text>
