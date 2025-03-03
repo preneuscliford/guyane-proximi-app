@@ -17,12 +17,17 @@ LogBox.ignoreLogs([
   "Warning: TRenderEngineProvider",
 ]);
 export default function TabLayout() {
+  const pathname = usePathname();
+
+  console.log(pathname);
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
 
         tabBarStyle: {
+          display: pathname === "/create" ? "none" : "flex",
           backgroundColor: "#181F27",
           height: heightPercentageToDP("6%"),
         },

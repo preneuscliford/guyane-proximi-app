@@ -26,6 +26,8 @@ import { useImagePicker } from "@/hooks/useImagePicker";
 import Toast, { ToastHandles } from "@/components/Toast";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import BackAppbar from "@/components/AppBar";
+import { MaterialIcons } from "@expo/vector-icons";
 
 // Pour simplifier, nous limitons ici les types à "service" et "event"
 type ListingType = "service" | "event";
@@ -180,7 +182,8 @@ const Create = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
+      <BackAppbar title="" />
       <StatusBar style="dark" backgroundColor="#F5F8FD" />
       <Toast ref={toastRef} />
       <ScrollView>
@@ -193,134 +196,143 @@ const Create = () => {
 
         <View style={styles.contentContainer}>
           <TouchableOpacity onPress={pickImages} style={styles.imagePicker}>
+            <MaterialIcons
+              name="add-photo-alternate"
+              size={24}
+              color="#7D5FFF"
+            />
             <Text style={styles.imagePickerText}>
               Ajouter des images ({images.length}/10)
             </Text>
           </TouchableOpacity>
 
-          <ScrollView
-            horizontal
-            style={styles.imageScroll}
-            contentContainerStyle={styles.imageScrollContent}
-          >
-            {images.map((image, index) => (
-              <View key={index} style={styles.imageWrapper}>
-                <Image
-                  source={{ uri: image.uri }}
-                  style={styles.imagePreview}
-                />
-                <TouchableOpacity
-                  onPress={() => removeImage(index)}
-                  style={styles.removeImageButton}
-                >
-                  <Text style={styles.removeImageText}>×</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
-
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={form.type}
-              onValueChange={(value: ListingType) =>
-                setForm({ ...form, type: value })
-              }
+          {images.length > 0 && (
+            <ScrollView
+              horizontal
+              style={styles.imageScroll}
+              contentContainerStyle={styles.imageScrollContent}
+              showsHorizontalScrollIndicator={false}
             >
-              <Picker.Item label="Service" value="service" />
-              <Picker.Item label="Événement" value="event" />
-            </Picker>
-          </View>
+              {images.map((image, index) => (
+                <View key={index} style={styles.imageWrapper}>
+                  <Image
+                    source={{ uri: image.uri }}
+                    style={styles.imagePreview}
+                  />
+                  <TouchableOpacity
+                    onPress={() => removeImage(index)}
+                    style={styles.removeImageButton}
+                  >
+                    <MaterialIcons name="close" size={16} color="#FFF" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+          )}
 
-          {/* Pour les services, affichage du Picker de catégories */}
-          {form.type === "service" && (
+          <View style={styles.formSection}>
             <View style={styles.pickerContainer}>
               <Picker
-                selectedValue={form.categoryId}
-                onValueChange={(value: string) =>
-                  setForm({ ...form, categoryId: value })
+                selectedValue={form.type}
+                onValueChange={(value: ListingType) =>
+                  setForm({ ...form, type: value })
                 }
+                style={styles.picker}
               >
-                <Picker.Item label="Sélectionnez une catégorie" value="" />
-                {serviceCategories.map((cat) => (
-                  <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
-                ))}
+                <Picker.Item label="Service" value="service" />
+                <Picker.Item label="Événement" value="event" />
               </Picker>
             </View>
-          )}
 
-          {form.type === "event" && (
-            <>
+            {form.type === "service" && (
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={form.categoryId}
+                  onValueChange={(value: string) =>
+                    setForm({ ...form, categoryId: value })
+                  }
+                  style={styles.picker}
+                >
+                  <Picker.Item label="Sélectionnez une catégorie" value="" />
+                  {serviceCategories.map((cat) => (
+                    <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
+                  ))}
+                </Picker>
+              </View>
+            )}
+
+            {form.type === "event" && (
               <EventForm form={form} setForm={setForm} />
-            </>
-          )}
+            )}
 
-          <RNTextInput
-            value={form.title}
-            onChangeText={(text) => setForm({ ...form, title: text })}
-            placeholder={
-              form.type !== "event"
-                ? "Titre du service"
-                : "Titre de l'événement"
-            }
-            maxLength={100}
-            multiline
-            style={styles.input}
-          />
-
-          <RNTextInput
-            value={form.description}
-            onChangeText={(text) => setForm({ ...form, description: text })}
-            placeholder={
-              form.type !== "event"
-                ? "Description du service"
-                : "Description de l'événement"
-            }
-            multiline
-            numberOfLines={5}
-            maxLength={1500}
-            textAlignVertical="top"
-            style={[styles.input, styles.textArea]}
-          />
-
-          {form.type === "service" ? (
             <RNTextInput
-              value={form.price}
-              onChangeText={(text) =>
-                setForm({ ...form, price: text.replace(/[^0-9.]/g, "") })
+              value={form.title}
+              onChangeText={(text) => setForm({ ...form, title: text })}
+              placeholder={
+                form.type === "event"
+                  ? "Titre de l'événement"
+                  : "Titre du service"
               }
-              placeholder="Prix"
-              keyboardType="numeric"
-              style={styles.input}
-            />
-          ) : (
-            <RNTextInput
-              value={form.location}
-              onChangeText={(text) => setForm({ ...form, location: text })}
-              placeholder="Lieu"
               maxLength={100}
               style={styles.input}
             />
-          )}
+
+            <RNTextInput
+              value={form.description}
+              onChangeText={(text) => setForm({ ...form, description: text })}
+              placeholder={
+                form.type === "event"
+                  ? "Description de l'événement"
+                  : "Description du service"
+              }
+              multiline
+              numberOfLines={5}
+              maxLength={1500}
+              textAlignVertical="top"
+              style={[styles.input, styles.textArea]}
+            />
+
+            {form.type === "service" ? (
+              <RNTextInput
+                value={form.price}
+                onChangeText={(text) =>
+                  setForm({ ...form, price: text.replace(/[^0-9.]/g, "") })
+                }
+                placeholder="Prix"
+                keyboardType="numeric"
+                style={styles.input}
+              />
+            ) : (
+              <RNTextInput
+                value={form.location}
+                onChangeText={(text) => setForm({ ...form, location: text })}
+                placeholder="Lieu"
+                maxLength={100}
+                style={styles.input}
+              />
+            )}
+          </View>
 
           <TouchableOpacity
             disabled={uploading || !session}
             onPress={submitForm}
             style={[
               styles.submitButton,
-              {
-                backgroundColor: !session || uploading ? "#1F2937" : "#7D5FFF",
-              },
+              uploading && styles.submitButtonDisabled,
             ]}
           >
             {uploading ? (
               <ActivityIndicator size="small" color="#ffffff" />
             ) : (
-              <Text style={styles.submitButtonText}>Publier l'annonce</Text>
+              <>
+                <MaterialIcons name="send" size={20} color="#FFF" />
+                <Text style={styles.submitButtonText}>Publier l'annonce</Text>
+              </>
             )}
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -330,97 +342,110 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F8FD",
   },
   headerContainer: {
-    padding: 20,
+    padding: wp("5%"),
+    backgroundColor: "#FFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
   },
   headerTitle: {
-    fontSize: hp("2.5%"),
-    letterSpacing: 0.5,
+    fontSize: hp("2.8%"),
     fontWeight: "bold",
-    color: "#111827",
+    color: "#1F2937",
+    marginBottom: hp("1%"),
+    letterSpacing: 0.5,
   },
   headerSubtitle: {
-    color: "#111827",
-    fontSize: hp("1.5%"),
-    letterSpacing: 0.5,
+    fontSize: hp("1.8%"),
+    color: "#64748B",
+    letterSpacing: 0.3,
   },
   contentContainer: {
-    paddingHorizontal: 20,
+    padding: wp("5%"),
   },
   imagePicker: {
-    backgroundColor: "#E5E7EB",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
+    backgroundColor: "#F3E8FF",
+    padding: wp("4%"),
+    borderRadius: wp("3%"),
+    marginBottom: hp("2%"),
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: wp("2%"),
   },
   imagePickerText: {
-    textAlign: "center",
-    fontSize: hp("1.5%"),
-    letterSpacing: 0.5,
+    fontSize: hp("1.8%"),
     color: "#7D5FFF",
-
-    fontWeight: "bold",
+    fontWeight: "600",
+    letterSpacing: 0.3,
   },
   imageScroll: {
-    marginBottom: 10,
+    marginBottom: hp("2%"),
   },
   imageScrollContent: {
-    paddingHorizontal: 10,
+    gap: wp("2%"),
   },
   imageWrapper: {
-    marginRight: 10,
     position: "relative",
+    borderRadius: wp("3%"),
+    overflow: "hidden",
   },
   imagePreview: {
-    width: 100,
-    height: 100,
-    borderRadius: 10,
+    width: wp("25%"),
+    height: wp("25%"),
+    borderRadius: wp("3%"),
   },
   removeImageButton: {
     position: "absolute",
-    width: 20,
-    height: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    top: 5,
-    right: 5,
-    backgroundColor: "red",
-    borderRadius: 5,
+    top: wp("2%"),
+    right: wp("2%"),
+    backgroundColor: "rgba(239, 68, 68, 0.9)",
+    borderRadius: wp("2%"),
+    padding: wp("1%"),
   },
-  removeImageText: {
-    color: "white",
-    fontWeight: "bold",
+  formSection: {
+    gap: hp("1%"),
   },
   pickerContainer: {
-    backgroundColor: "#E5E7EB",
-    borderRadius: 10,
-    marginBottom: 10,
+    backgroundColor: "#FFF",
+    borderRadius: wp("3%"),
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    overflow: "hidden",
+  },
+  picker: {
+    height: hp("7%"),
   },
   input: {
-    backgroundColor: "#E5E7EB",
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 10,
-    fontSize: hp("2%"),
-    letterSpacing: 0.5,
-    color: "#374151",
+    backgroundColor: "#FFF",
+    borderRadius: wp("3%"),
+    padding: wp("4%"),
+    fontSize: hp("1.8%"),
+    color: "#1F2937",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
   textArea: {
-    height: 120,
-    fontSize: hp("2%"),
-    letterSpacing: 0.5,
+    height: hp("20%"),
+    textAlignVertical: "top",
   },
   submitButton: {
-    paddingVertical: 15,
-    borderRadius: 10,
+    backgroundColor: "#7D5FFF",
+    padding: wp("4%"),
+    borderRadius: wp("3%"),
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    justifyContent: "center",
+    marginTop: hp("3%"),
+    gap: wp("2%"),
+  },
+  submitButtonDisabled: {
+    backgroundColor: "#CBD5E1",
   },
   submitButtonText: {
-    color: "#ffffff",
-
-    fontSize: hp("2%"),
-    letterSpacing: 0.5,
-    fontWeight: "bold",
+    color: "#FFF",
+    fontSize: hp("1.8%"),
+    fontWeight: "600",
+    letterSpacing: 0.3,
   },
 });
 

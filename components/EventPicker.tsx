@@ -2,6 +2,10 @@ import React from "react";
 import { View, Text, TouchableOpacity, Platform } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { format } from "date-fns";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 interface EventDatePickerProps {
   date: Date;
@@ -85,30 +89,51 @@ interface EventFormProps {
 
 export const EventForm = ({ form, setForm }: EventFormProps) => {
   return (
-    <View>
-      <EventDatePicker
-        date={form.startDate}
-        setDate={(newDate) =>
-          setForm((prev: any) => ({
-            ...prev,
-            startDate: newDate,
-            endDate: newDate > prev.endDate ? newDate : prev.endDate,
-          }))
-        }
-        label="Date de début"
-      />
+    <View style={{ flex: 1 }}>
+      <View
+        style={{
+          backgroundColor: "#FFF",
+          borderRadius: wp("3%"),
+          paddingHorizontal: wp("2%"),
+          borderWidth: 1,
+          borderColor: "#E2E8F0",
+          marginBottom: hp("1%"),
+        }}
+      >
+        <EventDatePicker
+          date={form.startDate}
+          setDate={(newDate) =>
+            setForm((prev: any) => ({
+              ...prev,
+              startDate: newDate,
+              endDate: newDate > prev.endDate ? newDate : prev.endDate,
+            }))
+          }
+          label="Date de début"
+        />
+      </View>
 
-      <EventDatePicker
-        date={form.endDate}
-        setDate={(newDate) =>
-          setForm((prev: any) => ({
-            ...prev,
-            endDate: newDate,
-          }))
-        }
-        label="Date de fin"
-        minimumDate={form.startDate}
-      />
+      <View
+        style={{
+          backgroundColor: "#FFF",
+          borderRadius: wp("3%"),
+          paddingHorizontal: wp("2%"),
+          borderWidth: 1,
+          borderColor: "#E2E8F0",
+        }}
+      >
+        <EventDatePicker
+          date={form.endDate}
+          setDate={(newDate) =>
+            setForm((prev: any) => ({
+              ...prev,
+              endDate: newDate,
+            }))
+          }
+          label="Date de fin"
+          minimumDate={form.startDate}
+        />
+      </View>
     </View>
   );
 };

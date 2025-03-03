@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
@@ -10,6 +10,7 @@ import {
 } from "react-native-responsive-screen";
 
 import { ServiceImages } from "./Images";
+import RemoteImage from "./RemoteImage";
 
 dayjs.locale("fr"); // Configuration globale
 
@@ -32,10 +33,29 @@ const EventItem = ({ event, onPress }: any) => {
           colors={["transparent", "rgba(0,0,0,0.7)"]}
           style={styles.gradient}
         >
-          <View style={styles.categoryTag}>
-            <Text style={styles.categoryText}>
-              {event.category || "Événement"}
-            </Text>
+          <View style={styles.authorInfo}>
+            {event.profiles?.avatar_url?.startsWith("https://") ? (
+              <Image
+                source={{ uri: event.profiles.avatar_url }}
+                style={styles.authorImage}
+              />
+            ) : (
+              <RemoteImage
+                path={event.profiles?.avatar_url}
+                fallback="profile-placeholder"
+                style={styles.authorImage}
+              />
+            )}
+            <View>
+              <Text style={styles.authorName}>
+                {event.profiles?.full_name || event.profiles?.username}
+              </Text>
+              <View style={styles.categoryTag}>
+                <Text style={styles.categoryText}>
+                  {event.category || "Événement"}
+                </Text>
+              </View>
+            </View>
           </View>
         </LinearGradient>
       </View>
@@ -106,6 +126,25 @@ const styles = StyleSheet.create({
     height: "40%",
     padding: 16,
     justifyContent: "flex-end",
+  },
+  authorInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: wp("2%"),
+    marginTop: "auto",
+  },
+  authorImage: {
+    width: wp("8%"),
+    height: wp("8%"),
+    borderRadius: wp("4%"),
+    borderWidth: 1,
+    borderColor: "#FFFFFF",
+  },
+  authorName: {
+    color: "#FFFFFF",
+    fontSize: hp("1.4%"),
+    fontWeight: "600",
+    marginBottom: hp("0.5%"),
   },
   categoryTag: {
     backgroundColor: "#9333EA",

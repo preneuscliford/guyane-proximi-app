@@ -28,7 +28,25 @@ const DisplayEvents = () => {
     error,
   } = useQuery({
     queryKey: ["events"],
-    queryFn: () => fetchEvents(),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select(
+          `
+          *,
+          profiles (
+            id,
+            username,
+            full_name,
+            avatar_url
+          )
+        `
+        )
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
   });
 
   return (
